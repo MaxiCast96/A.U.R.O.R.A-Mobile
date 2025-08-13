@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Image, Text, StyleSheet, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 
 /**
@@ -15,6 +16,9 @@ import { useAuth } from '../context/AuthContext';
  * - Animación de fade in/out
  * - Logo de la óptica
  * - Navegación automática según autenticación
+ * - Si no está autenticado: navega a Welcome
+ * - Si está autenticado: navega a Main
+ * - Degradado superior para mayor atractivo visual
  */
 const SplashScreen = () => {
     const navigation = useNavigation();
@@ -37,19 +41,41 @@ const SplashScreen = () => {
                 useNativeDriver: true,
             }).start(() => {
                 // Navegar según el estado de autenticación
-                if (isAuthenticated) {
-                    navigation.replace('Main');
-                } else {
-                    navigation.replace('Login');
-                }
+                handleNavigateAfterSplash();
             });
         }, 1800); // 1200ms fade in + 600ms visible
 
         return () => clearTimeout(timeout);
     }, [fadeAnim, navigation, isAuthenticated]);
 
+    /**
+     * Manejar la navegación después del splash screen
+     */
+    const handleNavigateAfterSplash = () => {
+        if (isAuthenticated) {
+            // Si el usuario ya está autenticado, va directo a Main
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Main' }],
+            });
+        } else {
+            // Si no está autenticado, va a la pantalla de bienvenida
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Welcome' }],
+            });
+        }
+    };
+
     return (
         <View style={styles.container}>
+            {/* Degradado superior */}
+            <LinearGradient
+                colors={['#A4D5DD', '#FFFFFF']}
+                locations={[0, 0.7]}
+                style={styles.gradient}
+            />
+            
             <Animated.View style={{ opacity: fadeAnim, alignItems: 'center' }}>
                 <Image
                     source={require('../assets/ap.png')}
@@ -72,6 +98,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    
+    // Degradado superior
+    gradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        height: '100%',
+    },
+    
     logo: {
         width: 250,
         height: 150,

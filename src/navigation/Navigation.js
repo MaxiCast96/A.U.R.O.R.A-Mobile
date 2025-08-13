@@ -5,6 +5,7 @@ import TabNavigator from './TabNavigation';
 import SplashScreen from '../screens/SplashScreen';
 import Login from '../screens/Login';
 import Register from '../screens/Register';
+import Welcome from '../screens/Welcome';
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -51,9 +52,12 @@ export default function Navigation() {
                 {/* Pantalla de carga inicial */}
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 
+                {/*Pantalla de Bienvenida */}
+                <Stack.Screen name="Welcome" component={Welcome} />
+
                 {/* Pantalla de login */}
                 <Stack.Screen name="Login" component={Login} />
-                
+
                 {/* Pantalla de registro */}
                 <Stack.Screen name="Register" component={Register} />
                 

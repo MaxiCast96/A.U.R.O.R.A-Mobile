@@ -48,6 +48,18 @@ const TabNavigator = () => (
                 animation: 'slide_from_right',
             }} 
         />
+
+         {/* Pantalla de opciones adicionales */}
+        <Tab.Screen 
+            name="More" 
+            component={More} 
+            options={{ 
+                title: 'Más',
+                tabBarLabel: 'Más',
+                // Configuración específica para esta pantalla
+                animation: 'slide_from_right',
+            }} 
+        />
         
         {/* Pantalla de citas */}
         <Tab.Screen 
@@ -61,17 +73,7 @@ const TabNavigator = () => (
             }} 
         />
         
-        {/* Pantalla de opciones adicionales */}
-        <Tab.Screen 
-            name="More" 
-            component={More} 
-            options={{ 
-                title: 'Más',
-                tabBarLabel: 'Más',
-                // Configuración específica para esta pantalla
-                animation: 'slide_from_right',
-            }} 
-        />
+       
     </Tab.Navigator>
 );
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
  * - Conexión con API de login
  * - Manejo de errores
  * - Navegación a pantalla principal
+ * - Degradado superior para mayor atractivo visual
  */
 const Login = () => {
     const navigation = useNavigation();
@@ -85,65 +87,74 @@ const Login = () => {
     };
 
     return (
-        <ScrollView 
-            style={styles.container}
-            contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
-        >
-            {/* Header con logo y título */}
-            <View style={styles.header}>
-                <Text style={styles.title}>Óptica La Inteligente</Text>
-                <Text style={styles.subtitle}>Inicia sesión en tu cuenta</Text>
-            </View>
+        <View style={styles.container}>
+            {/* Degradado superior */}
+            <LinearGradient
+                colors={['#A4D5DD', '#FFFFFF']}
+                locations={[0, 0.5]}
+                style={styles.gradient}
+            />
+            
+            <ScrollView 
+                style={styles.scrollContainer}
+                contentContainerStyle={styles.contentContainer}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Header con logo y título */}
+                <View style={styles.header}>
+                    <Text style={styles.title}>Óptica La Inteligente</Text>
+                    <Text style={styles.subtitle}>Inicia sesión en tu cuenta</Text>
+                </View>
 
-            {/* Formulario de login */}
-            <View style={styles.form}>
-                <Input
-                    label="Email"
-                    placeholder="Ingresa tu email"
-                    value={email}
-                    onChangeText={setEmail}
-                    icon="mail-outline"
-                    error={errors.email}
-                />
+                {/* Formulario de login */}
+                <View style={styles.form}>
+                    <Input
+                        label="Email"
+                        placeholder="Ingresa tu email"
+                        value={email}
+                        onChangeText={setEmail}
+                        icon="mail-outline"
+                        error={errors.email}
+                    />
 
-                <Input
-                    label="Contraseña"
-                    placeholder="Ingresa tu contraseña"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={true}
-                    icon="lock-closed-outline"
-                    error={errors.password}
-                />
+                    <Input
+                        label="Contraseña"
+                        placeholder="Ingresa tu contraseña"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={true}
+                        icon="lock-closed-outline"
+                        error={errors.password}
+                    />
 
-                {/* Botón de login */}
-                <Button
-                    title="Iniciar Sesión"
-                    onPress={handleLogin}
-                    variant="primary"
-                    size="large"
-                    disabled={isLoading}
-                    style={styles.loginButton}
-                />
+                    {/* Botón de login */}
+                    <Button
+                        title="Iniciar Sesión"
+                        onPress={handleLogin}
+                        variant="primary"
+                        size="large"
+                        disabled={isLoading}
+                        style={styles.loginButton}
+                    />
 
-                {/* Botón de registro */}
-                <Button
-                    title="¿No tienes cuenta? Regístrate"
-                    onPress={handleGoToRegister}
-                    variant="outline"
-                    size="medium"
-                    style={styles.registerButton}
-                />
-            </View>
+                    {/* Botón de registro */}
+                    <Button
+                        title="¿No tienes cuenta? Regístrate"
+                        onPress={handleGoToRegister}
+                        variant="outline"
+                        size="medium"
+                        style={styles.registerButton}
+                    />
+                </View>
 
-            {/* Información adicional */}
-            <View style={styles.footer}>
-                <Text style={styles.footerText}>
-                    Al iniciar sesión, aceptas nuestros términos y condiciones
-                </Text>
-            </View>
-        </ScrollView>
+                {/* Información adicional */}
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>
+                        Al iniciar sesión, aceptas nuestros términos y condiciones
+                    </Text>
+                </View>
+            </ScrollView>
+        </View>
     );
 };
 
@@ -152,6 +163,20 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
+    },
+    
+    // Degradado superior
+    gradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        height: '50%',
+    },
+    
+    // Contenedor del scroll
+    scrollContainer: {
+        flex: 1,
     },
     
     // Contenedor del contenido scrolleable
@@ -213,4 +238,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Login; 
+export default Login;

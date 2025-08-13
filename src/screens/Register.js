@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Input from '../components/Input';
 import Button from '../components/Button';
 
@@ -15,6 +16,7 @@ import Button from '../components/Button';
  * - Conexión con API de registro
  * - Manejo de errores
  * - Navegación al login después del registro
+ * - Degradado superior para mayor atractivo visual
  */
 const Register = () => {
     const navigation = useNavigation();
@@ -133,84 +135,93 @@ const Register = () => {
     };
 
     return (
-        <ScrollView 
-            style={styles.container}
-            contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
-        >
-            {/* Header con logo y título */}
-            <View style={styles.header}>
-                <Text style={styles.title}>Óptica La Inteligente</Text>
-                <Text style={styles.subtitle}>Crea tu cuenta</Text>
-            </View>
+        <View style={styles.container}>
+            {/* Degradado superior */}
+            <LinearGradient
+                colors={['#A4D5DD', '#FFFFFF']}
+                locations={[0, 0.4]}
+                style={styles.gradient}
+            />
+            
+            <ScrollView 
+                style={styles.scrollContainer}
+                contentContainerStyle={styles.contentContainer}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Header con logo y título */}
+                <View style={styles.header}>
+                    <Text style={styles.title}>Óptica La Inteligente</Text>
+                    <Text style={styles.subtitle}>Crea tu cuenta</Text>
+                </View>
 
-            {/* Formulario de registro */}
-            <View style={styles.form}>
-                <Input
-                    label="Nombre Completo"
-                    placeholder="Ingresa tu nombre completo"
-                    value={nombre}
-                    onChangeText={setNombre}
-                    icon="person-outline"
-                    error={errors.nombre}
-                />
+                {/* Formulario de registro */}
+                <View style={styles.form}>
+                    <Input
+                        label="Nombre Completo"
+                        placeholder="Ingresa tu nombre completo"
+                        value={nombre}
+                        onChangeText={setNombre}
+                        icon="person-outline"
+                        error={errors.nombre}
+                    />
 
-                <Input
-                    label="Correo Electrónico"
-                    placeholder="Ingresa tu correo electrónico"
-                    value={correo}
-                    onChangeText={setCorreo}
-                    icon="mail-outline"
-                    error={errors.correo}
-                />
+                    <Input
+                        label="Correo Electrónico"
+                        placeholder="Ingresa tu correo electrónico"
+                        value={correo}
+                        onChangeText={setCorreo}
+                        icon="mail-outline"
+                        error={errors.correo}
+                    />
 
-                <Input
-                    label="Contraseña"
-                    placeholder="Ingresa tu contraseña"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={true}
-                    icon="lock-closed-outline"
-                    error={errors.password}
-                />
+                    <Input
+                        label="Contraseña"
+                        placeholder="Ingresa tu contraseña"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={true}
+                        icon="lock-closed-outline"
+                        error={errors.password}
+                    />
 
-                <Input
-                    label="Confirmar Contraseña"
-                    placeholder="Confirma tu contraseña"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry={true}
-                    icon="lock-closed-outline"
-                    error={errors.confirmPassword}
-                />
+                    <Input
+                        label="Confirmar Contraseña"
+                        placeholder="Confirma tu contraseña"
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                        secureTextEntry={true}
+                        icon="lock-closed-outline"
+                        error={errors.confirmPassword}
+                    />
 
-                {/* Botón de registro */}
-                <Button
-                    title="Crear Cuenta"
-                    onPress={handleRegister}
-                    variant="primary"
-                    size="large"
-                    disabled={loading}
-                    style={styles.registerButton}
-                />
+                    {/* Botón de registro */}
+                    <Button
+                        title="Crear Cuenta"
+                        onPress={handleRegister}
+                        variant="primary"
+                        size="large"
+                        disabled={loading}
+                        style={styles.registerButton}
+                    />
 
-                {/* Botón para ir al login */}
-                <Button
-                    title="¿Ya tienes cuenta? Inicia Sesión"
-                    onPress={handleGoToLogin}
-                    variant="outline"
-                    size="medium"
-                    style={styles.loginButton}
-                />
-            </View>
+                    {/* Botón para ir al login */}
+                    <Button
+                        title="¿Ya tienes cuenta? Inicia Sesión"
+                        onPress={handleGoToLogin}
+                        variant="outline"
+                        size="medium"
+                        style={styles.loginButton}
+                    />
+                </View>
 
-            {/* Información adicional */}
-            <View style={styles.footer}>
-                <Text style={styles.footerText}>
-                    Al crear una cuenta, aceptas nuestros términos y condiciones
-                </Text>
-            </View>
-        </ScrollView>
+                {/* Información adicional */}
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>
+                        Al crear una cuenta, aceptas nuestros términos y condiciones
+                    </Text>
+                </View>
+            </ScrollView>
+        </View>
     );
 };
 
@@ -219,6 +230,20 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
+    },
+    
+    // Degradado superior
+    gradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        height: '40%',
+    },
+    
+    // Contenedor del scroll
+    scrollContainer: {
+        flex: 1,
     },
     
     // Contenedor del contenido scrolleable
@@ -280,4 +305,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Register; 
+export default Register;
