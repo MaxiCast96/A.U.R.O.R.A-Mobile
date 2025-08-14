@@ -5,6 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Home from '../screens/Home';
 import Citas from '../screens/Citas';
 import More from '../screens/More';
+import Menu from '../screens/Menu'; // Nuevo import
 import FloatingTabBar from '../components/FloatingTabBar';
 
 const Tab = createBottomTabNavigator();
@@ -12,8 +13,9 @@ const Tab = createBottomTabNavigator();
 /**
  * Navegador de tabs principal
  * 
- * Aquí configuramos las tres pantallas principales de la app:
+ * Aquí configuramos las pantallas principales de la app:
  * - Home: Pantalla de inicio
+ * - Menu: Pantalla de operaciones y menú principal
  * - Citas: Gestión de citas médicas
  * - More: Opciones adicionales
  * 
@@ -49,13 +51,13 @@ const TabNavigator = () => (
             }} 
         />
 
-         {/* Pantalla de opciones adicionales */}
+        {/* Pantalla de menú principal - NUEVA */}
         <Tab.Screen 
-            name="More" 
-            component={More} 
+            name="Menu" 
+            component={Menu} 
             options={{ 
-                title: 'Más',
-                tabBarLabel: 'Más',
+                title: 'Operaciones',
+                tabBarLabel: 'Menú',
                 // Configuración específica para esta pantalla
                 animation: 'slide_from_right',
             }} 
@@ -72,9 +74,19 @@ const TabNavigator = () => (
                 animation: 'slide_from_right',
             }} 
         />
-        
-       
+
+         {/* Pantalla de opciones adicionales */}
+        <Tab.Screen 
+            name="More" 
+            component={More} 
+            options={{ 
+                title: 'Más',
+                tabBarLabel: 'Más',
+                // Configuración específica para esta pantalla
+                animation: 'slide_from_right',
+            }} 
+        />
     </Tab.Navigator>
 );
 
-export default TabNavigator; 
+export default TabNavigator;

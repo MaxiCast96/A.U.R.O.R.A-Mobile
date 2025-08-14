@@ -6,6 +6,7 @@ import SplashScreen from '../screens/SplashScreen';
 import Login from '../screens/Login';
 import Register from '../screens/Register';
 import Welcome from '../screens/Welcome';
+import Menu from '../screens/Menu'; // Nuevo import para acceso directo
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -32,6 +33,7 @@ const LoadingScreen = () => (
  * 2. Login (si no está autenticado) o Main (si está autenticado)
  * 3. Register (pantalla de registro)
  * 4. Main (tab navigator con las pantallas principales)
+ * 5. Menu (pantalla de operaciones - accesible desde tabs y directamente)
  */
 export default function Navigation() {
     const { isAuthenticated, isLoading } = useAuth();
@@ -52,7 +54,7 @@ export default function Navigation() {
                 {/* Pantalla de carga inicial */}
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 
-                {/*Pantalla de Bienvenida */}
+                {/* Pantalla de Bienvenida */}
                 <Stack.Screen name="Welcome" component={Welcome} />
 
                 {/* Pantalla de login */}
@@ -63,6 +65,23 @@ export default function Navigation() {
                 
                 {/* Navegación principal con tabs */}
                 <Stack.Screen name="Main" component={TabNavigator} />
+
+                {/* Pantalla de menú - acceso directo para navegación desde otras pantallas */}
+                <Stack.Screen 
+                    name="MenuDirect" 
+                    component={Menu}
+                    options={{
+                        headerShown: true,
+                        title: 'Operaciones',
+                        headerStyle: {
+                            backgroundColor: '#009BBF',
+                        },
+                        headerTintColor: '#FFFFFF',
+                        headerTitleStyle: {
+                            fontFamily: 'Lato-Bold',
+                        },
+                    }}
+                />
             </Stack.Navigator>
         </NavigationContainer>
     );
