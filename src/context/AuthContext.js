@@ -50,10 +50,16 @@ export const AuthProvider = ({ children }) => {
             const storedToken = await AsyncStorage.getItem('authToken');
             const storedUser = await AsyncStorage.getItem('userData');
             
+            console.log('Token almacenado:', storedToken ? 'Existe' : 'No existe');
+            console.log('Usuario almacenado:', storedUser ? 'Existe' : 'No existe');
+            
             if (storedToken && storedUser) {
                 setToken(storedToken);
                 setUser(JSON.parse(storedUser));
                 setIsAuthenticated(true);
+                console.log('Autenticación restaurada desde storage');
+            } else {
+                console.log('No hay sesión previa guardada');
             }
         } catch (error) {
             console.error('Error al cargar token:', error);
@@ -69,6 +75,8 @@ export const AuthProvider = ({ children }) => {
         try {
             setIsLoading(true);
             
+            console.log('Intentando login con:', email);
+            
             const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -77,7 +85,10 @@ export const AuthProvider = ({ children }) => {
                 body: JSON.stringify({ correo: email, password }),
             });
 
+            console.log('Response status:', response.status);
+            
             const data = await response.json();
+            console.log('Response data:', data);
 
             if (response.ok && data.token) {
                 // Guardar token y datos del usuario
@@ -88,8 +99,11 @@ export const AuthProvider = ({ children }) => {
                 setUser(data.user);
                 setIsAuthenticated(true);
                 
+                console.log('Login exitoso, token guardado');
+                
                 return { success: true, message: 'Login exitoso' };
             } else {
+                console.log('Login fallido:', data.message);
                 return { 
                     success: false, 
                     message: data.message || 'Credenciales incorrectas' 
@@ -111,6 +125,8 @@ export const AuthProvider = ({ children }) => {
      */
     const logout = async () => {
         try {
+            console.log('Cerrando sesión...');
+            
             // Limpiar datos almacenados
             await AsyncStorage.removeItem('authToken');
             await AsyncStorage.removeItem('userData');
@@ -119,6 +135,8 @@ export const AuthProvider = ({ children }) => {
             setToken(null);
             setUser(null);
             setIsAuthenticated(false);
+            
+            console.log('Sesión cerrada correctamente');
             
             return { success: true, message: 'Logout exitoso' };
         } catch (error) {
@@ -134,9 +152,14 @@ export const AuthProvider = ({ children }) => {
      * Verificar si el token es válido
      */
     const verifyToken = async () => {
-        if (!token) return false;
+        if (!token) {
+            console.log('No hay token para verificar');
+            return false;
+        }
         
         try {
+            console.log('Verificando token...');
+            
             const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/auth/verify', {
                 method: 'GET',
                 headers: {
@@ -145,7 +168,15 @@ export const AuthProvider = ({ children }) => {
                 },
             });
             
-            return response.ok;
+            const isValid = response.ok;
+            console.log('Token válido:', isValid);
+            
+            if (!isValid) {
+                // Si el token no es válido, limpiar la sesión
+                await logout();
+            }
+            
+            return isValid;
         } catch (error) {
             console.error('Error al verificar token:', error);
             return false;
@@ -156,10 +187,30 @@ export const AuthProvider = ({ children }) => {
      * Obtener headers con token para peticiones autenticadas
      */
     const getAuthHeaders = () => {
+        if (!token) {
+            console.warn('No hay token disponible para headers de autenticación');
+            return {
+                'Content-Type': 'application/json',
+            };
+        }
+        
         return {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
         };
+    };
+
+    /**
+     * Actualizar información del usuario
+     */
+    const updateUser = async (userData) => {
+        try {
+            setUser(userData);
+            await AsyncStorage.setItem('userData', JSON.stringify(userData));
+            console.log('Información del usuario actualizada');
+        } catch (error) {
+            console.error('Error al actualizar usuario:', error);
+        }
     };
 
     const value = {
@@ -171,6 +222,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         verifyToken,
         getAuthHeaders,
+        updateUser,
     };
 
     return (
@@ -178,4 +230,4 @@ export const AuthProvider = ({ children }) => {
             {children}
         </AuthContext.Provider>
     );
-}; 
+};

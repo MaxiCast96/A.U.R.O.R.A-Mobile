@@ -11,7 +11,8 @@ import {
     Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import LinearGradient from 'react-native-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import KPICards from '../components/Home/KPICards';
 import DashboardCharts from '../components/Home/DashboardCharts';
@@ -33,6 +34,7 @@ import DashboardCharts from '../components/Home/DashboardCharts';
  * - Pull to refresh
  */
 const HomeScreen = () => {
+    const navigation = useNavigation(); // Hook de navegación
     const { user, getAuthHeaders } = useAuth();
     const [stats, setStats] = useState({
         totalClientes: 0,
@@ -60,19 +62,33 @@ const HomeScreen = () => {
      */
     const loadStats = async () => {
         try {
-            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/stats/dashboard', {
+            // Verificar que tenemos headers de autenticación
+            const headers = getAuthHeaders();
+            if (!headers || !headers.Authorization) {
+                console.log('No hay token de autenticación disponible');
+                return;
+            }
+
+            console.log('Cargando estadísticas...');
+            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/dashboard/all', {
                 method: 'GET',
-                headers: getAuthHeaders(),
+                headers: headers,
             });
+
+            console.log('Response status:', response.status);
 
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 console.log('El servidor no devolvió JSON válido para estadísticas');
+                const textResponse = await response.text();
+                console.log('Response text:', textResponse);
                 return;
             }
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('Datos recibidos:', data);
+                
                 setStats({
                     totalClientes: data.totalClientes || data.total_clientes || 0,
                     citasHoy: data.citasHoy || data.citas_hoy || 0,
@@ -81,7 +97,9 @@ const HomeScreen = () => {
                     pacientesActivos: data.pacientesActivos || data.pacientes_activos || 0
                 });
             } else {
-                console.log('No se pudieron cargar las estadísticas');
+                console.log('Error en la respuesta:', response.status);
+                const errorData = await response.text();
+                console.log('Error data:', errorData);
             }
         } catch (error) {
             console.error('Error al cargar estadísticas:', error);
@@ -102,9 +120,8 @@ const HomeScreen = () => {
      * Navegación al perfil
      */
     const handleProfilePress = () => {
-        // Aquí iría la navegación a More.js
         console.log('Navegando a configuración de perfil...');
-        // navigation.navigate('More');
+        navigation.navigate('More'); // Navegación a la pantalla More
     };
 
     /**
@@ -213,14 +230,14 @@ const HomeScreen = () => {
                 <View style={styles.topHeader}>
                     {/* Logo de la Óptica */}
                     <View style={styles.logoContainer}>
-                        <View style={styles.logoPlaceholder}>
-                            <Ionicons name="glasses-outline" size={24} color="#009BBF" />
-                        </View>
+                        <Ionicons name="glasses-outline" size={24} color="#009BBF" />
                     </View>
                     
                     {/* Saludo de Bienvenida */}
                     <View style={styles.greetingContainer}>
-                        <Text style={styles.greetingText}>Hola, {user?.nombre || user?.email || 'Usuario'}</Text>
+                        <Text style={styles.greetingText}>
+                            Hola, {user?.nombre || user?.email || 'Usuario'}
+                        </Text>
                     </View>
                     
                     {/* Botón de Perfil */}
@@ -334,16 +351,16 @@ const styles = StyleSheet.create({
     // Contenedor del saludo
     greetingContainer: {
         flex: 1,
-        alignItems: 'center',
+        alignItems: 'left',
         paddingHorizontal: 16,
     },
     
     // Texto del saludo
     greetingText: {
-        fontSize: 16,
+        fontSize: 24,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
-        textAlign: 'center',
+        textAlign: 'left',
     },
     
     // Botón de perfil

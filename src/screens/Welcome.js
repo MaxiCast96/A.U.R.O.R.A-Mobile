@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     
     // Título principal
     title: {
-        fontFamily: 'Lato-Bold', 
+        fontFamily: 'Lato', 
         fontSize: 30,
         fontWeight: 'bold',
         color: '#009BBF',

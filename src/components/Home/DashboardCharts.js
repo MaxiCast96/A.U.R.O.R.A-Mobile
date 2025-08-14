@@ -42,30 +42,66 @@ const DashboardCharts = () => {
         try {
             setLoading(true);
             
-            // Cargar datos de ventas mensuales
-            const salesResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/stats/sales-monthly', {
-                method: 'GET',
-                headers: getAuthHeaders(),
-            });
-
-            // Cargar datos de estado de citas
-            const appointmentsResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/stats/appointments-status', {
-                method: 'GET',
-                headers: getAuthHeaders(),
-            });
-
-            if (salesResponse.ok) {
-                const salesResult = await salesResponse.json();
-                setSalesData(processSalesData(salesResult));
+            // Verificar que tenemos headers de autenticación
+            const headers = getAuthHeaders();
+            if (!headers || !headers.Authorization) {
+                console.log('No hay token de autenticación disponible para gráficas');
+                setSalesData(getDefaultSalesData());
+                setAppointmentsData(getDefaultAppointmentsData());
+                setLoading(false);
+                return;
             }
 
-            if (appointmentsResponse.ok) {
-                const appointmentsResult = await appointmentsResponse.json();
-                setAppointmentsData(processAppointmentsData(appointmentsResult));
+            console.log('Cargando datos de gráficas...');
+
+            // Cargar datos de ventas mensuales
+            try {
+                console.log('Cargando datos de ventas...');
+                const salesResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/dashboard/ventas-mensuales', {
+                    method: 'GET',
+                    headers: headers,
+                });
+
+                console.log('Sales response status:', salesResponse.status);
+
+                if (salesResponse.ok) {
+                    const salesResult = await salesResponse.json();
+                    console.log('Datos de ventas recibidos:', salesResult);
+                    setSalesData(processSalesData(salesResult));
+                } else {
+                    console.log('Error al cargar ventas, usando datos por defecto');
+                    setSalesData(getDefaultSalesData());
+                }
+            } catch (salesError) {
+                console.error('Error en ventas:', salesError);
+                setSalesData(getDefaultSalesData());
+            }
+
+            // Cargar datos de estado de citas
+            try {
+                console.log('Cargando datos de estado de citas...');
+                const appointmentsResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/dashboard/estado-citas', {
+                    method: 'GET',
+                    headers: headers,
+                });
+
+                console.log('Appointments response status:', appointmentsResponse.status);
+
+                if (appointmentsResponse.ok) {
+                    const appointmentsResult = await appointmentsResponse.json();
+                    console.log('Datos de citas recibidos:', appointmentsResult);
+                    setAppointmentsData(processAppointmentsData(appointmentsResult));
+                } else {
+                    console.log('Error al cargar estado de citas, usando datos por defecto');
+                    setAppointmentsData(getDefaultAppointmentsData());
+                }
+            } catch (appointmentsError) {
+                console.error('Error en citas:', appointmentsError);
+                setAppointmentsData(getDefaultAppointmentsData());
             }
 
         } catch (error) {
-            console.error('Error al cargar datos de gráficas:', error);
+            console.error('Error general al cargar datos de gráficas:', error);
             // Datos de ejemplo en caso de error
             setSalesData(getDefaultSalesData());
             setAppointmentsData(getDefaultAppointmentsData());
@@ -78,16 +114,41 @@ const DashboardCharts = () => {
      * Procesar datos de ventas para la gráfica
      */
     const processSalesData = (data) => {
+        console.log('Procesando datos de ventas:', data);
+        
         const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
         const values = new Array(12).fill(0);
         
-        if (data && Array.isArray(data)) {
-            data.forEach(item => {
-                if (item.month && item.month >= 1 && item.month <= 12) {
-                    values[item.month - 1] = item.total || 0;
+        // Procesar diferentes estructuras de datos posibles
+        let salesArray = data;
+        
+        // Si data es un objeto, buscar la propiedad que contiene el array
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+            salesArray = data.ventas || data.ventasMensuales || data.data || data.results || [];
+        }
+        
+        if (Array.isArray(salesArray)) {
+            salesArray.forEach(item => {
+                // Manejar diferentes formatos de mes
+                let monthIndex = -1;
+                
+                if (item.mes) {
+                    monthIndex = parseInt(item.mes) - 1;
+                } else if (item.month) {
+                    monthIndex = parseInt(item.month) - 1;
+                } else if (item.fecha) {
+                    // Si viene una fecha, extraer el mes
+                    const date = new Date(item.fecha);
+                    monthIndex = date.getMonth();
+                }
+                
+                if (monthIndex >= 0 && monthIndex < 12) {
+                    values[monthIndex] = item.total || item.ventas || item.cantidad || 0;
                 }
             });
         }
+
+        console.log('Valores procesados para ventas:', values);
 
         return {
             labels: months,
@@ -103,45 +164,110 @@ const DashboardCharts = () => {
      * Procesar datos de citas para la gráfica de pastel
      */
     const processAppointmentsData = (data) => {
+        console.log('Procesando datos de citas:', data);
+        
         const colors = ['#009BBF', '#49AA4C', '#D0155F'];
         const defaultData = [
-            { name: 'Completada', population: 0, color: colors[0] },
-            { name: 'Pendiente', population: 0, color: colors[1] },
-            { name: 'Agendada', population: 0, color: colors[2] },
+            { 
+                name: 'Completada', 
+                population: 0, 
+                color: colors[0], 
+                legendFontColor: '#1A1A1A', 
+                legendFontSize: 12 
+            },
+            { 
+                name: 'Pendiente', 
+                population: 0, 
+                color: colors[1], 
+                legendFontColor: '#1A1A1A', 
+                legendFontSize: 12 
+            },
+            { 
+                name: 'Agendada', 
+                population: 0, 
+                color: colors[2], 
+                legendFontColor: '#1A1A1A', 
+                legendFontSize: 12 
+            },
         ];
 
-        if (data && Array.isArray(data)) {
-            data.forEach(item => {
-                const index = defaultData.findIndex(d => d.name.toLowerCase() === item.status?.toLowerCase());
-                if (index !== -1) {
-                    defaultData[index].population = item.count || 0;
+        // Procesar diferentes estructuras de datos posibles
+        let appointmentsArray = data;
+        
+        // Si data es un objeto, buscar la propiedad que contiene el array
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+            appointmentsArray = data.citas || data.estadoCitas || data.data || data.results || [];
+        }
+
+        if (Array.isArray(appointmentsArray)) {
+            appointmentsArray.forEach(item => {
+                // Buscar coincidencias por diferentes nombres de estado
+                const estado = (item.estado || item.status || item.tipo || '').toLowerCase();
+                
+                let targetItem = null;
+                
+                if (estado.includes('complet') || estado.includes('finaliz') || estado.includes('termin')) {
+                    targetItem = defaultData.find(d => d.name === 'Completada');
+                } else if (estado.includes('pendiente') || estado.includes('progreso') || estado.includes('proceso')) {
+                    targetItem = defaultData.find(d => d.name === 'Pendiente');
+                } else if (estado.includes('agenda') || estado.includes('program') || estado.includes('cita')) {
+                    targetItem = defaultData.find(d => d.name === 'Agendada');
+                }
+                
+                if (targetItem) {
+                    targetItem.population = item.cantidad || item.count || item.total || 0;
                 }
             });
         }
 
+        console.log('Datos procesados para citas:', defaultData);
         return defaultData;
     };
 
     /**
      * Datos por defecto para ventas
      */
-    const getDefaultSalesData = () => ({
-        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-        datasets: [{
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            color: (opacity = 1) => `rgba(0, 155, 191, ${opacity})`,
-            strokeWidth: 3,
-        }]
-    });
+    const getDefaultSalesData = () => {
+        console.log('Usando datos por defecto para ventas');
+        return {
+            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+            datasets: [{
+                data: [0, 1, 0, 2, 1, 0, 1, 0, 0, 0, 0, 0], // Algunos valores de ejemplo
+                color: (opacity = 1) => `rgba(0, 155, 191, ${opacity})`,
+                strokeWidth: 3,
+            }]
+        };
+    };
 
     /**
      * Datos por defecto para citas
      */
-    const getDefaultAppointmentsData = () => ([
-        { name: 'Completada', population: 2, color: '#009BBF' },
-        { name: 'Pendiente', population: 3, color: '#49AA4C' },
-        { name: 'Agendada', population: 1, color: '#D0155F' },
-    ]);
+    const getDefaultAppointmentsData = () => {
+        console.log('Usando datos por defecto para citas');
+        return [
+            { 
+                name: 'Completada', 
+                population: 2, 
+                color: '#009BBF', 
+                legendFontColor: '#1A1A1A', 
+                legendFontSize: 12 
+            },
+            { 
+                name: 'Pendiente', 
+                population: 3, 
+                color: '#49AA4C', 
+                legendFontColor: '#1A1A1A', 
+                legendFontSize: 12 
+            },
+            { 
+                name: 'Agendada', 
+                population: 1, 
+                color: '#D0155F', 
+                legendFontColor: '#1A1A1A', 
+                legendFontSize: 12 
+            },
+        ];
+    };
 
     /**
      * Configuración del gráfico
@@ -183,7 +309,7 @@ const DashboardCharts = () => {
             {/* Gráfica de Ventas Mensuales */}
             <View style={styles.chartContainer}>
                 <Text style={styles.chartTitle}>Ventas Mensuales</Text>
-                {salesData && (
+                {salesData ? (
                     <LineChart
                         data={salesData}
                         width={screenWidth - 60}
@@ -198,35 +324,47 @@ const DashboardCharts = () => {
                         withVerticalLines={false}
                         withHorizontalLines={true}
                     />
+                ) : (
+                    <Text style={styles.noDataText}>No hay datos de ventas disponibles</Text>
                 )}
             </View>
 
             {/* Gráfica de Estado de Citas */}
             <View style={styles.chartContainer}>
                 <Text style={styles.chartTitle}>Estado de Citas</Text>
-                {appointmentsData && (
+                {appointmentsData && appointmentsData.some(item => item.population > 0) ? (
                     <View style={styles.pieChartContainer}>
                         <PieChart
                             data={appointmentsData}
                             width={screenWidth - 60}
-                            height={200}
+                            height={220} // Aumentado para dar espacio a la leyenda con porcentajes
                             chartConfig={chartConfig}
                             accessor="population"
                             backgroundColor="transparent"
                             paddingLeft="15"
                             style={styles.chart}
+                            hasLegend={true} // Activamos la leyenda para mostrar porcentajes
+                            absolute // Muestra valores absolutos y porcentajes
                         />
+                        {/* Leyenda personalizada adicional si es necesaria */}
                         <View style={styles.legend}>
-                            {appointmentsData.map((item, index) => (
-                                <View key={index} style={styles.legendItem}>
-                                    <View style={[styles.legendColor, { backgroundColor: item.color }]} />
-                                    <Text style={styles.legendText}>
-                                        {item.name}: {item.population}
-                                    </Text>
-                                </View>
-                            ))}
+                            {appointmentsData.map((item, index) => {
+                                const total = appointmentsData.reduce((sum, data) => sum + data.population, 0);
+                                const percentage = total > 0 ? Math.round((item.population / total) * 100) : 0;
+                                
+                                return (
+                                    <View key={index} style={styles.legendItem}>
+                                        <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                                        <Text style={styles.legendText}>
+                                            {item.name}: {item.population} ({percentage}%)
+                                        </Text>
+                                    </View>
+                                );
+                            })}
                         </View>
                     </View>
+                ) : (
+                    <Text style={styles.noDataText}>No hay datos de citas disponibles</Text>
                 )}
             </View>
         </Animated.View>
@@ -244,6 +382,14 @@ const styles = StyleSheet.create({
         color: '#666666',
         textAlign: 'center',
         padding: 40,
+    },
+    noDataText: {
+        fontSize: 14,
+        fontFamily: 'Lato-Regular',
+        color: '#999999',
+        textAlign: 'center',
+        padding: 20,
+        fontStyle: 'italic',
     },
     chartContainer: {
         backgroundColor: '#FFFFFF',
