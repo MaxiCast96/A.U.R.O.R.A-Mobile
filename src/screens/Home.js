@@ -121,7 +121,7 @@ const HomeScreen = () => {
      */
     const handleProfilePress = () => {
         console.log('Navegando a configuración de perfil...');
-        navigation.navigate('More'); // Navegación a la pantalla More
+        navigation.navigate('Profile'); 
     };
 
     /**
@@ -230,7 +230,9 @@ const HomeScreen = () => {
                 <View style={styles.topHeader}>
                     {/* Logo de la Óptica */}
                     <View style={styles.logoContainer}>
-                        <Ionicons name="glasses-outline" size={24} color="#009BBF" />
+                        <Image
+                            source={require('../../assets/logo-para-fondo-blanco.png')}
+                        />
                     </View>
                     
                     {/* Saludo de Bienvenida */}

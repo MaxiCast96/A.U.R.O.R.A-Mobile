@@ -266,15 +266,8 @@ const MenuScreen = () => {
                     <View style={styles.essentialsSection}>
                         <Text style={styles.essentialsTitle}>Esenciales Óptica</Text>
                         <View style={styles.essentialsGrid}>
-                            <TouchableOpacity 
-                                style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Home')}
-                            >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
-                                    <Ionicons name="grid-outline" size={24} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.essentialText}>Dashboard</Text>
-                            </TouchableOpacity>
+
+                            
 
                             <TouchableOpacity 
                                 style={styles.essentialItem}
@@ -304,6 +297,16 @@ const MenuScreen = () => {
                                     <Ionicons name="glasses-outline" size={24} color="#FFFFFF" />
                                 </View>
                                 <Text style={styles.essentialText}>Lentes</Text>
+                            </TouchableOpacity>
+
+                             <TouchableOpacity 
+                                style={styles.essentialItem}
+                                onPress={() => Alert.alert('Reportes', 'Funcionalidad próximamente')}
+                            >
+                                <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
+                                    <Ionicons name="analytics-outline" size={24} color="#FFFFFF" />
+                                </View>
+                                <Text style={styles.essentialText}>Reportes</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

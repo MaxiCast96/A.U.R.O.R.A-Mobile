@@ -2,10 +2,11 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TabNavigator from './TabNavigation';
+import Profile from '../screens/Profile';
 import SplashScreen from '../screens/SplashScreen';
 import Login from '../screens/Login';
 import Welcome from '../screens/Welcome';
-import Menu from '../screens/Menu'; // Nuevo import para acceso directo
+import Menu from '../screens/Menu'; 
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -60,6 +61,10 @@ export default function Navigation() {
                 
                 {/* Navegación principal con tabs */}
                 <Stack.Screen name="Main" component={TabNavigator} />
+
+                {/* Navegación de Perfil */}
+                <Stack.Screen name="Profile" component={Profile} />
+
 
                 {/* Pantalla de menú - acceso directo para navegación desde otras pantallas */}
                 <Stack.Screen 

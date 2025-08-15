@@ -1,11 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Ionicons from '@expo/vector-icons/Ionicons';
-
 import Home from '../screens/Home';
 import Citas from '../screens/Citas';
-import More from '../screens/More';
-import Menu from '../screens/Menu'; // Nuevo import
+import Menu from '../screens/Menu'; 
 import FloatingTabBar from '../components/FloatingTabBar';
 
 const Tab = createBottomTabNavigator();
@@ -53,7 +50,7 @@ const TabNavigator = () => (
 
         {/* Pantalla de menú principal - NUEVA */}
         <Tab.Screen 
-            name="Menu" 
+            name="More" 
             component={Menu} 
             options={{ 
                 title: 'Operaciones',
@@ -75,17 +72,7 @@ const TabNavigator = () => (
             }} 
         />
 
-         {/* Pantalla de opciones adicionales */}
-        <Tab.Screen 
-            name="More" 
-            component={More} 
-            options={{ 
-                title: 'Más',
-                tabBarLabel: 'Más',
-                // Configuración específica para esta pantalla
-                animation: 'slide_from_right',
-            }} 
-        />
+       
     </Tab.Navigator>
 );
 

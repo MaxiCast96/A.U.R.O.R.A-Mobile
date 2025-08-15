@@ -166,7 +166,7 @@ const DashboardCharts = () => {
     const processAppointmentsData = (data) => {
         console.log('Procesando datos de citas:', data);
         
-        const colors = ['#009BBF', '#49AA4C', '#D0155F'];
+        const colors = ['#49AA4C', '#D0155F', '#009BBF'];
         const defaultData = [
             { 
                 name: 'Completada', 

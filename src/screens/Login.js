@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Input from '../components/Input';
+import Input from '../components/Login/Input';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 
