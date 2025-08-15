@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TabNavigator from './TabNavigation';
 import SplashScreen from '../screens/SplashScreen';
 import Login from '../screens/Login';
-import Register from '../screens/Register';
 import Welcome from '../screens/Welcome';
 import Menu from '../screens/Menu'; // Nuevo import para acceso directo
 import { useAuth } from '../context/AuthContext';
@@ -31,9 +30,8 @@ const LoadingScreen = () => (
  * Flujo de navegación:
  * 1. Splash Screen (pantalla de carga con logo y animación)
  * 2. Login (si no está autenticado) o Main (si está autenticado)
- * 3. Register (pantalla de registro)
- * 4. Main (tab navigator con las pantallas principales)
- * 5. Menu (pantalla de operaciones - accesible desde tabs y directamente)
+ * 3. Main (tab navigator con las pantallas principales)
+ * 4. Menu (pantalla de operaciones - accesible desde tabs y directamente)
  */
 export default function Navigation() {
     const { isAuthenticated, isLoading } = useAuth();
@@ -59,9 +57,6 @@ export default function Navigation() {
 
                 {/* Pantalla de login */}
                 <Stack.Screen name="Login" component={Login} />
-
-                {/* Pantalla de registro */}
-                <Stack.Screen name="Register" component={Register} />
                 
                 {/* Navegación principal con tabs */}
                 <Stack.Screen name="Main" component={TabNavigator} />

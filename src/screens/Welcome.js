@@ -4,33 +4,11 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Button from '../components/Button';
 
-/**
- * Pantalla de Bienvenida
- * 
- * Esta pantalla es la primera que ve el usuario al abrir la aplicación.
- * Permite elegir entre iniciar sesión o registrarse.
- * 
- * Funcionalidades:
- * - Navegación al Login
- * - Navegación al Register
- * - Diseño atractivo con logo de la óptica
- * - Degradado superior para mayor atractivo visual
- */
 const Welcome = () => {
     const navigation = useNavigation();
 
-    /**
-     * Navegar a la pantalla de Login
-     */
     const handleGoToLogin = () => {
         navigation.navigate('Login');
-    };
-
-    /**
-     * Navegar a la pantalla de Register
-     */
-    const handleGoToRegister = () => {
-        navigation.navigate('Register');
     };
 
     return (
@@ -41,45 +19,30 @@ const Welcome = () => {
                 locations={[0, 0.6]}
                 style={styles.gradient}
             />
-            
-            <View style={styles.content}>
+            <View style={styles.centeredContent}>
                 {/* Logo de la óptica */}
-                <View style={styles.logoContainer}>
-                    <Image
-                        source={require('../assets/ojo.png')}
-                        style={styles.logo}
-                        resizeMode="contain"
-                    />
-                </View>
+                <Image
+                    source={require('../assets/ojoo.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
 
                 {/* Título y mensaje de bienvenida */}
-                <View style={styles.welcomeContainer}>
-                    <Text style={styles.title}>
-                        ¡BIENVENIDO A ÓPTICA LA INTELIGENTE!
-                    </Text>
-                    <Text style={styles.subtitle}>
-                        ¡Selecciona tu opción para comenzar!
-                    </Text>
-                </View>
+                <Text style={styles.title}>
+                    ¡BIENVENIDO A ÓPTICA LA INTELIGENTE!
+                </Text>
+                <Text style={styles.subtitle}>
+                    ¡Selecciona tu opción para comenzar!
+                </Text>
 
-                {/* Botones de acción */}
-                <View style={styles.buttonsContainer}>
-                    <Button
-                        title="Registrarse"
-                        onPress={handleGoToRegister}
-                        variant="outline"
-                        size="large"
-                        style={styles.registerButton}
-                    />
-                    
-                    <Button
-                        title="Iniciar sesión"
-                        onPress={handleGoToLogin}
-                        variant="primary"
-                        size="large"
-                        style={styles.loginButton}
-                    />
-                </View>
+                {/* Botón de login */}
+                <Button
+                    title="Iniciar sesión"
+                    onPress={handleGoToLogin}
+                    variant="primary"
+                    size="large"
+                    style={styles.loginButton}
+                />
 
                 {/* Indicador inferior */}
                 <View style={styles.indicator} />
@@ -89,13 +52,10 @@ const Welcome = () => {
 };
 
 const styles = StyleSheet.create({
-    // Contenedor principal
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
     },
-    
-    // Degradado superior
     gradient: {
         position: 'absolute',
         left: 0,
@@ -103,90 +63,47 @@ const styles = StyleSheet.create({
         top: 0,
         height: '60%',
     },
-    
-    // Contenedor del contenido
-    content: {
+    centeredContent: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
         paddingHorizontal: 24,
-        paddingVertical: 40,
-        justifyContent: 'space-between',
-        alignItems: 'center',
     },
-    
-    // Contenedor del logo
-    logoContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 40,
-    },
-    
-    // Logo
     logo: {
-        width: 240,
-        height: 160,
-        marginBottom: 20,
+        width: 200,
+        height: 140,
+        marginBottom: 24,
+        marginTop: 10,
     },
-    
-    // Contenedor de bienvenida
-    welcomeContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        maxWidth: 400,
-    },
-    
-    // Título principal
     title: {
-        fontFamily: 'Lato', 
-        fontSize: 30,
+        fontFamily: 'Lato',
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#009BBF',
         textAlign: 'center',
-        marginBottom: 40,
+        marginBottom: 16,
         lineHeight: 32,
         letterSpacing: 1.5,
     },
-    
-    // Subtítulo
     subtitle: {
         fontFamily: 'Lato-Regular',
         fontSize: 16,
         color: '#666666',
         textAlign: 'center',
         lineHeight: 24,
-        paddingHorizontal: 10,
+        marginBottom: 32,
     },
-    
-    // Contenedor de botones
-    buttonsContainer: {
-        width: '100%',
-        paddingHorizontal: 20,
-        marginBottom: 40,
-    },
-    
-    // Botón de registro
-    registerButton: {
-        marginBottom: 16,
-        width: '100%',
-        borderColor: '#009BBF',
-        borderWidth: 2,
-    },
-    
-    // Botón de login
     loginButton: {
-        width: '100%',
+        width: 220,
         backgroundColor: '#009BBF',
+        marginBottom: 32,
     },
-    
-    // Indicador inferior
     indicator: {
         width: 60,
         height: 4,
         backgroundColor: '#E5E7EB',
         borderRadius: 2,
-        marginBottom: 20,
+        marginTop: 16,
     },
 });
 
