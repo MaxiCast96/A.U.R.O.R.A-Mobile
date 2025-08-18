@@ -3,66 +3,80 @@
 ![Logo del proyecto](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTeSP1tTjjpFSC_UfBfzaTO3R2i_Z_cIxbnIARcPaZlnBNPUHzQa58ogB3wfKNc7MwRynU&usqp=CAU)
 
 ## Descripción del Proyecto
-**Advanced Unified Retail & Optical Resource Administration (A.U.R.O.R.A)** es un sistema integral diseñado para la administración eficiente de catálogos y citas en **Óptica Inteligente**.
+**Advanced Unified Retail & Optical Resource Administration (A.U.R.O.R.A) - Mobile** es la aplicación móvil administrativa complementaria al sistema web de **Óptica Inteligente**. Esta aplicación está diseñada para proporcionar a los administradores y empleados una herramienta móvil eficiente para gestionar operaciones clave desde cualquier lugar.
 
-El sistema está desarrollado utilizando las tecnologías **MERN** (MongoDB, Express, React, Node.js), lo que garantiza robustez, escalabilidad y una experiencia fluida para los usuarios.
+El sistema está desarrollado utilizando **React Native** con **Expo**, garantizando una experiencia nativa en dispositivos iOS y Android con un código base unificado.
 
 ## Características Principales
-- 📋 **Gestión de Catálogos**: Administra productos ópticos de manera eficiente.
-- 📆 **Gestión de Citas**: Organiza y programa citas con clientes fácilmente.
-- ⚡ **Interfaz Intuitiva**: Una experiencia de usuario optimizada y amigable.
-- 🔐 **Sistema de Autenticación**: Login, registro y recuperación de contraseñas.
-- 📊 **Dashboard Administrativo**: Estadísticas y gráficas en tiempo real.
-- 📱 **Diseño Responsive**: Adaptable a todos los dispositivos.
+- 📱 **Aplicación Nativa**: Compatible con iOS y Android
+- 🏢 **Gestión Administrativa**: Control total de operaciones desde móvil
+- 👥 **Gestión de Clientes**: Registro y administración de clientes
+- 📅 **Gestión de Citas**: Programación y seguimiento de citas
+- 🕶️ **Catálogo de Productos**: Administración de lentes y accesorios
+- 📊 **Dashboard Móvil**: Estadísticas y gráficas optimizadas para móvil
+- 🔐 **Autenticación Segura**: Login y gestión de sesiones
+- 📸 **Carga de Imágenes**: Subida de fotos de productos y perfiles
+- 🎨 **Diseño Adaptativo**: Interfaz optimizada para diferentes tamaños de pantalla
+- ⚡ **Rendimiento Optimizado**: Navegación fluida y carga rápida
 
 ## Tecnologías Utilizadas
 
-### Frontend
-- **React.js**: Librería frontend para interfaces interactivas
-- **Vite**: Build tool y servidor de desarrollo
-- **Tailwind CSS**: Framework de CSS para diseño responsive
-- **Framer Motion**: Animaciones y transiciones
-- **Axios**: Cliente HTTP para peticiones al backend
-- **React Router**: Navegación entre páginas
-- **Lucide React**: Iconos modernos
+### Framework Principal
+- **React Native**: Framework para desarrollo de aplicaciones móviles nativas
+- **Expo**: Plataforma y herramientas para desarrollo React Native
+- **React**: Librería base (v19.0.0)
 
-### Backend
-- **Node.js**: Entorno de ejecución para el backend
-- **Express.js**: Framework backend para Node.js
-- **MongoDB**: Base de datos NoSQL
-- **Mongoose**: ODM para MongoDB
-- **JWT**: Autenticación con tokens
-- **bcryptjs**: Encriptación de contraseñas
-- **Cloudinary**: Almacenamiento de imágenes
-- **Nodemailer**: Envío de emails
-- **Multer**: Manejo de archivos
+### Navegación
+- **@react-navigation/native**: Navegación principal para React Native
+- **@react-navigation/native-stack**: Navegación en pila
+- **@react-navigation/bottom-tabs**: Navegación con pestañas inferiores
+- **react-native-screens**: Optimización de rendimiento de pantallas
+- **react-native-safe-area-context**: Manejo de áreas seguras
+
+### UI y Diseño
+- **@expo/vector-icons**: Iconos vectoriales para Expo
+- **react-native-vector-icons**: Biblioteca adicional de iconos
+- **expo-linear-gradient**: Gradientes lineales
+- **react-native-linear-gradient**: Gradientes nativos adicionales
+- **react-native-svg**: Soporte para gráficos SVG
+
+### Funcionalidades Específicas
+- **axios**: Cliente HTTP para peticiones al backend
+- **@react-native-async-storage/async-storage**: Almacenamiento local persistente
+- **expo-image-picker**: Selección y captura de imágenes
+- **react-native-chart-kit**: Gráficas y visualizaciones de datos
+- **expo-status-bar**: Control de la barra de estado
+
+### Herramientas de Desarrollo
+- **@babel/core**: Transpilador de JavaScript
+- **Expo CLI**: Herramientas de línea de comandos para desarrollo
 
 ## Estructura del Proyecto
 
 ```
-A.U.R.O.R.A/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/     # Lógica de negocio
-│   │   ├── models/          # Modelos de MongoDB
-│   │   ├── routes/          # Rutas de la API
-│   │   └── config.js        # Configuración
-│   ├── uploads/             # Archivos temporales
-│   ├── app.js              # Configuración de Express
-│   ├── database.js         # Conexión a MongoDB
-│   └── index.js            # Punto de entrada
-├── frontend/
-│   ├── src/
-│   │   ├── components/      # Componentes React
-│   │   │   ├── Admin/       # Componentes administrativos
-│   │   │   ├── auth/        # Autenticación
-│   │   │   ├── layout/      # Layout principal
-│   │   │   └── ui/          # Componentes reutilizables
-│   │   ├── hooks/           # Custom hooks
-│   │   ├── pages/           # Páginas de la aplicación
-│   │   └── assets/          # Recursos estáticos
-│   ├── public/              # Archivos públicos
-│   └── index.html           # HTML principal
+A.U.R.O.R.A-Mobile/
+├── src/
+│   ├── components/          # Componentes reutilizables
+│   │   ├── common/         # Componentes comunes
+│   │   ├── forms/          # Formularios
+│   │   └── charts/         # Gráficas y visualizaciones
+│   ├── screens/            # Pantallas de la aplicación
+│   │   ├── Auth/          # Autenticación
+│   │   ├── Dashboard/     # Panel principal
+│   │   ├── Clients/       # Gestión de clientes
+│   │   ├── Appointments/  # Gestión de citas
+│   │   └── Products/      # Catálogo de productos
+│   ├── navigation/         # Configuración de navegación
+│   ├── services/          # Servicios y API calls
+│   ├── utils/             # Utilidades y helpers
+│   ├── hooks/             # Custom hooks
+│   └── constants/         # Constantes y configuración
+├── assets/                # Recursos estáticos
+│   ├── images/           # Imágenes
+│   ├── icons/            # Iconos personalizados
+│   └── fonts/            # Fuentes tipográficas
+├── app.json              # Configuración de Expo
+├── package.json          # Dependencias del proyecto
 └── README.md
 ```
 
@@ -70,162 +84,213 @@ A.U.R.O.R.A/
 
 ### Convenciones de Nomenclatura
 
-#### Archivos y Carpetas
+#### Archivos y Componentes
+- **PascalCase**: Componentes React Native, pantallas
 - **camelCase**: Variables, funciones, métodos, propiedades
-- **PascalCase**: Componentes React, clases, interfaces
-- **kebab-case**: URLs, rutas, nombres de archivos HTML/CSS
-- **snake_case**: Nombres de archivos del backend (controladores, modelos)
+- **kebab-case**: Nombres de archivos de configuración
+- **UPPER_SNAKE_CASE**: Constantes globales
 
 #### Variables y Funciones
 ```javascript
 // Variables - camelCase
 const userName = 'John';
-const isAuthenticated = true;
-const userData = {};
+const isLoggedIn = true;
+const clientData = {};
 
 // Funciones - camelCase
-const handleSubmit = () => {};
-const validateForm = () => {};
-const fetchUserData = () => {};
+const handleLogin = () => {};
+const fetchClients = () => {};
+const validateInput = () => {};
 
 // Componentes - PascalCase
-const UserProfile = () => {};
-const AuthModal = () => {};
-const DashboardContent = () => {};
+const ClientCard = () => {};
+const AuthScreen = () => {};
+const DashboardHeader = () => {};
 
 // Constantes - UPPER_SNAKE_CASE
 const API_BASE_URL = 'http://localhost:4000';
-const MAX_FILE_SIZE = 5242880;
+const SCREEN_NAMES = {
+  HOME: 'Home',
+  CLIENTS: 'Clients'
+};
 ```
 
-#### Base de Datos
-- **Colecciones**: PascalCase (Clientes, Empleados, Citas)
-- **Campos**: camelCase (nombre, apellido, fechaCreacion)
-- **Índices**: snake_case (idx_email, idx_created_at)
-
-#### API Endpoints
-- **Rutas**: kebab-case (/api/registro-clientes, /api/historial-medico)
-- **Métodos**: camelCase (getClientes, createEmpleado, updateCita)
+#### Pantallas y Navegación
+- **Pantallas**: PascalCase (LoginScreen, ClientsScreen, DashboardScreen)
+- **Navegadores**: PascalCase (AuthNavigator, TabNavigator)
+- **Rutas**: camelCase (clientsList, appointmentDetail)
 
 ## Instalación y Configuración
 
 ### Prerrequisitos
 - Node.js (v18 o superior)
-- MongoDB (v6 o superior)
 - npm o yarn
+- Expo CLI (`npm install -g @expo/cli`)
+- Dispositivo físico con Expo Go o emulador
+- Conexión al backend de A.U.R.O.R.A Web
 
-### Backend
+### Configuración del Proyecto
 
-1. **Instalar dependencias**:
+1. **Clonar el repositorio**:
 ```bash
-cd backend
+git clone [URL_DEL_REPOSITORIO]
+cd A.U.R.O.R.A-Mobile
+```
+
+2. **Instalar dependencias**:
+```bash
 npm install
 ```
 
-2. **Configurar variables de entorno**:
-Crear archivo `.env` en la carpeta `backend/`:
-```env
-# Base de datos
-DB_URI=mongodb://localhost:27017/aurora_db
-
-# Servidor
-PORT=4000
-
-# JWT
-JWT_SECRET=tu_jwt_secret_super_seguro
-JWT_EXPIRE=24h
-
-# Email (Gmail)
-USER_EMAIL=tu_email@gmail.com
-USER_PASS=tu_password_de_aplicacion
-
-# Cloudinary
-CLOUD_NAME=tu_cloud_name
-CLOUDINARY_API_KEY=tu_api_key
-CLOUDINARY_API_SECRET=tu_api_secret
-
-# Frontend URL
-FRONTEND_URL=http://localhost:5173
+3. **Configurar variables de entorno**:
+Crear archivo `app.config.js` o configurar en `app.json`:
+```javascript
+export default {
+  expo: {
+    extra: {
+      API_URL: "http://tu-backend-url:4000/api",
+      CLOUDINARY_CLOUD_NAME: "tu_cloud_name",
+      CLOUDINARY_UPLOAD_PRESET: "tu_upload_preset"
+    }
+  }
+};
 ```
 
-3. **Ejecutar el servidor**:
+4. **Ejecutar la aplicación**:
+
+**Desarrollo general**:
 ```bash
-npm run dev
+npm start
+# o
+expo start
 ```
 
-### Frontend
-
-1. **Instalar dependencias**:
+**Android**:
 ```bash
-cd frontend
-npm install
+npm run android
+# o
+expo start --android
 ```
 
-2. **Configurar variables de entorno**:
-Crear archivo `.env` en la carpeta `frontend/`:
-```env
-VITE_API_URL=http://localhost:4000/api
-VITE_CLOUDINARY_CLOUD_NAME=tu_cloud_name
-VITE_CLOUDINARY_UPLOAD_PRESET=tu_upload_preset
-```
-
-3. **Ejecutar el cliente**:
+**iOS**:
 ```bash
-npm run dev
+npm run ios
+# o
+expo start --ios
+```
+
+**Web (desarrollo)**:
+```bash
+npm run web
+# o
+expo start --web
 ```
 
 ## Funcionalidades Implementadas
 
 ### ✅ Autenticación y Autorización
-- Login unificado (clientes y empleados)
-- Registro con verificación por email
-- Recuperación de contraseñas
+- Login para empleados y administradores
+- Gestión de sesiones con AsyncStorage
 - Rutas protegidas por roles
-- JWT en cookies seguras
+- Logout seguro con limpieza de datos
 
-### ✅ CRUD Completo (8 módulos)
-1. **Clientes**: Gestión completa de clientes
-2. **Empleados**: Administración de personal
-3. **Recetas**: Gestión médica de recetas
-4. **Citas**: Programación de citas
-5. **Lentes**: Catálogo de lentes
-6. **Accesorios**: Gestión de accesorios
-7. **Marcas**: Administración de marcas
-8. **Categorías**: Clasificación de productos
+### ✅ Panel Administrativo Móvil
+- Dashboard con estadísticas en tiempo real
+- Gráficas optimizadas para móvil
+- Navegación intuitiva con tabs
+- Información resumida y accesible
 
-### ✅ Validaciones
-- **Frontend**: Validaciones en tiempo real con react-hook-form
-- **Backend**: Validaciones de seguridad y formato
-- **Base de datos**: Validaciones a nivel de esquema
+### ✅ Gestión de Clientes
+- Lista de clientes con búsqueda
+- Registro de nuevos clientes
+- Edición de información
+- Visualización de historial
 
-### ✅ Características Avanzadas
-- Dashboard con estadísticas y gráficas
-- Subida de imágenes con Cloudinary
-- Sistema de notificaciones
-- Diseño responsive con Tailwind CSS
-- Paginación y filtros
-- Búsqueda en tiempo real
+### ✅ Gestión de Citas
+- Calendario de citas
+- Programación desde móvil
+- Estados de citas (pendiente, confirmada, completada)
+- Notificaciones y recordatorios
+
+### ✅ Catálogo de Productos
+- Visualización de lentes y accesorios
+- Gestión de inventario básico
+- Carga de imágenes de productos
+- Categorización y marcas
+
+### ✅ Características Técnicas
+- Navegación fluida entre pantallas
+- Carga optimizada de imágenes
+- Manejo de estados de carga
+- Gestión de errores y conectividad
+- Diseño responsive para diferentes dispositivos
 
 ## Scripts Disponibles
 
-### Backend
 ```bash
-npm run dev      # Desarrollo con nodemon
-npm start        # Producción
+npm start        # Iniciar Expo development server
+npm run android  # Ejecutar en Android
+npm run ios      # Ejecutar en iOS
+npm run web      # Ejecutar en navegador web
 ```
 
-### Frontend
+## Construcción para Producción
+
+### Android (APK/AAB)
 ```bash
-npm run dev      # Desarrollo
-npm run build    # Construir para producción
-npm run preview  # Vista previa de producción
-npm run lint     # Linting del código
+expo build:android
+# o para AAB
+expo build:android -t app-bundle
 ```
+
+### iOS (IPA)
+```bash
+expo build:ios
+```
+
+### Configuración de Build
+Actualizar `app.json` con la configuración necesaria:
+```json
+{
+  "expo": {
+    "name": "A.U.R.O.R.A Mobile",
+    "slug": "aurora-mobile",
+    "version": "1.0.0",
+    "platforms": ["ios", "android"],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png"
+    },
+    "android": {
+      "package": "com.opticainteligente.aurora"
+    },
+    "ios": {
+      "bundleIdentifier": "com.opticainteligente.aurora"
+    }
+  }
+}
+```
+
+## Conexión con Backend
+La aplicación móvil se conecta al mismo backend que la versión web de A.U.R.O.R.A, utilizando:
+- **API REST**: Comunicación con axios
+- **Autenticación JWT**: Tokens almacenados de forma segura
+- **Subida de imágenes**: Integración con Cloudinary
+- **Sincronización**: Datos en tiempo real con el sistema web
+
+## Características de Rendimiento
+- **Lazy Loading**: Carga diferida de componentes
+- **Optimización de imágenes**: Compresión automática
+- **Caché inteligente**: AsyncStorage para datos frecuentes
+- **Navegación optimizada**: React Navigation con screens optimizadas
 
 ## Integrantes del equipo:
 - Guillermo Rodrigo Chávez Mejía
 - Luis Fernando Navarró Alemán
 - Jhonatan Josué Valle Gamboa
 - Kevin Josue Alvarado Hernandez
-- Fernando Ariel 
-     
+- Fernando Ariel
+
+---
+
+**Nota**: Esta aplicación móvil está diseñada para complementar el sistema web A.U.R.O.R.A, proporcionando funcionalidades administrativas clave en un formato móvil optimizado para el personal de Óptica Inteligente.
