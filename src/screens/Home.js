@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-    View, 
-    Text, 
-    StyleSheet, 
-    ScrollView, 
-    Alert, 
+import {
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    Alert,
     RefreshControl,
     Animated,
     TouchableOpacity,
@@ -17,24 +17,8 @@ import { useAuth } from '../context/AuthContext';
 import KPICards from '../components/Home/KPICards';
 import DashboardCharts from '../components/Home/DashboardCharts';
 
-/**
- * Pantalla de Home (Inicio) Mejorada
- * 
- * Esta pantalla muestra un dashboard completo con indicadores clave,
- * gráficas interactivas y acciones rápidas, imitando la interfaz
- * de escritorio con una experiencia móvil optimizada.
- * 
- * Funcionalidades:
- * - Acciones rápidas en la parte superior
- * - Mensaje de bienvenida personalizado
- * - Indicadores clave de rendimiento (KPI)
- * - Gráficas de ventas y estado de citas
- * - Datos reales de la API
- * - Animaciones sutiles
- * - Pull to refresh
- */
 const HomeScreen = () => {
-    const navigation = useNavigation(); // Hook de navegación
+    const navigation = useNavigation();
     const { user, getAuthHeaders } = useAuth();
     const [stats, setStats] = useState({
         totalClientes: 0,
@@ -43,13 +27,13 @@ const HomeScreen = () => {
         ingresosMes: 0,
         pacientesActivos: 0
     });
+    const [profileData, setProfileData] = useState({});
     const [refreshing, setRefreshing] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         loadStats();
-        
-        // Animación de entrada
+        loadProfileData(); // Cargar datos del perfil
         Animated.timing(fadeAnim, {
             toValue: 1,
             duration: 800,
@@ -57,26 +41,49 @@ const HomeScreen = () => {
         }).start();
     }, []);
 
-    /**
-     * Cargar estadísticas completas de la óptica
-     */
+    // Función para cargar los datos del perfil
+    const loadProfileData = async () => {
+        try {
+            const headers = getAuthHeaders();
+            if (!headers || !headers.Authorization) {
+                console.log('No hay token de autenticación disponible para perfil');
+                return;
+            }
+            
+            const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/empleados/${user.id}`, {
+                method: 'GET',
+                headers: headers,
+            });
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.log('El servidor no devolvió JSON válido para perfil');
+                return;
+            }
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Datos del perfil cargados en Home:', data);
+                setProfileData(data);
+            }
+        } catch (error) {
+            console.error('Error al cargar perfil en Home:', error);
+        }
+    };
+
     const loadStats = async () => {
         try {
-            // Verificar que tenemos headers de autenticación
             const headers = getAuthHeaders();
             if (!headers || !headers.Authorization) {
                 console.log('No hay token de autenticación disponible');
                 return;
             }
-
             console.log('Cargando estadísticas...');
             const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/dashboard/all', {
                 method: 'GET',
                 headers: headers,
             });
-
             console.log('Response status:', response.status);
-
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 console.log('El servidor no devolvió JSON válido para estadísticas');
@@ -84,11 +91,9 @@ const HomeScreen = () => {
                 console.log('Response text:', textResponse);
                 return;
             }
-
             if (response.ok) {
                 const data = await response.json();
                 console.log('Datos recibidos:', data);
-                
                 setStats({
                     totalClientes: data.totalClientes || data.total_clientes || 0,
                     citasHoy: data.citasHoy || data.citas_hoy || 0,
@@ -103,38 +108,28 @@ const HomeScreen = () => {
             }
         } catch (error) {
             console.error('Error al cargar estadísticas:', error);
-            // Mantener valores por defecto en caso de error
         }
     };
 
-    /**
-     * Función de refresh
-     */
     const onRefresh = async () => {
         setRefreshing(true);
-        await loadStats();
+        await Promise.all([loadStats(), loadProfileData()]);
         setRefreshing(false);
     };
 
-    /**
-     * Navegación al perfil
-     */
     const handleProfilePress = () => {
         console.log('Navegando a configuración de perfil...');
-        navigation.navigate('Profile'); 
+        navigation.navigate('Profile');
     };
 
-    /**
-     * Funciones para las acciones rápidas
-     */
     const handleCreateLentes = () => {
         Alert.alert(
             'Crear Lentes',
             '¿Desea crear un nuevo registro de lentes?',
             [
                 { text: 'Cancelar', style: 'cancel' },
-                { 
-                    text: 'Crear', 
+                {
+                    text: 'Crear',
                     onPress: () => {
                         console.log('Navegando a crear lentes...');
                     }
@@ -149,8 +144,8 @@ const HomeScreen = () => {
             '¿Desea agendar una nueva cita?',
             [
                 { text: 'Cancelar', style: 'cancel' },
-                { 
-                    text: 'Crear', 
+                {
+                    text: 'Crear',
                     onPress: () => {
                         console.log('Navegando a crear cita...');
                     }
@@ -165,8 +160,8 @@ const HomeScreen = () => {
             '¿Desea crear una nueva receta médica?',
             [
                 { text: 'Cancelar', style: 'cancel' },
-                { 
-                    text: 'Crear', 
+                {
+                    text: 'Crear',
                     onPress: () => {
                         console.log('Navegando a crear receta...');
                     }
@@ -181,8 +176,8 @@ const HomeScreen = () => {
             '¿Desea crear una nueva promoción?',
             [
                 { text: 'Cancelar', style: 'cancel' },
-                { 
-                    text: 'Crear', 
+                {
+                    text: 'Crear',
                     onPress: () => {
                         console.log('Navegando a crear promoción...');
                     }
@@ -191,9 +186,6 @@ const HomeScreen = () => {
         );
     };
 
-    /**
-     * Renderizar botón de acción rápida con degradado
-     */
     const renderQuickActionButton = (title, icon, onPress) => (
         <TouchableOpacity
             style={styles.quickActionButton}
@@ -212,8 +204,28 @@ const HomeScreen = () => {
         </TouchableOpacity>
     );
 
+    // Obtener la URL de la foto de perfil desde múltiples fuentes
+    const getProfilePhotoUrl = () => {
+        return profileData.photoUrl || 
+               profileData.fotoPerfil || 
+               user?.photoUrl || 
+               user?.fotoPerfil || 
+               null;
+    };
+
+    // Obtener el nombre del usuario
+    const getUserName = () => {
+        return profileData.nombre || 
+               user?.nombre || 
+               user?.email || 
+               'Usuario';
+    };
+
+    const profilePhotoUrl = getProfilePhotoUrl();
+    console.log('URL de foto de perfil en Home:', profilePhotoUrl);
+
     return (
-        <ScrollView 
+        <ScrollView
             style={styles.container}
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -231,24 +243,38 @@ const HomeScreen = () => {
                     {/* Logo de la Óptica */}
                     <View style={styles.logoContainer}>
                         <Image
-                            source={require('../../assets/logo-para-fondo-blanco.png')}
+                            source={require('../../src/assets/Logo-para-fondo-blanco.png')}
+                            style={styles.logo}
+                            resizeMode="contain"
                         />
                     </View>
-                    
                     {/* Saludo de Bienvenida */}
                     <View style={styles.greetingContainer}>
                         <Text style={styles.greetingText}>
-                            Hola, {user?.nombre || user?.email || 'Usuario'}
+                            Hola, {getUserName()}
                         </Text>
                     </View>
-                    
-                    {/* Botón de Perfil */}
-                    <TouchableOpacity 
+                    {/* Botón de Perfil con foto */}
+                    <TouchableOpacity
                         style={styles.profileButton}
                         onPress={handleProfilePress}
                         activeOpacity={0.7}
                     >
-                        <Ionicons name="person-circle-outline" size={32} color="#666666" />
+                        {profilePhotoUrl ? (
+                            <Image
+                                source={{ uri: profilePhotoUrl }}
+                                style={styles.profileImage}
+                                resizeMode="cover"
+                                onError={(error) => {
+                                    console.log('Error cargando imagen de perfil:', error);
+                                }}
+                                onLoad={() => {
+                                    console.log('Imagen de perfil cargada correctamente');
+                                }}
+                            />
+                        ) : (
+                            <Ionicons name="person-circle-outline" size={40} color="#009BBF" />
+                        )}
                     </TouchableOpacity>
                 </View>
 
@@ -273,11 +299,11 @@ const HomeScreen = () => {
                 <View style={styles.infoSection}>
                     <Text style={styles.sectionTitle}>Óptica La Inteligente</Text>
                     <Text style={styles.infoText}>
-                        Somos especialistas en el cuidado de tu visión. 
-                        Ofrecemos servicios de calidad con la mejor tecnología 
+                        Somos especialistas en el cuidado de tu visión.
+                        Ofrecemos servicios de calidad con la mejor tecnología
                         para garantizar tu salud visual.
                     </Text>
-                    
+
                     {/* Información adicional con el eslogan */}
                     <View style={styles.sloganContainer}>
                         <Text style={styles.sloganText}>
@@ -290,21 +316,21 @@ const HomeScreen = () => {
                 {/* Servicios destacados */}
                 <View style={styles.servicesSection}>
                     <Text style={styles.sectionTitle}>Nuestros Servicios</Text>
-                    
+
                     <View style={styles.serviceItem}>
                         <Text style={styles.serviceTitle}>Examen de la Vista</Text>
                         <Text style={styles.serviceDescription}>
                             Evaluación completa de tu salud visual
                         </Text>
                     </View>
-                    
+
                     <View style={styles.serviceItem}>
                         <Text style={styles.serviceTitle}>Lentes de Contacto</Text>
                         <Text style={styles.serviceDescription}>
                             Adaptación y venta de lentes de contacto
                         </Text>
                     </View>
-                    
+
                     <View style={styles.serviceItem}>
                         <Text style={styles.serviceTitle}>Monturas</Text>
                         <Text style={styles.serviceDescription}>
@@ -321,13 +347,10 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    // Contenedor principal
     container: {
         flex: 1,
         backgroundColor: '#F8F9FA',
     },
-    
-    // Header superior con logo, saludo y perfil
     topHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -337,8 +360,6 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         backgroundColor: '#FFFFFF',
     },
-    
-    // Contenedor del logo
     logoContainer: {
         width: 40,
         height: 40,
@@ -348,51 +369,54 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         borderWidth: 2,
         borderColor: '#009BBF',
+        overflow: 'hidden',
     },
-    
-    // Contenedor del saludo
+    logo: {
+        width: 40,
+        height: 40,
+    },
     greetingContainer: {
         flex: 1,
         alignItems: 'left',
         paddingHorizontal: 16,
     },
-    
-    // Texto del saludo
     greetingText: {
         fontSize: 24,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
         textAlign: 'left',
     },
-    
-    // Botón de perfil
     profileButton: {
-        padding: 4,
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    
-    // Sección de acciones rápidas
+    profileImage: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        borderWidth: 2,
+        borderColor: '#009BBF',
+        backgroundColor: '#E5E7EB',
+    },
+
     quickActionsSection: {
         backgroundColor: '#FFFFFF',
         paddingHorizontal: 20,
         paddingVertical: 16,
         marginBottom: 16,
     },
-    
-    // Título de acciones rápidas
     quickActionsTitle: {
         fontSize: 16,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
         marginBottom: 12,
     },
-    
-    // Fila de acciones rápidas
     quickActionsRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
-    
-    // Botón de acción rápida
     quickActionButton: {
         flex: 1,
         marginHorizontal: 4,
@@ -407,8 +431,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
-    
-    // Degradado del botón de acción rápida
     quickActionGradient: {
         paddingVertical: 16,
         paddingHorizontal: 8,
@@ -416,8 +438,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         minHeight: 80,
     },
-    
-    // Texto del botón de acción rápida
     quickActionText: {
         color: '#FFFFFF',
         fontSize: 11,
@@ -426,8 +446,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 14,
     },
-    
-    // Sección de información
     infoSection: {
         padding: 20,
         backgroundColor: '#FFFFFF',
@@ -443,16 +461,12 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 4,
     },
-    
-    // Título de sección
     sectionTitle: {
         fontSize: 17,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
         marginBottom: 12,
     },
-    
-    // Texto informativo
     infoText: {
         fontSize: 14,
         fontFamily: 'Lato-Regular',
@@ -460,39 +474,27 @@ const styles = StyleSheet.create({
         lineHeight: 22,
         marginBottom: 16,
     },
-    
-    // Contenedor del eslogan
     sloganContainer: {
         alignItems: 'center',
         paddingTop: 12,
         borderTopWidth: 1,
         borderTopColor: '#E5E5E5',
     },
-    
-    // Texto del eslogan
     sloganText: {
         fontSize: 15,
         fontFamily: 'Lato-Bold',
         textAlign: 'center',
     },
-    
-    // Eslogan verde
     sloganGreen: {
         color: '#49AA4C',
     },
-    
-    // Eslogan rosa
     sloganPink: {
         color: '#D0155F',
     },
-    
-    // Sección de servicios
     servicesSection: {
         padding: 20,
         paddingTop: 0,
     },
-    
-    // Item de servicio
     serviceItem: {
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
@@ -509,24 +511,18 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 3,
     },
-    
-    // Título del servicio
     serviceTitle: {
         fontSize: 15,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
         marginBottom: 6,
     },
-    
-    // Descripción del servicio
     serviceDescription: {
         fontSize: 13,
         fontFamily: 'Lato-Regular',
         color: '#666666',
         lineHeight: 20,
     },
-    
-    // Espaciador para el tab bar
     spacer: {
         height: 100,
     },

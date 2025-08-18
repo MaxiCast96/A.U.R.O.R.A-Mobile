@@ -6,7 +6,12 @@ import Profile from '../screens/Profile';
 import SplashScreen from '../screens/SplashScreen';
 import Login from '../screens/Login';
 import Welcome from '../screens/Welcome';
-import Menu from '../screens/Menu'; 
+import Menu from '../screens/Menu';
+// Nuevas pantallas de recuperación de contraseña
+import ForgotPassword from '../screens/ForgotPassword';
+import VerifyCode from '../screens/VerifyCode';
+import ResetPassword from '../screens/ResetPassword';
+import PasswordSuccess from '../screens/PasswordSucces';
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -33,6 +38,7 @@ const LoadingScreen = () => (
  * 2. Login (si no está autenticado) o Main (si está autenticado)
  * 3. Main (tab navigator con las pantallas principales)
  * 4. Menu (pantalla de operaciones - accesible desde tabs y directamente)
+ * 5. Flujo de recuperación de contraseña (ForgotPassword -> VerifyCode -> ResetPassword -> PasswordSuccess)
  */
 export default function Navigation() {
     const { isAuthenticated, isLoading } = useAuth();
@@ -59,12 +65,29 @@ export default function Navigation() {
                 {/* Pantalla de login */}
                 <Stack.Screen name="Login" component={Login} />
                 
+                {/* ===== PANTALLAS DE RECUPERACIÓN DE CONTRASEÑA ===== */}
+                <Stack.Screen 
+                    name="ForgotPassword" 
+                    component={ForgotPassword}
+                />
+                <Stack.Screen 
+                    name="VerifyCode" 
+                    component={VerifyCode}
+                />
+                <Stack.Screen 
+                    name="ResetPassword" 
+                    component={ResetPassword}
+                />
+                <Stack.Screen 
+                    name="PasswordSuccess" 
+                    component={PasswordSuccess}
+                />
+                
                 {/* Navegación principal con tabs */}
                 <Stack.Screen name="Main" component={TabNavigator} />
 
                 {/* Navegación de Perfil */}
                 <Stack.Screen name="Profile" component={Profile} />
-
 
                 {/* Pantalla de menú - acceso directo para navegación desde otras pantallas */}
                 <Stack.Screen 

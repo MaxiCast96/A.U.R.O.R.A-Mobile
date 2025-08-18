@@ -19,22 +19,6 @@ import EditableField from '../components/Profile/EditableField';
 import ProfileSection from '../components/Profile/ProfileSection';
 import SaveStatus from '../components/Profile/SaveStatus';
 
-/**
- * Pantalla de Perfil de Usuario
- * 
- * Permite visualizar y editar la información del perfil del usuario.
- * Incluye datos personales, información de contacto, datos laborales
- * y configuraciones de cuenta.
- * 
- * Funcionalidades principales:
- * - Edición de foto de perfil con Cloudinary
- * - Campos editables con validación
- * - Campos de solo lectura para datos sensibles
- * - Guardado automático de cambios
- * - Refresh manual de datos
- * - Integración con backend en Render
- * - Navegación de vuelta al Home
- */
 const Profile = () => {
     const { user, updateUser, getAuthHeaders, logout } = useAuth();
     const navigation = useNavigation();
@@ -43,32 +27,22 @@ const Profile = () => {
     const [profileData, setProfileData] = useState({});
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [saveStatus, setSaveStatus] = useState('idle'); // Estado para SaveStatus
+    const [saveStatus, setSaveStatus] = useState('idle');
     const [saveMessage, setSaveMessage] = useState('');
 
-    /**
-     * Cargar datos del perfil desde el backend
-     * Utilizando la misma estrategia que Home.js para llamadas a la API
-     */
     const loadProfileData = async () => {
         try {
             setLoading(true);
-            
-            // Verificar que tenemos headers de autenticación
             const headers = getAuthHeaders();
             if (!headers || !headers.Authorization) {
                 console.log('No hay token de autenticación disponible para perfil');
                 return;
             }
-
-            console.log('Cargando datos del perfil...');
-            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/user/profile', {
-                method: 'GET',
-                headers: headers,
-            });
-
+            const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/empleados/${user.id}`, {
+    method: 'GET',
+    headers: headers,
+});
             console.log('Response status perfil:', response.status);
-
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 console.log('El servidor no devolvió JSON válido para perfil');
@@ -76,7 +50,6 @@ const Profile = () => {
                 console.log('Response text perfil:', textResponse);
                 return;
             }
-
             if (response.ok) {
                 const data = await response.json();
                 console.log('Datos del perfil recibidos:', data);
@@ -85,7 +58,6 @@ const Profile = () => {
                 console.log('Error en la respuesta del perfil:', response.status);
                 const errorData = await response.text();
                 console.log('Error data perfil:', errorData);
-                
                 Alert.alert(
                     'Error de conexión', 
                     'No se pudieron cargar los datos del perfil.',
@@ -104,25 +76,17 @@ const Profile = () => {
         }
     };
 
-    /**
-     * Actualizar campo específico del perfil
-     * Utilizando la misma estrategia de validación que Home.js
-     */
     const updateProfileField = async (field, value) => {
         try {
             setSaveStatus('saving');
             setSaveMessage(`Guardando ${field}...`);
-            
-            // Verificar headers de autenticación
             const headers = getAuthHeaders();
             if (!headers || !headers.Authorization) {
                 throw new Error('No hay token de autenticación disponible');
             }
-
             console.log(`Actualizando campo ${field} con valor:`, value);
-            
-            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/user/profile', {
-                method: 'PATCH',
+            const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/empleados/${user.id}`, {
+                method: 'PUT',
                 headers: {
                     ...headers,
                     'Content-Type': 'application/json',
@@ -131,9 +95,7 @@ const Profile = () => {
                     [field]: value
                 }),
             });
-
             console.log('Response status actualización:', response.status);
-
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 console.log('El servidor no devolvió JSON válido para actualización');
@@ -141,25 +103,18 @@ const Profile = () => {
                 console.log('Response text actualización:', textResponse);
                 throw new Error('Respuesta del servidor no válida');
             }
-
             if (response.ok) {
                 const updatedData = await response.json();
                 console.log('Campo actualizado correctamente:', updatedData);
-                
                 setProfileData(prev => ({
                     ...prev,
                     [field]: value
                 }));
-                
-                // Actualizar contexto de usuario si es necesario
                 if (['nombre', 'apellido', 'correo'].includes(field)) {
                     updateUser && updateUser(updatedData);
                 }
-                
-                // Mostrar estado de éxito
                 setSaveStatus('saved');
                 setSaveMessage('Cambios guardados correctamente');
-                
             } else {
                 console.log('Error en actualización:', response.status);
                 const errorData = await response.text();
@@ -170,27 +125,22 @@ const Profile = () => {
             console.error('Error al actualizar campo:', error);
             setSaveStatus('error');
             setSaveMessage('Error al guardar cambios');
-            throw error; // Re-lanzar para que EditableField maneje el error
+            throw error;
         }
     };
 
-    /**
-     * Actualizar foto de perfil
-     */
     const updateProfilePhoto = async (photoUrl) => {
         try {
             setSaveStatus('saving');
             setSaveMessage('Actualizando foto de perfil...');
-            
-            await updateProfileField('photoUrl', photoUrl);
-            
+            // Usar el campo correcto según lo que espera el backend
+            await updateProfileField('fotoPerfil', photoUrl);
             setSaveStatus('saved');
             setSaveMessage('Foto actualizada correctamente');
         } catch (error) {
             console.error('Error al actualizar foto:', error);
             setSaveStatus('error');
             setSaveMessage('Error al actualizar la foto');
-            
             Alert.alert(
                 'Error',
                 'No se pudo actualizar la foto de perfil.',
@@ -199,26 +149,39 @@ const Profile = () => {
         }
     };
 
-    /**
-     * Refrescar datos del perfil
-     */
     const onRefresh = async () => {
         setRefreshing(true);
         await loadProfileData();
         setRefreshing(false);
     };
 
-    /**
-     * Navegar de vuelta al Home
-     */
     const handleGoHome = () => {
         console.log('Navegando al Home...');
         navigation.navigate('Home');
     };
 
-    /**
-     * Confirmar cierre de sesión (mantener funcionalidad)
-     */
+    const handleChangePassword = () => {
+        Alert.alert(
+            'Cambiar Contraseña',
+            'Se enviará un código de verificación a tu correo registrado para confirmar el cambio de contraseña.',
+            [
+                {
+                    text: 'Cancelar',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Continuar',
+                    onPress: () => {
+                        navigation.navigate('ForgotPassword', {
+                            fromProfile: true,
+                            prefilledEmail: userData.correo
+                        });
+                    },
+                },
+            ]
+        );
+    };
+
     const handleLogout = () => {
         Alert.alert(
             'Cerrar sesión',
@@ -231,33 +194,52 @@ const Profile = () => {
                 {
                     text: 'Cerrar sesión',
                     style: 'destructive',
-                    onPress: logout
+                    onPress: async () => {
+                        await logout();
+                        navigation.reset({
+                            index: 0,
+                            routes: [{ name: 'Login' }],
+                        });
+                    }
                 }
             ]
         );
     };
 
-    /**
-     * Cargar datos al montar el componente
-     */
     useEffect(() => {
         loadProfileData();
     }, []);
 
-    /**
-     * Combinar datos del usuario del contexto con datos del perfil
-     */
+    // --- userData con valores por defecto para todos los campos ---
     const userData = {
+        nombre: '',
+        apellido: '',
+        correo: '',
+        telefono: '',
+        dui: '',
+        cargo: '',
+        photoUrl: user?.photoUrl || user?.fotoPerfil || '',
+        fechaContratacion: '',
+        sucursalId: '',
+        direccion: { departamento: '', municipio: '', direccionDetallada: '' },
         ...user,
-        ...profileData
+        ...profileData,
+        photoUrl: profileData.photoUrl || profileData.fotoPerfil || user?.photoUrl || user?.fotoPerfil || '',
+        sucursalId: profileData.sucursalId || user?.sucursalId || '',
+        direccion: profileData.direccion || user?.direccion || { departamento: '', municipio: '', direccionDetallada: '' },
     };
 
+    // Función para mostrar sucursal (nombre si es objeto, ID si es string)
+    const getSucursalDisplay = (sucursalId) => {
+        if (!sucursalId) return 'No asignada';
+        if (typeof sucursalId === 'object' && sucursalId.nombre) return sucursalId.nombre;
+        if (typeof sucursalId === 'string') return sucursalId;
+        return 'No asignada';
+    };
+console.log('userData:', userData);
     return (
         <View style={styles.container}>
-            {/* Configuración de la barra de estado */}
             <StatusBar barStyle="light-content" backgroundColor="#009BBF" />
-            
-            {/* Header principal */}
             <View style={styles.header}>
                 <View style={styles.headerContent}>
                     <Text style={styles.headerTitle}>Mi Perfil</Text>
@@ -265,8 +247,6 @@ const Profile = () => {
                         Gestiona tu información personal
                     </Text>
                 </View>
-                
-                {/* Botón de volver al inicio */}
                 <TouchableOpacity 
                     style={styles.homeButton}
                     onPress={handleGoHome}
@@ -275,8 +255,6 @@ const Profile = () => {
                     <Ionicons name="home-outline" size={24} color="#FFFFFF" />
                 </TouchableOpacity>
             </View>
-
-            {/* Contenido principal */}
             <ScrollView 
                 style={styles.content}
                 showsVerticalScrollIndicator={false}
@@ -292,14 +270,11 @@ const Profile = () => {
                 }
                 contentContainerStyle={styles.scrollContent}
             >
-                {/* Indicador de estado de guardado */}
                 <SaveStatus 
                     status={saveStatus}
                     message={saveMessage}
                     autoHide={true}
                 />
-
-                {/* Foto de perfil */}
                 <View style={styles.photoSection}>
                     <ProfilePhoto 
                         photoUrl={userData.photoUrl}
@@ -313,8 +288,6 @@ const Profile = () => {
                         {userData.cargo || 'Miembro del equipo'}
                     </Text>
                 </View>
-
-                {/* Información Personal */}
                 <ProfileSection 
                     title="Información Personal"
                     subtitle="Datos básicos de tu perfil"
@@ -327,7 +300,6 @@ const Profile = () => {
                         type="text"
                         maxLength={50}
                     />
-                    
                     <EditableField
                         label="Apellido"
                         value={userData.apellido}
@@ -336,7 +308,6 @@ const Profile = () => {
                         type="text"
                         maxLength={50}
                     />
-                    
                     <EditableField
                         label="Correo Electrónico"
                         value={userData.correo}
@@ -344,7 +315,6 @@ const Profile = () => {
                         icon="mail-outline"
                         type="email"
                     />
-                    
                     <EditableField
                         label="Teléfono"
                         value={userData.telefono}
@@ -354,8 +324,6 @@ const Profile = () => {
                         maxLength={15}
                     />
                 </ProfileSection>
-
-                {/* Información de Identificación */}
                 <ProfileSection 
                     title="Identificación"
                     subtitle="Documentos oficiales (solo lectura)"
@@ -368,8 +336,6 @@ const Profile = () => {
                         type="dui"
                     />
                 </ProfileSection>
-
-                {/* Información Laboral */}
                 <ProfileSection 
                     title="Información Laboral"
                     subtitle="Datos relacionados con tu trabajo"
@@ -381,15 +347,13 @@ const Profile = () => {
                         icon="briefcase-outline"
                         type="text"
                     />
-                    
                     <EditableField
                         label="Sucursal"
-                        value={userData.sucursalId?.nombre || 'No asignada'}
+                        value={getSucursalDisplay(userData.sucursalId)}
                         editable={false}
                         icon="business-outline"
                         type="text"
                     />
-                    
                     <EditableField
                         label="Fecha de Contratación"
                         value={userData.fechaContratacion ? 
@@ -401,15 +365,13 @@ const Profile = () => {
                         type="text"
                     />
                 </ProfileSection>
-
-                {/* Sección de Acciones */}
                 <ProfileSection 
                     title="Acciones de Cuenta"
                     subtitle="Configuraciones y opciones avanzadas"
                 >
                     <TouchableOpacity 
                         style={styles.actionButton}
-                        onPress={() => Alert.alert('Cambiar contraseña', 'Funcionalidad próximamente')}
+                        onPress={handleChangePassword}
                         activeOpacity={0.7}
                     >
                         <View style={styles.actionButtonContent}>
@@ -423,13 +385,12 @@ const Profile = () => {
                             <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
                         </View>
                     </TouchableOpacity>
-
                     <TouchableOpacity 
                         style={styles.actionButton}
                         onPress={handleGoHome}
                         activeOpacity={0.7}
                     >
-                        <View style={styles.actionButtonContent}>
+                        <View style={[styles.actionButtonContent, styles.homeActionIcon]}>
                             <View style={[styles.actionIcon, styles.homeActionIcon]}>
                                 <Ionicons name="home-outline" size={20} color="#009BBF" />
                             </View>
@@ -442,7 +403,6 @@ const Profile = () => {
                             <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
                         </View>
                     </TouchableOpacity>
-
                     <TouchableOpacity 
                         style={[styles.actionButton, styles.logoutActionButton]}
                         onPress={handleLogout}
@@ -461,8 +421,6 @@ const Profile = () => {
                         </View>
                     </TouchableOpacity>
                 </ProfileSection>
-
-                {/* Espaciador para el tab bar */}
                 <View style={styles.spacer} />
             </ScrollView>
         </View>
@@ -470,13 +428,10 @@ const Profile = () => {
 };
 
 const styles = StyleSheet.create({
-    // Contenedor principal
     container: {
         flex: 1,
         backgroundColor: '#F8F9FA',
     },
-    
-    // Header principal
     header: {
         backgroundColor: '#009BBF',
         paddingTop: 50,
@@ -496,29 +451,21 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 8,
     },
-    
-    // Contenido del header
     headerContent: {
         flex: 1,
     },
-    
-    // Título del header
     headerTitle: {
         fontSize: 24,
         fontFamily: 'Lato-Bold',
         color: '#FFFFFF',
         marginBottom: 4,
     },
-    
-    // Subtítulo del header
     headerSubtitle: {
         fontSize: 14,
         fontFamily: 'Lato-Regular',
         color: '#E0F7FF',
         opacity: 0.9,
     },
-    
-    // Botón de ir al inicio en header
     homeButton: {
         width: 44,
         height: 44,
@@ -528,25 +475,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginLeft: 16,
     },
-    
-    // Contenido principal
     content: {
         flex: 1,
     },
-    
-    // Contenido del scroll
     scrollContent: {
         paddingBottom: 100,
     },
-    
-    // Sección de foto
     photoSection: {
         alignItems: 'center',
         paddingVertical: 32,
         paddingHorizontal: 20,
     },
-    
-    // Texto de bienvenida
     welcomeText: {
         fontSize: 22,
         fontFamily: 'Lato-Bold',
@@ -554,8 +493,6 @@ const styles = StyleSheet.create({
         marginTop: 12,
         textAlign: 'center',
     },
-    
-    // Texto del rol
     roleText: {
         fontSize: 16,
         fontFamily: 'Lato-Regular',
@@ -563,8 +500,6 @@ const styles = StyleSheet.create({
         marginTop: 4,
         textAlign: 'center',
     },
-    
-    // Botón de acción
     actionButton: {
         backgroundColor: '#F8F9FA',
         borderRadius: 12,
@@ -572,22 +507,16 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E5E5E5',
     },
-    
-    // Botón de acción de logout
     logoutActionButton: {
         backgroundColor: '#FFF5F5',
         borderColor: '#FFEBEE',
     },
-    
-    // Contenido del botón de acción
     actionButtonContent: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
         gap: 12,
     },
-    
-    // Ícono de acción
     actionIcon: {
         width: 40,
         height: 40,
@@ -596,48 +525,32 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    
-    // Ícono de home
     homeActionIcon: {
         backgroundColor: '#F0F9FF',
     },
-    
-    // Ícono de logout
     logoutActionIcon: {
         backgroundColor: '#FFEBEE',
     },
-    
-    // Texto de acción
     actionText: {
         flex: 1,
     },
-    
-    // Título de acción
     actionTitle: {
         fontSize: 16,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
         marginBottom: 2,
     },
-    
-    // Título de home
     homeActionTitle: {
         color: '#009BBF',
     },
-    
-    // Título de logout
     logoutActionTitle: {
         color: '#E74C3C',
     },
-    
-    // Subtítulo de acción
     actionSubtitle: {
         fontSize: 13,
         fontFamily: 'Lato-Regular',
         color: '#666666',
     },
-    
-    // Espaciador
     spacer: {
         height: 40,
     },

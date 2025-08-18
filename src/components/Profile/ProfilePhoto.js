@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { 
-    View, 
-    Text, 
-    StyleSheet, 
-    TouchableOpacity, 
-    Image, 
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    Image,
     Alert,
-    ActionSheet,
-    Platform 
+    Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Componente ProfilePhoto
@@ -27,6 +27,7 @@ import * as ImagePicker from 'expo-image-picker';
  * @param {boolean} editable - Si la foto se puede editar
  */
 const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
+    const { getAuthHeaders } = useAuth();
     const [uploading, setUploading] = useState(false);
     const [localImageUri, setLocalImageUri] = useState(null);
 
@@ -37,7 +38,7 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
         if (Platform.OS !== 'web') {
             const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
             const mediaLibraryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            
+
             if (cameraPermission.status !== 'granted' || mediaLibraryPermission.status !== 'granted') {
                 Alert.alert(
                     'Permisos requeridos',
@@ -87,12 +88,12 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
 
         try {
             let result;
-            
+
             const options = {
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
                 aspect: [1, 1], // Aspecto cuadrado para foto de perfil
-                quality: 0.8,
+                quality: 0.7, // Reducir calidad para mejor rendimiento
                 base64: false,
             };
 
@@ -104,8 +105,9 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
 
             if (!result.canceled && result.assets && result.assets[0]) {
                 const selectedImage = result.assets[0];
+                console.log('Imagen seleccionada:', selectedImage.uri);
                 setLocalImageUri(selectedImage.uri);
-                await uploadImageToCloudinary(selectedImage.uri);
+                await uploadImageToBackend(selectedImage.uri);
             }
         } catch (error) {
             console.error('Error al seleccionar imagen:', error);
@@ -118,62 +120,81 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
     };
 
     /**
-     * Subir imagen a Cloudinary a través del backend
+     * Subir imagen al backend que luego la sube a Cloudinary
      */
-    const uploadImageToCloudinary = async (imageUri) => {
+    const uploadImageToBackend = async (imageUri) => {
         try {
             setUploading(true);
+            console.log('Iniciando subida de imagen:', imageUri);
+
+            const headers = getAuthHeaders();
+            if (!headers || !headers.Authorization) {
+                throw new Error('No hay token de autenticación disponible');
+            }
 
             // Crear FormData para envío multipart
             const formData = new FormData();
-            
+
             // Obtener información del archivo
-            const filename = imageUri.split('/').pop();
+            const filename = imageUri.split('/').pop() || 'profile-photo.jpg';
             const match = /\.(\w+)$/.exec(filename);
             const type = match ? `image/${match[1]}` : 'image/jpeg';
-
+            // Agregar el archivo al FormData
             formData.append('file', {
                 uri: imageUri,
                 name: filename,
                 type: type,
             });
 
-            // Enviar al backend (ajusta la URL según tu endpoint)
+            console.log('Enviando imagen al servidor...');
+
+            // Enviar al backend
             const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/upload/profile-photo', {
                 method: 'POST',
                 headers: {
+                    ...headers,
                     'Content-Type': 'multipart/form-data',
-                    // Aquí deberías incluir headers de autenticación si es necesario
-                    // 'Authorization': `Bearer ${token}`,
                 },
                 body: formData,
             });
 
+            console.log('Response status:', response.status);
+
             if (response.ok) {
                 const data = await response.json();
-                
-                // Asumiendo que el backend devuelve { photoUrl: 'cloudinary_url' }
-                if (data.photoUrl) {
-                    onPhotoChange && onPhotoChange(data.photoUrl);
+                console.log('Respuesta del servidor:', data);
+
+                // El backend debería devolver la URL de Cloudinary
+                if (data.photoUrl || data.url || data.secure_url) {
+                    const cloudinaryUrl = data.photoUrl || data.url || data.secure_url;
+                    console.log('URL de Cloudinary recibida:', cloudinaryUrl);
+
+                    // Llamar al callback con la nueva URL
+                    onPhotoChange && onPhotoChange(cloudinaryUrl);
                     setLocalImageUri(null); // Limpiar imagen local
-                    
+
                     Alert.alert(
                         'Éxito',
                         'Foto de perfil actualizada correctamente.',
                         [{ text: 'Perfecto', style: 'default' }]
                     );
                 } else {
-                    throw new Error('No se recibió URL de la imagen');
+                    throw new Error('No se recibió URL de la imagen del servidor');
                 }
             } else {
+                const errorText = await response.text();
+                console.error('Error del servidor:', errorText);
                 throw new Error(`Error del servidor: ${response.status}`);
             }
         } catch (error) {
             console.error('Error al subir imagen:', error);
             Alert.alert(
                 'Error de subida',
-                'No se pudo actualizar la foto de perfil. Verifica tu conexión a internet.',
-                [{ text: 'Reintentar', onPress: () => uploadImageToCloudinary(imageUri) }]
+                `No se pudo actualizar la foto de perfil: ${error.message}`,
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { text: 'Reintentar', onPress: () => uploadImageToBackend(imageUri) }
+                ]
             );
             setLocalImageUri(null);
         } finally {
@@ -188,30 +209,33 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
         if (localImageUri) {
             return { uri: localImageUri };
         }
-        
+
         if (photoUrl) {
             return { uri: photoUrl };
         }
-        
-        // Imagen por defecto
-        return require('../../assets/default-avatar.png'); 
+
+        return null;
     };
 
     /**
      * Obtener las iniciales del usuario como fallback
      */
-    const getInitials = (name = 'Usuario') => {
+    const getInitials = (name = 'U') => {
+        if (typeof name !== 'string') return 'U';
+
         return name
             .split(' ')
             .map(word => word.charAt(0))
             .join('')
             .toUpperCase()
-            .substring(0, 2);
+            .substring(0, 2) || 'U';
     };
+
+    const imageSource = getImageSource();
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.photoContainer}
                 onPress={showImagePicker}
                 disabled={!editable || uploading}
@@ -219,25 +243,29 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
             >
                 {/* Imagen de perfil */}
                 <View style={styles.imageContainer}>
-                    {photoUrl || localImageUri ? (
-                        <Image 
-                            source={getImageSource()} 
+                    {imageSource ? (
+                        <Image
+                            source={imageSource}
                             style={styles.profileImage}
-                            defaultSource={require('../../assets/default-avatar.png')}
+                            onError={(error) => {
+                                console.log('Error cargando imagen:', error);
+                            }}
+                            onLoad={() => {
+                                console.log('Imagen cargada correctamente');
+                            }}
                         />
                     ) : (
                         <View style={styles.placeholderContainer}>
-                            <Text style={styles.initialsText}>
-                                {getInitials()}
-                            </Text>
+                            <Ionicons name="person" size={48} color="#FFFFFF" />
                         </View>
                     )}
-                    
+
                     {/* Overlay de carga */}
                     {uploading && (
                         <View style={styles.uploadingOverlay}>
                             <View style={styles.uploadingIndicator}>
                                 <Ionicons name="cloud-upload" size={24} color="#FFFFFF" />
+                                <Text style={styles.uploadingText}>Subiendo...</Text>
                             </View>
                         </View>
                     )}
@@ -274,13 +302,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 24,
     },
-    
+
     // Contenedor de la foto
     photoContainer: {
         position: 'relative',
         marginBottom: 8,
     },
-    
+
     // Contenedor de la imagen
     imageContainer: {
         width: 120,
@@ -298,14 +326,15 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 8,
     },
-    
+
     // Imagen de perfil
     profileImage: {
         width: '100%',
         height: '100%',
         resizeMode: 'cover',
+        backgroundColor: '#E5E7EB',
     },
-    
+
     // Contenedor placeholder para iniciales
     placeholderContainer: {
         width: '100%',
@@ -314,14 +343,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    
-    // Texto de iniciales
-    initialsText: {
-        fontSize: 36,
-        fontFamily: 'Lato-Bold',
-        color: '#FFFFFF',
-    },
-    
+
     // Overlay de carga
     uploadingOverlay: {
         position: 'absolute',
@@ -329,21 +351,25 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    
+
     // Indicador de subida
     uploadingIndicator: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#009BBF',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    
+
+    // Texto de subida
+    uploadingText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontFamily: 'Lato-Bold',
+        marginTop: 8,
+    },
+
     // Botón de editar
     editButton: {
         position: 'absolute',
@@ -366,7 +392,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 4,
     },
-    
+
     // Botón de carga
     loadingButton: {
         position: 'absolute',
@@ -381,7 +407,7 @@ const styles = StyleSheet.create({
         borderWidth: 3,
         borderColor: '#FFFFFF',
     },
-    
+
     // Texto de ayuda
     helpText: {
         fontSize: 14,

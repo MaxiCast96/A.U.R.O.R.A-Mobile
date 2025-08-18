@@ -50,14 +50,9 @@ const Login = () => {
     };
 
     // Manejar el botón de "¿Olvidaste tu contraseña?"
-    const handleForgotPassword = () => {
-        Alert.alert(
-            'Recuperar contraseña',
-            'Por favor contacta al administrador para restablecer tu contraseña.'
-        );
-        // Si tienes una pantalla de recuperación, navega así:
-        // navigation.navigate('ForgotPassword');
-    };
+const handleForgotPassword = () => {
+    navigation.navigate('ForgotPassword');
+};
 
     return (
         <View style={styles.container}>

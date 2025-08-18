@@ -32,7 +32,7 @@ const Welcome = () => {
                     ¡BIENVENIDO A ÓPTICA LA INTELIGENTE!
                 </Text>
                 <Text style={styles.subtitle}>
-                    ¡Selecciona tu opción para comenzar!
+                    ¡Haz clic en el botón para comenzar!
                 </Text>
 
                 {/* Botón de login */}
