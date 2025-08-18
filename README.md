@@ -54,30 +54,33 @@ El sistema está desarrollado utilizando **React Native** con **Expo**, garantiz
 ## Estructura del Proyecto
 
 ```
-A.U.R.O.R.A-Mobile/
+A.U.R.O.R.A-MOBILE/
+├── .expo/                  # Configuración de Expo
+├── assets/                 # Recursos estáticos (imágenes, iconos, fuentes)
+├── node_modules/           # Dependencias del proyecto
 ├── src/
-│   ├── components/          # Componentes reutilizables
-│   │   ├── common/         # Componentes comunes
-│   │   ├── forms/          # Formularios
-│   │   └── charts/         # Gráficas y visualizaciones
-│   ├── screens/            # Pantallas de la aplicación
-│   │   ├── Auth/          # Autenticación
-│   │   ├── Dashboard/     # Panel principal
-│   │   ├── Clients/       # Gestión de clientes
-│   │   ├── Appointments/  # Gestión de citas
-│   │   └── Products/      # Catálogo de productos
-│   ├── navigation/         # Configuración de navegación
-│   ├── services/          # Servicios y API calls
-│   ├── utils/             # Utilidades y helpers
-│   ├── hooks/             # Custom hooks
-│   └── constants/         # Constantes y configuración
-├── assets/                # Recursos estáticos
-│   ├── images/           # Imágenes
-│   ├── icons/            # Iconos personalizados
-│   └── fonts/            # Fuentes tipográficas
-├── app.json              # Configuración de Expo
-├── package.json          # Dependencias del proyecto
-└── README.md
+│   ├── assets/            # Recursos específicos del código fuente
+│   ├── components/        # Componentes reutilizables
+│   │   ├── Citas/        # Componentes para gestión de citas
+│   │   ├── Home/         # Componentes del dashboard principal
+│   │   ├── Login/        # Componentes de autenticación
+│   │   ├── Profile/      # Componentes de perfil de usuario
+│   │   ├── Button.js     # Botón reutilizable
+│   │   ├── Card.js       # Tarjeta reutilizable
+│   │   ├── CodeInput.js  # Input de código personalizado
+│   │   ├── FloatingTabBar.js  # Barra de navegación flotante
+│   │   └── Modal.js      # Modal reutilizable
+│   ├── context/          # Context providers para estado global
+│   ├── hooks/            # Custom hooks
+│   ├── navigation/       # Configuración de navegación
+│   └── screens/          # Pantallas principales de la aplicación
+├── .gitignore            # Archivos ignorados por Git
+├── App.js               # Componente principal de la aplicación
+├── app.json             # Configuración de Expo
+├── index.js             # Punto de entrada de la aplicación
+├── package-lock.json    # Lock file de dependencias
+├── package.json         # Dependencias y scripts del proyecto
+└── README.md           # Documentación del proyecto
 ```
 
 ## Nomenclatura del Proyecto
@@ -89,31 +92,6 @@ A.U.R.O.R.A-Mobile/
 - **camelCase**: Variables, funciones, métodos, propiedades
 - **kebab-case**: Nombres de archivos de configuración
 - **UPPER_SNAKE_CASE**: Constantes globales
-
-#### Variables y Funciones
-```javascript
-// Variables - camelCase
-const userName = 'John';
-const isLoggedIn = true;
-const clientData = {};
-
-// Funciones - camelCase
-const handleLogin = () => {};
-const fetchClients = () => {};
-const validateInput = () => {};
-
-// Componentes - PascalCase
-const ClientCard = () => {};
-const AuthScreen = () => {};
-const DashboardHeader = () => {};
-
-// Constantes - UPPER_SNAKE_CASE
-const API_BASE_URL = 'http://localhost:4000';
-const SCREEN_NAMES = {
-  HOME: 'Home',
-  CLIENTS: 'Clients'
-};
-```
 
 #### Pantallas y Navegación
 - **Pantallas**: PascalCase (LoginScreen, ClientsScreen, DashboardScreen)
@@ -140,20 +118,6 @@ cd A.U.R.O.R.A-Mobile
 2. **Instalar dependencias**:
 ```bash
 npm install
-```
-
-3. **Configurar variables de entorno**:
-Crear archivo `app.config.js` o configurar en `app.json`:
-```javascript
-export default {
-  expo: {
-    extra: {
-      API_URL: "http://tu-backend-url:4000/api",
-      CLOUDINARY_CLOUD_NAME: "tu_cloud_name",
-      CLOUDINARY_UPLOAD_PRESET: "tu_upload_preset"
-    }
-  }
-};
 ```
 
 4. **Ejecutar la aplicación**:
@@ -248,29 +212,6 @@ expo build:android -t app-bundle
 expo build:ios
 ```
 
-### Configuración de Build
-Actualizar `app.json` con la configuración necesaria:
-```json
-{
-  "expo": {
-    "name": "A.U.R.O.R.A Mobile",
-    "slug": "aurora-mobile",
-    "version": "1.0.0",
-    "platforms": ["ios", "android"],
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png"
-    },
-    "android": {
-      "package": "com.opticainteligente.aurora"
-    },
-    "ios": {
-      "bundleIdentifier": "com.opticainteligente.aurora"
-    }
-  }
-}
-```
-
 ## Conexión con Backend
 La aplicación móvil se conecta al mismo backend que la versión web de A.U.R.O.R.A, utilizando:
 - **API REST**: Comunicación con axios
@@ -285,11 +226,11 @@ La aplicación móvil se conecta al mismo backend que la versión web de A.U.R.O
 - **Navegación optimizada**: React Navigation con screens optimizadas
 
 ## Integrantes del equipo:
-- Guillermo Rodrigo Chávez Mejía
-- Luis Fernando Navarró Alemán
-- Jhonatan Josué Valle Gamboa
-- Kevin Josue Alvarado Hernandez
-- Fernando Ariel
+- Jhonatan Josué Valle Gamboa - Coordinador
+- Guillermo Rodrigo Chávez Mejía - Subcoordinador
+- Fernando Ariel Morales Rodriguez - Secretario
+- Luis Fernando Navarró Alemán - Tesorero
+- Kevin Josue Alvarado Hernandez - Vocal
 
 ---
 
