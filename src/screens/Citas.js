@@ -1,27 +1,62 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
+import { 
+    View, 
+    Text, 
+    StyleSheet, 
+    FlatList, 
+    RefreshControl, 
+    Alert,
+    TouchableOpacity,
+    StatusBar
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 
+// Importación de componentes separados
+import CitaCard from '../components/Citas/CitaCard';
+import CitaDetailModal from '../components/Citas/CitaDetailModal';
+import EmptyState from '../components/Citas/EmptyState';
+import FilterSearchBar from '../components/Citas/FiltrerSearchBar';
+
 /**
- * Pantalla de Citas
+ * Pantalla de Citas Renovada
  * 
- * Esta pantalla muestra las citas programadas en la óptica
- * con datos reales obtenidos desde el backend.
+ * Esta pantalla muestra las citas programadas en la óptica con un diseño
+ * moderno y elegante, siguiendo la estética de la aplicación.
+ * Incluye vista rápida de citas, modal de detalle completo, filtros y búsqueda.
  * 
- * Funcionalidades:
- * - Lista de citas reales
- * - Pull to refresh
- * - Información detallada de cada cita
- * - Estados de carga y error
+ * Funcionalidades principales:
+ * - Lista de citas con diseño moderno y tarjetas elegantes
+ * - 5 estados de citas: Agendada, Pendiente, Confirmada, Cancelada, Completada
+ * - Vista rápida de información esencial de cada cita
+ * - Modal de detalle completo con toda la información
+ * - Filtros de ordenamiento: Más reciente, Más próxima, Más lejana
+ * - Búsqueda por motivo de cita
+ * - Pull to refresh para actualizar datos
+ * - Estados de carga, error y lista vacía
+ * - Integración con la paleta de colores y tipografía Lato
  */
 const Citas = () => {
     const { getAuthHeaders } = useAuth();
+    
+    // Estados principales
     const [citas, setCitas] = useState([]);
+    const [filteredCitas, setFilteredCitas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    
+    // Estados del modal de detalle
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedCita, setSelectedCita] = useState(null);
+    const [selectedIndex, setSelectedIndex] = useState(0);
+
+    // Estados de filtros y búsqueda
+    const [searchText, setSearchText] = useState('');
+    const [selectedFilter, setSelectedFilter] = useState('reciente');
 
     /**
-     * Cargar citas desde el backend
+     * Función para cargar citas desde el backend
+     * Incluye manejo de errores y estados de carga
      */
     const loadCitas = async () => {
         try {
@@ -36,24 +71,133 @@ const Citas = () => {
                 const data = await response.json();
                 setCitas(data);
             } else {
-                Alert.alert('Error', 'No se pudieron cargar las citas');
+                Alert.alert(
+                    'Error de conexión', 
+                    'No se pudieron cargar las citas. Verifica tu conexión a internet.',
+                    [{ text: 'Entendido', style: 'default' }]
+                );
             }
         } catch (error) {
             console.error('Error al cargar citas:', error);
-            Alert.alert('Error', 'Error de conexión');
+            Alert.alert(
+                'Error de red', 
+                'Hubo un problema al conectar con el servidor. Intenta nuevamente.',
+                [{ text: 'Reintentar', onPress: loadCitas, style: 'default' }]
+            );
         } finally {
             setLoading(false);
         }
     };
 
     /**
-     * Función para refrescar la lista
+     * Función para refrescar la lista mediante pull-to-refresh
+     * Proporciona feedback visual al usuario durante la actualización
      */
     const onRefresh = async () => {
         setRefreshing(true);
         await loadCitas();
         setRefreshing(false);
     };
+
+    /**
+     * Función para abrir el modal de detalle de una cita
+     * @param {Object} cita - Objeto con los datos de la cita
+     * @param {number} index - Índice de la cita en la lista filtrada
+     */
+    const handleViewMore = (cita, index) => {
+        setSelectedCita(cita);
+        setSelectedIndex(index);
+        setModalVisible(true);
+    };
+
+    /**
+     * Función para cerrar el modal de detalle
+     */
+    const handleCloseModal = () => {
+        setModalVisible(false);
+        setSelectedCita(null);
+        setSelectedIndex(0);
+    };
+
+    /**
+     * Función para filtrar y ordenar citas según búsqueda y filtros seleccionados
+     */
+    const filterAndSortCitas = () => {
+        let filtered = [...citas];
+
+        // Aplicar filtro de búsqueda por motivo de cita
+        if (searchText.trim()) {
+            filtered = filtered.filter(cita => 
+                cita.motivoCita?.toLowerCase().includes(searchText.toLowerCase().trim())
+            );
+        }
+
+        // Aplicar ordenamiento según filtro seleccionado
+        switch (selectedFilter) {
+            case 'reciente':
+                // Ordenar por fecha de creación (más reciente primero)
+                // Si no hay campo de creación, usar fecha de cita
+                filtered.sort((a, b) => {
+                    const dateA = new Date(a.fecha || a.createdAt);
+                    const dateB = new Date(b.fecha || b.createdAt);
+                    return dateB - dateA;
+                });
+                break;
+            
+            case 'proxima':
+                // Ordenar por fecha de cita (más próxima primero)
+                filtered.sort((a, b) => {
+                    const dateA = new Date(a.fecha);
+                    const dateB = new Date(b.fecha);
+                    return dateA - dateB;
+                });
+                break;
+            
+            case 'lejana':
+                // Ordenar por fecha de cita (más lejana primero)
+                filtered.sort((a, b) => {
+                    const dateA = new Date(a.fecha);
+                    const dateB = new Date(b.fecha);
+                    return dateB - dateA;
+                });
+                break;
+            
+            default:
+                // Por defecto, más reciente
+                filtered.sort((a, b) => {
+                    const dateA = new Date(a.fecha || a.createdAt);
+                    const dateB = new Date(b.fecha || b.createdAt);
+                    return dateB - dateA;
+                });
+        }
+
+        return filtered;
+    };
+
+    /**
+     * Obtener estadísticas rápidas de las citas con los 5 estados
+     */
+    const getCitasStats = () => {
+        const total = citas.length;
+        const agendadas = citas.filter(cita => cita.estado?.toLowerCase() === 'agendada').length;
+        const pendientes = citas.filter(cita => cita.estado?.toLowerCase() === 'pendiente').length;
+        const confirmadas = citas.filter(cita => cita.estado?.toLowerCase() === 'confirmada').length;
+        const canceladas = citas.filter(cita => cita.estado?.toLowerCase() === 'cancelada').length;
+        const completadas = citas.filter(cita => 
+            cita.estado?.toLowerCase() === 'completada' || 
+            cita.estado?.toLowerCase() === 'completado'
+        ).length;
+        
+        return { total, agendadas, pendientes, confirmadas, canceladas, completadas };
+    };
+
+    /**
+     * Efecto para actualizar la lista filtrada cuando cambian los datos, búsqueda o filtros
+     */
+    useEffect(() => {
+        const filtered = filterAndSortCitas();
+        setFilteredCitas(filtered);
+    }, [citas, searchText, selectedFilter]);
 
     /**
      * Cargar citas al montar el componente
@@ -63,291 +207,252 @@ const Citas = () => {
     }, []);
 
     /**
-     * Formatear fecha para mostrar
-     */
-    const formatDate = (dateString) => {
-        if (!dateString) return 'Fecha no disponible';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    /**
-     * Formatear hora para mostrar
-     */
-    const formatTime = (timeString) => {
-        if (!timeString) return 'Hora no disponible';
-        return timeString; // Ya viene en formato "HH:MM"
-    };
-
-    /**
-     * Obtener el estado en español
-     */
-    const getEstadoText = (estado) => {
-        switch (estado) {
-            case 'completada':
-                return 'Completada';
-            case 'pendiente':
-                return 'Pendiente';
-            case 'cancelada':
-                return 'Cancelada';
-            default:
-                return 'Sin estado';
-        }
-    };
-
-    /**
-     * Obtener el color del estado
-     */
-    const getEstadoColor = (estado) => {
-        switch (estado) {
-            case 'completada':
-                return '#4CAF50';
-            case 'pendiente':
-                return '#FF9800';
-            case 'cancelada':
-                return '#F44336';
-            default:
-                return '#9E9E9E';
-        }
-    };
-
-    /**
-     * Renderizar cada item de cita
+     * Renderizar cada tarjeta de cita
      */
     const renderCitaItem = ({ item, index }) => (
-        <View style={styles.citaItem}>
-            <View style={styles.citaHeader}>
-                <Text style={styles.citaTitle}>
-                    Cita #{index + 1}
-                </Text>
-                <View style={[
-                    styles.statusBadge,
-                    { backgroundColor: getEstadoColor(item.estado) }
-                ]}>
-                    <Text style={styles.statusText}>
-                        {getEstadoText(item.estado)}
-                    </Text>
-                </View>
-            </View>
-            
-            <View style={styles.citaDetails}>
-                <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Fecha:</Text>
-                    <Text style={styles.detailValue}>{formatDate(item.fecha)}</Text>
-                </View>
-                
-                <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Hora:</Text>
-                    <Text style={styles.detailValue}>{formatTime(item.hora)}</Text>
-                </View>
-                
-                {item.motivoCita && (
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Motivo:</Text>
-                        <Text style={styles.detailValue}>{item.motivoCita}</Text>
-                    </View>
-                )}
-                
-                {item.tipoLente && (
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Tipo de Lente:</Text>
-                        <Text style={styles.detailValue}>{item.tipoLente}</Text>
-                    </View>
-                )}
-                
-                {item.graduacion && (
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Graduación:</Text>
-                        <Text style={styles.detailValue}>{item.graduacion}</Text>
-                    </View>
-                )}
-                
-                {item.notasAdicionales && (
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Notas:</Text>
-                        <Text style={styles.detailValue}>{item.notasAdicionales}</Text>
-                    </View>
-                )}
-            </View>
-        </View>
+        <CitaCard 
+            cita={item}
+            index={index}
+            onPress={handleViewMore}
+        />
     );
 
-    /**
-     * Renderizar mensaje cuando no hay citas
-     */
-    const renderEmptyList = () => (
-        <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>No hay citas programadas</Text>
-            <Text style={styles.emptySubtitle}>
-                Las citas aparecerán aquí cuando sean programadas
-            </Text>
-        </View>
-    );
+    const stats = getCitasStats();
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Citas Programadas</Text>
-                <Text style={styles.subtitle}>
-                    {citas.length} cita{citas.length !== 1 ? 's' : ''} programada{citas.length !== 1 ? 's' : ''}
-                </Text>
-            </View>
+            {/* Configuración de la barra de estado */}
+            <StatusBar barStyle="light-content" backgroundColor="#009BBF" />
             
+            {/* Header principal con gradiente */}
+            <View style={styles.header}>
+                <View style={styles.headerContent}>
+                    <View style={styles.headerText}>
+                        <Text style={styles.headerTitle}>Citas Programadas</Text>
+                        <Text style={styles.headerSubtitle}>
+                            Gestiona todas las citas de la óptica
+                        </Text>
+                    </View>
+                    
+                    {/* Ícono decorativo del header */}
+                    <View style={styles.headerIcon}>
+                        <Ionicons name="calendar" size={28} color="#FFFFFF" />
+                    </View>
+                </View>
+                
+                {/* Estadísticas rápidas con 5 estados */}
+                {!loading && stats.total > 0 && (
+                    <View style={styles.statsContainer}>
+                        <View style={styles.statItem}>
+                            <Text style={styles.statNumber}>{stats.total}</Text>
+                            <Text style={styles.statLabel}>Total</Text>
+                        </View>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statItem}>
+                            <Text style={styles.statNumber}>{stats.pendientes}</Text>
+                            <Text style={styles.statLabel}>Pendientes</Text>
+                        </View>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statItem}>
+                            <Text style={styles.statNumber}>{stats.confirmadas}</Text>
+                            <Text style={styles.statLabel}>Confirmadas</Text>
+                        </View>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statItem}>
+                            <Text style={styles.statNumber}>{stats.completadas}</Text>
+                            <Text style={styles.statLabel}>Completadas</Text>
+                        </View>
+                    </View>
+                )}
+            </View>
+
+            {/* Barra de filtros y búsqueda */}
+            <FilterSearchBar
+                searchText={searchText}
+                onSearchChange={setSearchText}
+                selectedFilter={selectedFilter}
+                onFilterChange={setSelectedFilter}
+            />
+            
+            {/* Lista de citas */}
             <FlatList
-                data={citas}
+                data={filteredCitas}
                 keyExtractor={(item, index) => (item._id ? item._id.toString() : `cita-${index}`)}
                 renderItem={renderCitaItem}
-                contentContainerStyle={styles.listContainer}
+                contentContainerStyle={[
+                    styles.listContainer,
+                    filteredCitas.length === 0 && styles.emptyListContainer
+                ]}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
                         colors={['#009BBF']}
                         tintColor="#009BBF"
+                        title="Actualizando citas..."
+                        titleColor="#666666"
                     />
                 }
-                ListEmptyComponent={renderEmptyList}
+                ListEmptyComponent={() => {
+                    // Mostrar diferentes mensajes según si hay búsqueda activa o no
+                    if (searchText.trim()) {
+                        return (
+                            <EmptyState 
+                                title="No se encontraron citas"
+                                subtitle={`No hay citas que coincidan con "${searchText}"`}
+                                icon="search-outline"
+                            />
+                        );
+                    }
+                    return (
+                        <EmptyState 
+                            title="No hay citas programadas"
+                            subtitle="Las nuevas citas aparecerán aquí cuando sean agendadas"
+                            icon="calendar-outline"
+                        />
+                    );
+                }}
                 showsVerticalScrollIndicator={false}
+                bounces={true}
+                style={styles.list}
+            />
+
+            {/* Modal de detalle de cita */}
+            <CitaDetailModal
+                visible={modalVisible}
+                cita={selectedCita}
+                index={selectedIndex}
+                onClose={handleCloseModal}
             />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    // Contenedor principal
+    // Contenedor principal de la pantalla
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#F8F9FA',
     },
     
-    // Header de la pantalla
+    // Header principal con diseño moderno
     header: {
-        padding: 20,
-        paddingTop: 40,
         backgroundColor: '#009BBF',
+        paddingTop: 50,
+        paddingBottom: 20,
+        paddingHorizontal: 20,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 8,
     },
     
-    // Título principal
-    title: {
+    // Contenido del header
+    headerContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    
+    // Texto del header
+    headerText: {
+        flex: 1,
+    },
+    
+    // Título principal del header
+    headerTitle: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontFamily: 'Lato-Bold',
         color: '#FFFFFF',
         marginBottom: 4,
     },
     
-    // Subtítulo
-    subtitle: {
+    // Subtítulo del header
+    headerSubtitle: {
         fontSize: 14,
+        fontFamily: 'Lato-Regular',
         color: '#E0F7FF',
+        opacity: 0.9,
+    },
+    
+    // Ícono decorativo del header
+    headerIcon: {
+        width: 56,
+        height: 56,
+        borderRadius: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: 16,
+    },
+    
+    // Contenedor de estadísticas expandido para 5 estados
+    statsContainer: {
+        flexDirection: 'row',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderRadius: 10,
+        paddingVertical: 15,
+        paddingHorizontal: 16,
+        alignItems: 'center',
+        justifyContent: 'space-around',
+    },
+    
+    // Item individual de estadística
+    statItem: {
+        alignItems: 'center',
+        flex: 1,
+        paddingHorizontal: 1,
+    },
+    
+    // Número de la estadística
+    statNumber: {
+        fontSize: 18,
+        fontFamily: 'Lato-Bold',
+        color: '#FFFFFF',
+        marginBottom: 2,
+    },
+    
+    // Etiqueta de la estadística
+    statLabel: {
+        fontSize: 10,
+        fontFamily: 'Lato-Regular',
+        color: '#E0F7FF',
+        opacity: 0.9,
+        textAlign: 'center',
+    },
+    
+    // Divisor entre estadísticas
+    statDivider: {
+        width: 1,
+        height: 24,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        marginHorizontal: 8,
+    },
+    
+    // Lista principal
+    list: {
+        flex: 1,
     },
     
     // Contenedor de la lista
     listContainer: {
         padding: 16,
+        paddingBottom: 100, // Espacio para el tab bar
+    },
+    
+    // Contenedor cuando la lista está vacía
+    emptyListContainer: {
         flexGrow: 1,
-    },
-    
-    // Item de cita
-    citaItem: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    
-    // Header del item de cita
-    citaHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    
-    // Título de la cita
-    citaTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1A1A1A',
-        flex: 1,
-    },
-    
-    // Badge de estado
-    statusBadge: {
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    
-    // Texto del estado
-    statusText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#FFFFFF',
-    },
-    
-    // Detalles de la cita
-    citaDetails: {
-        gap: 8,
-    },
-    
-    // Fila de detalle
-    detailRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-    },
-    
-    // Etiqueta del detalle
-    detailLabel: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#666666',
-        width: 100,
-    },
-    
-    // Valor del detalle
-    detailValue: {
-        fontSize: 14,
-        color: '#1A1A1A',
-        flex: 1,
-    },
-    
-    // Contenedor vacío
-    emptyContainer: {
-        flex: 1,
         justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 60,
-    },
-    
-    // Título del estado vacío
-    emptyTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#666666',
-        marginBottom: 8,
-        textAlign: 'center',
-    },
-    
-    // Subtítulo del estado vacío
-    emptySubtitle: {
-        fontSize: 14,
-        color: '#999999',
-        textAlign: 'center',
-        lineHeight: 20,
     },
 });
 
 export default Citas;
+

@@ -25,33 +25,33 @@ const MoreScreen = () => {
      * Opciones del menú
      */
     const menuOptions = [
-        { 
-            icon: 'person-outline', 
-            title: 'Perfil', 
+        {
+            icon: 'person-outline',
+            title: 'Perfil',
             subtitle: 'Ver información de tu cuenta',
             onPress: () => Alert.alert('Perfil', 'Funcionalidad próximamente')
         },
-        { 
-            icon: 'settings-outline', 
-            title: 'Configuración', 
+        {
+            icon: 'settings-outline',
+            title: 'Configuración',
             subtitle: 'Ajustes de la aplicación',
             onPress: () => Alert.alert('Configuración', 'Funcionalidad próximamente')
         },
-        { 
-            icon: 'notifications-outline', 
-            title: 'Notificaciones', 
+        {
+            icon: 'notifications-outline',
+            title: 'Notificaciones',
             subtitle: 'Gestionar alertas y recordatorios',
             onPress: () => Alert.alert('Notificaciones', 'Funcionalidad próximamente')
         },
-        { 
-            icon: 'help-circle-outline', 
-            title: 'Ayuda', 
+        {
+            icon: 'help-circle-outline',
+            title: 'Ayuda',
             subtitle: 'Centro de ayuda y soporte',
             onPress: () => Alert.alert('Ayuda', 'Funcionalidad próximamente')
         },
-        { 
-            icon: 'information-circle-outline', 
-            title: 'Acerca de', 
+        {
+            icon: 'information-circle-outline',
+            title: 'Acerca de',
             subtitle: 'Información de la aplicación',
             onPress: () => Alert.alert('Acerca de', 'Óptica La Inteligente v1.0.0')
         },
@@ -74,16 +74,11 @@ const MoreScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            const result = await logout();
-                            if (result.success) {
-                                // Navegar al login después del logout exitoso
-                                navigation.reset({
-                                    index: 0,
-                                    routes: [{ name: 'Login' }],
-                                });
-                            } else {
-                                Alert.alert('Error', result.message);
-                            }
+                            await logout();
+                            navigation.reset({
+                                index: 0,
+                                routes: [{ name: 'Login' }],
+                            });
                         } catch (error) {
                             Alert.alert('Error', 'Error al cerrar sesión');
                         }
@@ -94,7 +89,7 @@ const MoreScreen = () => {
     };
 
     return (
-        <ScrollView 
+        <ScrollView
             style={styles.container}
             showsVerticalScrollIndicator={false}
         >
@@ -121,19 +116,19 @@ const MoreScreen = () => {
             {/* Menú de opciones */}
             <View style={styles.menuContainer}>
                 <Text style={styles.sectionTitle}>Opciones</Text>
-                
+
                 {menuOptions.map((option, index) => (
-                    <TouchableOpacity 
-                        key={index} 
+                    <TouchableOpacity
+                        key={index}
                         style={styles.menuItem}
                         onPress={option.onPress}
                         activeOpacity={0.7}
                     >
                         <View style={styles.menuItemLeft}>
-                            <Ionicons 
-                                name={option.icon} 
-                                size={24} 
-                                color="#009BBF" 
+                            <Ionicons
+                                name={option.icon}
+                                size={24}
+                                color="#009BBF"
                                 style={styles.menuIcon}
                             />
                             <View style={styles.menuText}>
@@ -148,7 +143,7 @@ const MoreScreen = () => {
 
             {/* Sección de logout */}
             <View style={styles.logoutSection}>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.logoutButton}
                     onPress={handleLogout}
                     activeOpacity={0.7}
@@ -180,20 +175,20 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#FFFFFF',
     },
-    
+
     // Header con información del usuario
     header: {
         padding: 20,
         paddingTop: 40,
         backgroundColor: '#009BBF',
     },
-    
+
     // Información del usuario
     userInfo: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    
+
     // Avatar del usuario
     avatar: {
         width: 60,
@@ -204,12 +199,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 16,
     },
-    
+
     // Detalles del usuario
     userDetails: {
         flex: 1,
     },
-    
+
     // Nombre del usuario
     userName: {
         fontSize: 20,
@@ -217,26 +212,26 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         marginBottom: 4,
     },
-    
+
     // Email del usuario
     userEmail: {
         fontSize: 14,
         color: '#E0F7FF',
         marginBottom: 2,
     },
-    
+
     // Rol del usuario
     userRole: {
         fontSize: 12,
         color: '#E0F7FF',
         opacity: 0.8,
     },
-    
+
     // Contenedor del menú
     menuContainer: {
         padding: 20,
     },
-    
+
     // Título de sección
     sectionTitle: {
         fontSize: 18,
@@ -244,7 +239,7 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
         marginBottom: 16,
     },
-    
+
     // Item del menú
     menuItem: {
         flexDirection: 'row',
@@ -255,24 +250,24 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
     },
-    
+
     // Lado izquierdo del item
     menuItemLeft: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
     },
-    
+
     // Icono del menú
     menuIcon: {
         marginRight: 16,
     },
-    
+
     // Texto del menú
     menuText: {
         flex: 1,
     },
-    
+
     // Título del menú
     menuTitle: {
         fontSize: 16,
@@ -280,19 +275,19 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
         marginBottom: 2,
     },
-    
+
     // Subtítulo del menú
     menuSubtitle: {
         fontSize: 12,
         color: '#666666',
     },
-    
+
     // Sección de logout
     logoutSection: {
         padding: 20,
         paddingTop: 0,
     },
-    
+
     // Botón de logout
     logoutButton: {
         flexDirection: 'row',
@@ -304,7 +299,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#FECACA',
     },
-    
+
     // Texto del logout
     logoutText: {
         fontSize: 16,
@@ -312,27 +307,27 @@ const styles = StyleSheet.create({
         color: '#EF4444',
         marginLeft: 12,
     },
-    
+
     // Información de la app
     appInfo: {
         alignItems: 'center',
         padding: 20,
         paddingTop: 0,
     },
-    
+
     // Texto de información de la app
     appInfoText: {
         fontSize: 14,
         color: '#666666',
         marginBottom: 4,
     },
-    
+
     // Versión de la app
     appVersion: {
         fontSize: 12,
         color: '#999999',
     },
-    
+
     // Espaciador para el tab bar
     spacer: {
         height: 100,

@@ -1,0 +1,235 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import Input from '../components/Login/Input';
+import Button from '../components/Button';
+import { useAuth } from '../context/AuthContext';
+
+const ForgotPassword = () => {
+    const navigation = useNavigation();
+    const route = useRoute();
+    const { API } = useAuth();
+    
+    const { prefilledEmail = '' } = route.params || {};
+
+    const [correo, setCorreo] = useState(prefilledEmail);
+    const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
+
+    const validateForm = () => {
+        const newErrors = {};
+        if (!correo) {
+            newErrors.correo = 'El correo es requerido';
+        } else if (!/\S+@\S+\.\S+/.test(correo)) {
+            newErrors.correo = 'El correo no es válido';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSendCode = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            
+            const response = await fetch(`${API}/api/empleados/forgot-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ correo }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                Alert.alert(
+                    'Código Enviado',
+                    'Se ha enviado un código de verificación a tu correo electrónico.',
+                    [
+                        {
+                            text: 'Continuar',
+                            onPress: () => navigation.navigate('VerifyCode', { correo })
+                        }
+                    ]
+                );
+            } else {
+                Alert.alert('Error', data.message || 'Error al enviar código de verificación');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Alert.alert('Error', 'Error de conexión. Inténtalo de nuevo.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <LinearGradient
+                colors={['#A4D5DD', '#FFFFFF']}
+                locations={[0, 0.5]}
+                style={styles.gradient}
+            />
+
+            <TouchableOpacity 
+                style={styles.backButton} 
+                onPress={() => navigation.goBack()}
+            >
+                <Ionicons name="arrow-back" size={24} color="#009BBF" />
+            </TouchableOpacity>
+
+            <KeyboardAvoidingView 
+                style={styles.keyboardView}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
+                <ScrollView
+                    style={styles.scrollContainer}
+                    contentContainerStyle={styles.contentContainer}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <View style={styles.header}>
+                        <View style={styles.iconContainer}>
+                            <Ionicons name="mail-outline" size={50} color="#009BBF" />
+                        </View>
+                        <Text style={styles.title}>Recuperar Contraseña</Text>
+                        <Text style={styles.subtitle}>
+                            Ingresa tu correo electrónico y te enviaremos un código de verificación
+                        </Text>
+                    </View>
+
+                    <View style={styles.form}>
+                        <Input
+                            label="Correo Electrónico"
+                            placeholder="Ingresa tu correo registrado"
+                            value={correo}
+                            onChangeText={setCorreo}
+                            icon="mail-outline"
+                            error={errors.correo}
+                        />
+
+                        <Button
+                            title="Enviar Código"
+                            onPress={handleSendCode}
+                            variant="primary"
+                            size="large"
+                            disabled={isLoading}
+                            style={styles.sendButton}
+                        />
+                    </View>
+
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>
+                            Revisa tu bandeja de entrada y la carpeta de spam
+                        </Text>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+    gradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        height: '40%',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 50,
+        left: 20,
+        zIndex: 10,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+    },
+    keyboardView: {
+        flex: 1,
+        paddingTop: 80,
+    },
+    scrollContainer: {
+        flex: 1,
+    },
+    contentContainer: {
+        flexGrow: 1,
+        padding: 20,
+        paddingTop: 20,
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: 30,
+    },
+    iconContainer: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    title: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#009BBF',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    subtitle: {
+        fontSize: 15,
+        color: '#666666',
+        textAlign: 'center',
+        lineHeight: 22,
+        paddingHorizontal: 10,
+    },
+    form: {
+        marginBottom: 30,
+    },
+    sendButton: {
+        marginTop: 20,
+    },
+    footer: {
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    footerText: {
+        fontSize: 13,
+        color: '#999999',
+        textAlign: 'center',
+        lineHeight: 18,
+    },
+});
+
+export default ForgotPassword;

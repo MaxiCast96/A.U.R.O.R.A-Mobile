@@ -2,9 +2,16 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TabNavigator from './TabNavigation';
+import Profile from '../screens/Profile';
 import SplashScreen from '../screens/SplashScreen';
 import Login from '../screens/Login';
-import Register from '../screens/Register';
+import Welcome from '../screens/Welcome';
+import Menu from '../screens/Menu';
+// Nuevas pantallas de recuperación de contraseña
+import ForgotPassword from '../screens/ForgotPassword';
+import VerifyCode from '../screens/VerifyCode';
+import ResetPassword from '../screens/ResetPassword';
+import PasswordSuccess from '../screens/PasswordSucces';
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -29,8 +36,9 @@ const LoadingScreen = () => (
  * Flujo de navegación:
  * 1. Splash Screen (pantalla de carga con logo y animación)
  * 2. Login (si no está autenticado) o Main (si está autenticado)
- * 3. Register (pantalla de registro)
- * 4. Main (tab navigator con las pantallas principales)
+ * 3. Main (tab navigator con las pantallas principales)
+ * 4. Menu (pantalla de operaciones - accesible desde tabs y directamente)
+ * 5. Flujo de recuperación de contraseña (ForgotPassword -> VerifyCode -> ResetPassword -> PasswordSuccess)
  */
 export default function Navigation() {
     const { isAuthenticated, isLoading } = useAuth();
@@ -51,14 +59,52 @@ export default function Navigation() {
                 {/* Pantalla de carga inicial */}
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 
+                {/* Pantalla de Bienvenida */}
+                <Stack.Screen name="Welcome" component={Welcome} />
+
                 {/* Pantalla de login */}
                 <Stack.Screen name="Login" component={Login} />
                 
-                {/* Pantalla de registro */}
-                <Stack.Screen name="Register" component={Register} />
+                {/* ===== PANTALLAS DE RECUPERACIÓN DE CONTRASEÑA ===== */}
+                <Stack.Screen 
+                    name="ForgotPassword" 
+                    component={ForgotPassword}
+                />
+                <Stack.Screen 
+                    name="VerifyCode" 
+                    component={VerifyCode}
+                />
+                <Stack.Screen 
+                    name="ResetPassword" 
+                    component={ResetPassword}
+                />
+                <Stack.Screen 
+                    name="PasswordSuccess" 
+                    component={PasswordSuccess}
+                />
                 
                 {/* Navegación principal con tabs */}
                 <Stack.Screen name="Main" component={TabNavigator} />
+
+                {/* Navegación de Perfil */}
+                <Stack.Screen name="Profile" component={Profile} />
+
+                {/* Pantalla de menú - acceso directo para navegación desde otras pantallas */}
+                <Stack.Screen 
+                    name="MenuDirect" 
+                    component={Menu}
+                    options={{
+                        headerShown: true,
+                        title: 'Operaciones',
+                        headerStyle: {
+                            backgroundColor: '#009BBF',
+                        },
+                        headerTintColor: '#FFFFFF',
+                        headerTitleStyle: {
+                            fontFamily: 'Lato-Bold',
+                        },
+                    }}
+                />
             </Stack.Navigator>
         </NavigationContainer>
     );
