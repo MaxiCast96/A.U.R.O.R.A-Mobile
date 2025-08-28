@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import {
     View,
     Text,
     StyleSheet,
     ScrollView,
-    Alert,
     RefreshControl,
     Animated,
     TouchableOpacity,
@@ -13,177 +12,44 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../context/AuthContext';
+
+// Importación del hook personalizado
+import { useHome } from '../hooks/useHome';
+
+// Importación de componentes
 import KPICards from '../components/Home/KPICards';
 import DashboardCharts from '../components/Home/DashboardCharts';
 
 const HomeScreen = () => {
     const navigation = useNavigation();
-    const { user, getAuthHeaders } = useAuth();
-    const [stats, setStats] = useState({
-        totalClientes: 0,
-        citasHoy: 0,
-        ventasMes: 0,
-        ingresosMes: 0,
-        pacientesActivos: 0
-    });
-    const [profileData, setProfileData] = useState({});
-    const [refreshing, setRefreshing] = useState(false);
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        loadStats();
-        loadProfileData(); // Cargar datos del perfil
-        Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-        }).start();
-    }, []);
-
-    // Función para cargar los datos del perfil
-    const loadProfileData = async () => {
-        try {
-            const headers = getAuthHeaders();
-            if (!headers || !headers.Authorization) {
-                console.log('No hay token de autenticación disponible para perfil');
-                return;
-            }
-            
-            const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/empleados/${user.id}`, {
-                method: 'GET',
-                headers: headers,
-            });
-            
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                console.log('El servidor no devolvió JSON válido para perfil');
-                return;
-            }
-            
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Datos del perfil cargados en Home:', data);
-                setProfileData(data);
-            }
-        } catch (error) {
-            console.error('Error al cargar perfil en Home:', error);
-        }
-    };
-
-    const loadStats = async () => {
-        try {
-            const headers = getAuthHeaders();
-            if (!headers || !headers.Authorization) {
-                console.log('No hay token de autenticación disponible');
-                return;
-            }
-            console.log('Cargando estadísticas...');
-            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/dashboard/all', {
-                method: 'GET',
-                headers: headers,
-            });
-            console.log('Response status:', response.status);
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                console.log('El servidor no devolvió JSON válido para estadísticas');
-                const textResponse = await response.text();
-                console.log('Response text:', textResponse);
-                return;
-            }
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Datos recibidos:', data);
-                setStats({
-                    totalClientes: data.totalClientes || data.total_clientes || 0,
-                    citasHoy: data.citasHoy || data.citas_hoy || 0,
-                    ventasMes: data.ventasMes || data.ventas_mes || 0,
-                    ingresosMes: data.ingresosMes || data.ingresos_mes || 0,
-                    pacientesActivos: data.pacientesActivos || data.pacientes_activos || 0
-                });
-            } else {
-                console.log('Error en la respuesta:', response.status);
-                const errorData = await response.text();
-                console.log('Error data:', errorData);
-            }
-        } catch (error) {
-            console.error('Error al cargar estadísticas:', error);
-        }
-    };
-
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await Promise.all([loadStats(), loadProfileData()]);
-        setRefreshing(false);
-    };
+    
+    // Uso del hook personalizado para obtener todos los estados y funciones
+    const {
+        // Estados de datos
+        stats,
+        profileData,
+        refreshing,
+        
+        // Animación
+        fadeAnim,
+        
+        // Funciones de datos
+        onRefresh,
+        
+        // Funciones de utilidad
+        getProfilePhotoUrl,
+        getUserName,
+        
+        // Handlers de acciones rápidas
+        handleCreateLentes,
+        handleCreateCita,
+        handleCreateReceta,
+        handleCreatePromocion
+    } = useHome();
 
     const handleProfilePress = () => {
         console.log('Navegando a configuración de perfil...');
         navigation.navigate('Profile');
-    };
-
-    const handleCreateLentes = () => {
-        Alert.alert(
-            'Crear Lentes',
-            '¿Desea crear un nuevo registro de lentes?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Crear',
-                    onPress: () => {
-                        console.log('Navegando a crear lentes...');
-                    }
-                }
-            ]
-        );
-    };
-
-    const handleCreateCita = () => {
-        Alert.alert(
-            'Crear Cita',
-            '¿Desea agendar una nueva cita?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Crear',
-                    onPress: () => {
-                        console.log('Navegando a crear cita...');
-                    }
-                }
-            ]
-        );
-    };
-
-    const handleCreateReceta = () => {
-        Alert.alert(
-            'Crear Receta',
-            '¿Desea crear una nueva receta médica?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Crear',
-                    onPress: () => {
-                        console.log('Navegando a crear receta...');
-                    }
-                }
-            ]
-        );
-    };
-
-    const handleCreatePromocion = () => {
-        Alert.alert(
-            'Crear Promoción',
-            '¿Desea crear una nueva promoción?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Crear',
-                    onPress: () => {
-                        console.log('Navegando a crear promoción...');
-                    }
-                }
-            ]
-        );
     };
 
     const renderQuickActionButton = (title, icon, onPress) => (
@@ -204,24 +70,10 @@ const HomeScreen = () => {
         </TouchableOpacity>
     );
 
-    // Obtener la URL de la foto de perfil desde múltiples fuentes
-    const getProfilePhotoUrl = () => {
-        return profileData.photoUrl || 
-               profileData.fotoPerfil || 
-               user?.photoUrl || 
-               user?.fotoPerfil || 
-               null;
-    };
-
-    // Obtener el nombre del usuario
-    const getUserName = () => {
-        return profileData.nombre || 
-               user?.nombre || 
-               user?.email || 
-               'Usuario';
-    };
-
+    // Obtener la URL de la foto de perfil y nombre del usuario
     const profilePhotoUrl = getProfilePhotoUrl();
+    const userName = getUserName();
+
     console.log('URL de foto de perfil en Home:', profilePhotoUrl);
 
     return (
@@ -248,12 +100,14 @@ const HomeScreen = () => {
                             resizeMode="contain"
                         />
                     </View>
+                    
                     {/* Saludo de Bienvenida */}
                     <View style={styles.greetingContainer}>
                         <Text style={styles.greetingText}>
-                            Hola, {getUserName()}
+                            Hola, {userName}
                         </Text>
                     </View>
+                    
                     {/* Botón de Perfil con foto */}
                     <TouchableOpacity
                         style={styles.profileButton}

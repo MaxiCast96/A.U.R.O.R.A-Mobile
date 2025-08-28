@@ -1,76 +1,44 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+
+// Importación del hook personalizado
+import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
+
+// Importación de componentes
 import Input from '../components/Login/Input';
 import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
 
 const ResetPassword = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { API } = useAuth();
     const { correo, codigo } = route.params;
 
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [errors, setErrors] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
-
-    const validateForm = () => {
-        const newErrors = {};
+    // Uso del hook personalizado para obtener todos los estados y funciones
+    const {
+        // Estados de formularios
+        password,
+        confirmPassword,
         
-        if (!password) {
-            newErrors.password = 'La contraseña es requerida';
-        } else if (password.length < 6) {
-            newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-            newErrors.password = 'Debe contener al menos: 1 mayúscula, 1 minúscula y 1 número';
-        }
-
-        if (!confirmPassword) {
-            newErrors.confirmPassword = 'Confirma tu contraseña';
-        } else if (password !== confirmPassword) {
-            newErrors.confirmPassword = 'Las contraseñas no coinciden';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+        // Estados de UI
+        errors,
+        isLoading,
+        
+        // Funciones de cambio de estado
+        setPassword,
+        setConfirmPassword,
+        
+        // Funciones de API
+        resetPassword
+    } = usePasswordRecovery();
 
     const handleResetPassword = async () => {
-        if (!validateForm()) {
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            
-            const response = await fetch(`${API}/api/empleados/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    correo, 
-                    code: codigo,
-                    newPassword: password 
-                }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                navigation.navigate('PasswordSuccess');
-            } else {
-                Alert.alert('Error', data.message || 'Error al cambiar la contraseña');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Alert.alert('Error', 'Error de conexión. Inténtalo de nuevo.');
-        } finally {
-            setIsLoading(false);
+        const result = await resetPassword(correo, codigo);
+        
+        if (result && result.success) {
+            navigation.navigate('PasswordSuccess');
         }
     };
 

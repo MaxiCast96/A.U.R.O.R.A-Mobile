@@ -1,71 +1,65 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+
+// Importación del hook personalizado
+import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
+
+// Importación de componentes
 import Input from '../components/Login/Input';
 import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
 
 const ForgotPassword = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { API } = useAuth();
     
     const { prefilledEmail = '' } = route.params || {};
 
-    const [correo, setCorreo] = useState(prefilledEmail);
-    const [errors, setErrors] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
+    // Uso del hook personalizado para obtener todos los estados y funciones
+    const {
+        // Estados de formularios
+        correo,
+        
+        // Estados de UI
+        errors,
+        isLoading,
+        
+        // Funciones de cambio de estado
+        setCorreo,
+        
+        // Funciones de validación
+        validateEmailForm,
+        
+        // Funciones de API
+        sendRecoveryCode,
+        
+        // Funciones de utilidad
+        initializeWithEmail
+    } = usePasswordRecovery();
 
-    const validateForm = () => {
-        const newErrors = {};
-        if (!correo) {
-            newErrors.correo = 'El correo es requerido';
-        } else if (!/\S+@\S+\.\S+/.test(correo)) {
-            newErrors.correo = 'El correo no es válido';
+    // Inicializar con el email prellenado si existe
+    useEffect(() => {
+        if (prefilledEmail) {
+            initializeWithEmail(prefilledEmail);
         }
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+    }, [prefilledEmail]);
 
     const handleSendCode = async () => {
-        if (!validateForm()) {
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            
-            const response = await fetch(`${API}/api/empleados/forgot-password`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ correo }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                Alert.alert(
-                    'Código Enviado',
-                    'Se ha enviado un código de verificación a tu correo electrónico.',
-                    [
-                        {
-                            text: 'Continuar',
-                            onPress: () => navigation.navigate('VerifyCode', { correo })
-                        }
-                    ]
-                );
-            } else {
-                Alert.alert('Error', data.message || 'Error al enviar código de verificación');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Alert.alert('Error', 'Error de conexión. Inténtalo de nuevo.');
-        } finally {
-            setIsLoading(false);
+        const result = await sendRecoveryCode();
+        
+        if (result && result.success) {
+            Alert.alert(
+                'Código Enviado',
+                'Se ha enviado un código de verificación a tu correo electrónico.',
+                [
+                    {
+                        text: 'Continuar',
+                        onPress: () => navigation.navigate('VerifyCode', { correo })
+                    }
+                ]
+            );
         }
     };
 

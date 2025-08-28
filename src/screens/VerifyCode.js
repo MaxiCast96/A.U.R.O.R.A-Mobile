@@ -1,115 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import CodeInput from '../components/CodeInput';
-import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
 
-const VerifyCode = () => {
+// Importación del hook personalizado
+import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
+
+// Importación de componentes
+import Input from '../components/Login/Input';
+import Button from '../components/Button';
+
+const ResetPassword = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { API } = useAuth();
-    const { correo } = route.params;
+    const { correo, codigo } = route.params;
 
-    const [codigo, setCodigo] = useState('');
-    const [errors, setErrors] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(300);
-    const [canResend, setCanResend] = useState(false);
+    // Uso del hook personalizado para obtener todos los estados y funciones
+    const {
+        // Estados de formularios
+        password,
+        confirmPassword,
+        
+        // Estados de UI
+        errors,
+        isLoading,
+        
+        // Funciones de cambio de estado
+        setPassword,
+        setConfirmPassword,
+        
+        // Funciones de API
+        resetPassword
+    } = usePasswordRecovery();
 
-    useEffect(() => {
-        if (timeLeft > 0) {
-            const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-            return () => clearTimeout(timer);
-        } else {
-            setCanResend(true);
-        }
-    }, [timeLeft]);
-
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const handleCodeComplete = (code) => {
-        setCodigo(code);
-        setErrors({});
-    };
-
-    const handleCodeChange = (code) => {
-        setCodigo(code);
-        setErrors({});
-    };
-
-    const handleVerifyCode = async () => {
-        if (!codigo || codigo.length !== 6) {
-            setErrors({ codigo: 'Ingresa el código completo de 6 dígitos' });
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            
-            const response = await fetch(`${API}/api/empleados/verify-reset-code`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    correo,
-                    code: codigo
-                }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                navigation.navigate('ResetPassword', {
-                    correo,
-                    codigo
-                });
-            } else {
-                setErrors({ codigo: 'Código incorrecto o expirado' });
-                Alert.alert('Error', data.message || 'Código incorrecto o expirado');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Alert.alert('Error', 'Error de conexión. Inténtalo de nuevo.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleResendCode = async () => {
-        try {
-            setIsLoading(true);
-
-            const response = await fetch(`${API}/api/empleados/forgot-password`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ correo }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                Alert.alert('Código Reenviado', 'Se ha enviado un nuevo código a tu correo');
-                setTimeLeft(300);
-                setCanResend(false);
-                setCodigo('');
-            } else {
-                Alert.alert('Error', data.message || 'Error al reenviar código');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Alert.alert('Error', 'Error de conexión. Inténtalo de nuevo.');
-        } finally {
-            setIsLoading(false);
+    const handleResetPassword = async () => {
+        const result = await resetPassword(correo, codigo);
+        
+        if (result && result.success) {
+            navigation.navigate('PasswordSuccess');
         }
     };
 
@@ -121,8 +50,8 @@ const VerifyCode = () => {
                 style={styles.gradient}
             />
 
-            <TouchableOpacity
-                style={styles.backButton}
+            <TouchableOpacity 
+                style={styles.backButton} 
                 onPress={() => navigation.goBack()}
             >
                 <Ionicons name="arrow-back" size={24} color="#009BBF" />
@@ -140,53 +69,71 @@ const VerifyCode = () => {
                 >
                     <View style={styles.header}>
                         <View style={styles.iconContainer}>
-                            <Ionicons name="key-outline" size={50} color="#009BBF" />
+                            <Ionicons name="lock-closed-outline" size={50} color="#009BBF" />
                         </View>
-                        <Text style={styles.title}>Verificar Código</Text>
+                        <Text style={styles.title}>Nueva Contraseña</Text>
                         <Text style={styles.subtitle}>
-                            Ingresa el código de 6 dígitos que enviamos a
+                            Crea una contraseña segura para tu cuenta
                         </Text>
-                        <Text style={styles.email}>{correo}</Text>
                     </View>
 
                     <View style={styles.form}>
-                        <Text style={styles.codeLabel}>Código de Verificación</Text>
-                        <CodeInput
-                            length={6}
-                            value={codigo}
-                            onChangeText={handleCodeChange}
-                            onComplete={handleCodeComplete}
-                            error={errors.codigo}
+                        <Input
+                            label="Nueva Contraseña"
+                            placeholder="Ingresa tu nueva contraseña"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry={true}
+                            icon="lock-closed-outline"
+                            error={errors.password}
                         />
+
+                        <Input
+                            label="Confirmar Contraseña"
+                            placeholder="Confirma tu nueva contraseña"
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            secureTextEntry={true}
+                            icon="lock-closed-outline"
+                            error={errors.confirmPassword}
+                        />
+
+                        <View style={styles.requirements}>
+                            <Text style={styles.requirementsTitle}>Requisitos de la contraseña:</Text>
+                            <Text style={[
+                                styles.requirement,
+                                password.length >= 6 && styles.requirementMet
+                            ]}>
+                                • Mínimo 6 caracteres
+                            </Text>
+                            <Text style={[
+                                styles.requirement,
+                                /(?=.*[a-z])/.test(password) && styles.requirementMet
+                            ]}>
+                                • Al menos una letra minúscula
+                            </Text>
+                            <Text style={[
+                                styles.requirement,
+                                /(?=.*[A-Z])/.test(password) && styles.requirementMet
+                            ]}>
+                                • Al menos una letra mayúscula
+                            </Text>
+                            <Text style={[
+                                styles.requirement,
+                                /(?=.*\d)/.test(password) && styles.requirementMet
+                            ]}>
+                                • Al menos un número
+                            </Text>
+                        </View>
 
                         <Button
-                            title="Verificar Código"
-                            onPress={handleVerifyCode}
+                            title="Cambiar Contraseña"
+                            onPress={handleResetPassword}
                             variant="primary"
                             size="large"
-                            disabled={isLoading || codigo.length !== 6}
-                            style={styles.verifyButton}
+                            disabled={isLoading}
+                            style={styles.resetButton}
                         />
-
-                        <View style={styles.resendContainer}>
-                            {!canResend ? (
-                                <Text style={styles.timerText}>
-                                    Reenviar código en {formatTime(timeLeft)}
-                                </Text>
-                            ) : (
-                                <TouchableOpacity onPress={handleResendCode} disabled={isLoading}>
-                                    <Text style={styles.resendText}>
-                                        ¿No recibiste el código? Reenviar
-                                    </Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </View>
-
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>
-                            Revisa tu bandeja de entrada y la carpeta de spam
-                        </Text>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -240,7 +187,7 @@ const styles = StyleSheet.create({
     },
     header: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 25,
     },
     iconContainer: {
         width: 100,
@@ -270,52 +217,36 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: '#666666',
         textAlign: 'center',
-        marginBottom: 8,
-    },
-    email: {
-        fontSize: 15,
-        color: '#009BBF',
-        fontWeight: '600',
-        textAlign: 'center',
+        lineHeight: 22,
     },
     form: {
         marginBottom: 20,
     },
-    codeLabel: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1A1A1A',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    verifyButton: {
-        marginTop: 25,
+    requirements: {
+        backgroundColor: '#F8F9FA',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 12,
         marginBottom: 15,
     },
-    resendContainer: {
-        alignItems: 'center',
-    },
-    timerText: {
+    requirementsTitle: {
         fontSize: 13,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginBottom: 6,
+    },
+    requirement: {
+        fontSize: 11,
         color: '#666666',
-        textAlign: 'center',
+        marginBottom: 3,
     },
-    resendText: {
-        fontSize: 13,
-        color: '#009BBF',
-        textAlign: 'center',
-        textDecorationLine: 'underline',
+    requirementMet: {
+        color: '#22C55E',
+        fontWeight: '500',
     },
-    footer: {
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    footerText: {
-        fontSize: 13,
-        color: '#999999',
-        textAlign: 'center',
-        lineHeight: 18,
+    resetButton: {
+        marginTop: 10,
     },
 });
 
-export default VerifyCode;
+export default ResetPassword;

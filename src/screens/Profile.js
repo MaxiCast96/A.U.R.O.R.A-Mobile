@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
     View, 
     Text, 
@@ -10,8 +10,11 @@ import {
     RefreshControl 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../context/AuthContext';
+
+// Importación del hook personalizado
+import { useProfile } from '../hooks/useProfile';
 
 // Importación de componentes separados
 import ProfilePhoto from '../components/Profile/ProfilePhoto';
@@ -20,140 +23,29 @@ import ProfileSection from '../components/Profile/ProfileSection';
 import SaveStatus from '../components/Profile/SaveStatus';
 
 const Profile = () => {
-    const { user, updateUser, getAuthHeaders, logout } = useAuth();
+    const { logout } = useAuth();
     const navigation = useNavigation();
     
-    // Estados principales
-    const [profileData, setProfileData] = useState({});
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [saveStatus, setSaveStatus] = useState('idle');
-    const [saveMessage, setSaveMessage] = useState('');
-
-    const loadProfileData = async () => {
-        try {
-            setLoading(true);
-            const headers = getAuthHeaders();
-            if (!headers || !headers.Authorization) {
-                console.log('No hay token de autenticación disponible para perfil');
-                return;
-            }
-            const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/empleados/${user.id}`, {
-    method: 'GET',
-    headers: headers,
-});
-            console.log('Response status perfil:', response.status);
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                console.log('El servidor no devolvió JSON válido para perfil');
-                const textResponse = await response.text();
-                console.log('Response text perfil:', textResponse);
-                return;
-            }
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Datos del perfil recibidos:', data);
-                setProfileData(data);
-            } else {
-                console.log('Error en la respuesta del perfil:', response.status);
-                const errorData = await response.text();
-                console.log('Error data perfil:', errorData);
-                Alert.alert(
-                    'Error de conexión', 
-                    'No se pudieron cargar los datos del perfil.',
-                    [{ text: 'Entendido', style: 'default' }]
-                );
-            }
-        } catch (error) {
-            console.error('Error al cargar perfil:', error);
-            Alert.alert(
-                'Error de red', 
-                'Hubo un problema al conectar con el servidor.',
-                [{ text: 'Reintentar', onPress: loadProfileData, style: 'default' }]
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const updateProfileField = async (field, value) => {
-        try {
-            setSaveStatus('saving');
-            setSaveMessage(`Guardando ${field}...`);
-            const headers = getAuthHeaders();
-            if (!headers || !headers.Authorization) {
-                throw new Error('No hay token de autenticación disponible');
-            }
-            console.log(`Actualizando campo ${field} con valor:`, value);
-            const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/empleados/${user.id}`, {
-                method: 'PUT',
-                headers: {
-                    ...headers,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    [field]: value
-                }),
-            });
-            console.log('Response status actualización:', response.status);
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                console.log('El servidor no devolvió JSON válido para actualización');
-                const textResponse = await response.text();
-                console.log('Response text actualización:', textResponse);
-                throw new Error('Respuesta del servidor no válida');
-            }
-            if (response.ok) {
-                const updatedData = await response.json();
-                console.log('Campo actualizado correctamente:', updatedData);
-                setProfileData(prev => ({
-                    ...prev,
-                    [field]: value
-                }));
-                if (['nombre', 'apellido', 'correo'].includes(field)) {
-                    updateUser && updateUser(updatedData);
-                }
-                setSaveStatus('saved');
-                setSaveMessage('Cambios guardados correctamente');
-            } else {
-                console.log('Error en actualización:', response.status);
-                const errorData = await response.text();
-                console.log('Error data actualización:', errorData);
-                throw new Error(`Error del servidor: ${response.status}`);
-            }
-        } catch (error) {
-            console.error('Error al actualizar campo:', error);
-            setSaveStatus('error');
-            setSaveMessage('Error al guardar cambios');
-            throw error;
-        }
-    };
-
-    const updateProfilePhoto = async (photoUrl) => {
-        try {
-            setSaveStatus('saving');
-            setSaveMessage('Actualizando foto de perfil...');
-            // Usar el campo correcto según lo que espera el backend
-            await updateProfileField('fotoPerfil', photoUrl);
-            setSaveStatus('saved');
-            setSaveMessage('Foto actualizada correctamente');
-        } catch (error) {
-            console.error('Error al actualizar foto:', error);
-            setSaveStatus('error');
-            setSaveMessage('Error al actualizar la foto');
-            Alert.alert(
-                'Error',
-                'No se pudo actualizar la foto de perfil.',
-                [{ text: 'Entendido', style: 'default' }]
-            );
-        }
-    };
-
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await loadProfileData();
-        setRefreshing(false);
-    };
+    // Uso del hook personalizado para obtener todos los estados y funciones
+    const {
+        // Estados de datos
+        profileData,
+        loading,
+        refreshing,
+        
+        // Estados de guardado
+        saveStatus,
+        saveMessage,
+        
+        // Funciones de datos
+        updateProfileField,
+        updateProfilePhoto,
+        onRefresh,
+        
+        // Funciones de utilidad
+        getUserData,
+        getSucursalDisplay
+    } = useProfile();
 
     const handleGoHome = () => {
         console.log('Navegando al Home...');
@@ -161,6 +53,7 @@ const Profile = () => {
     };
 
     const handleChangePassword = () => {
+        const userData = getUserData();
         Alert.alert(
             'Cambiar Contraseña',
             'Se enviará un código de verificación a tu correo registrado para confirmar el cambio de contraseña.',
@@ -206,40 +99,16 @@ const Profile = () => {
         );
     };
 
-    useEffect(() => {
-        loadProfileData();
-    }, []);
+    // Obtener datos del usuario combinados
+    const userData = getUserData();
 
-    // --- userData con valores por defecto para todos los campos ---
-    const userData = {
-        nombre: '',
-        apellido: '',
-        correo: '',
-        telefono: '',
-        dui: '',
-        cargo: '',
-        photoUrl: user?.photoUrl || user?.fotoPerfil || '',
-        fechaContratacion: '',
-        sucursalId: '',
-        direccion: { departamento: '', municipio: '', direccionDetallada: '' },
-        ...user,
-        ...profileData,
-        photoUrl: profileData.photoUrl || profileData.fotoPerfil || user?.photoUrl || user?.fotoPerfil || '',
-        sucursalId: profileData.sucursalId || user?.sucursalId || '',
-        direccion: profileData.direccion || user?.direccion || { departamento: '', municipio: '', direccionDetallada: '' },
-    };
+    console.log('userData:', userData);
 
-    // Función para mostrar sucursal (nombre si es objeto, ID si es string)
-    const getSucursalDisplay = (sucursalId) => {
-        if (!sucursalId) return 'No asignada';
-        if (typeof sucursalId === 'object' && sucursalId.nombre) return sucursalId.nombre;
-        if (typeof sucursalId === 'string') return sucursalId;
-        return 'No asignada';
-    };
-console.log('userData:', userData);
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#009BBF" />
+            
+            {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerContent}>
                     <Text style={styles.headerTitle}>Mi Perfil</Text>
@@ -255,6 +124,8 @@ console.log('userData:', userData);
                     <Ionicons name="home-outline" size={24} color="#FFFFFF" />
                 </TouchableOpacity>
             </View>
+            
+            {/* Content */}
             <ScrollView 
                 style={styles.content}
                 showsVerticalScrollIndicator={false}
@@ -270,11 +141,14 @@ console.log('userData:', userData);
                 }
                 contentContainerStyle={styles.scrollContent}
             >
+                {/* Estado de guardado */}
                 <SaveStatus 
                     status={saveStatus}
                     message={saveMessage}
                     autoHide={true}
                 />
+                
+                {/* Sección de foto de perfil */}
                 <View style={styles.photoSection}>
                     <ProfilePhoto 
                         photoUrl={userData.photoUrl}
@@ -288,6 +162,8 @@ console.log('userData:', userData);
                         {userData.cargo || 'Miembro del equipo'}
                     </Text>
                 </View>
+                
+                {/* Información Personal */}
                 <ProfileSection 
                     title="Información Personal"
                     subtitle="Datos básicos de tu perfil"
@@ -324,6 +200,8 @@ console.log('userData:', userData);
                         maxLength={15}
                     />
                 </ProfileSection>
+                
+                {/* Identificación */}
                 <ProfileSection 
                     title="Identificación"
                     subtitle="Documentos oficiales (solo lectura)"
@@ -336,6 +214,8 @@ console.log('userData:', userData);
                         type="dui"
                     />
                 </ProfileSection>
+                
+                {/* Información Laboral */}
                 <ProfileSection 
                     title="Información Laboral"
                     subtitle="Datos relacionados con tu trabajo"
@@ -365,6 +245,8 @@ console.log('userData:', userData);
                         type="text"
                     />
                 </ProfileSection>
+                
+                {/* Acciones de Cuenta */}
                 <ProfileSection 
                     title="Acciones de Cuenta"
                     subtitle="Configuraciones y opciones avanzadas"
@@ -385,6 +267,7 @@ console.log('userData:', userData);
                             <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
                         </View>
                     </TouchableOpacity>
+                    
                     <TouchableOpacity 
                         style={styles.actionButton}
                         onPress={handleGoHome}
@@ -403,6 +286,7 @@ console.log('userData:', userData);
                             <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
                         </View>
                     </TouchableOpacity>
+                    
                     <TouchableOpacity 
                         style={[styles.actionButton, styles.logoutActionButton]}
                         onPress={handleLogout}
@@ -421,6 +305,7 @@ console.log('userData:', userData);
                         </View>
                     </TouchableOpacity>
                 </ProfileSection>
+                
                 <View style={styles.spacer} />
             </ScrollView>
         </View>
