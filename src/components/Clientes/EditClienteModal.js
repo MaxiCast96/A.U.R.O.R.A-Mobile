@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import {
     View,
     Text,
@@ -11,199 +11,122 @@ import {
     Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../context/AuthContext';
+import { useEditCliente } from '../../hooks/useCliente/useEditCliente';
 
 /**
- * Componente AddClienteModal
+ * Componente EditClienteModal
  * 
- * Modal para agregar nuevos clientes con formulario organizado por secciones
- * siguiendo el diseño del sitio web de escritorio.
+ * Modal para editar clientes existentes con formulario organizado por secciones
+ * siguiendo el diseño del sitio web de escritorio pero diferenciándose visualmente
+ * del modal de agregar cliente.
  * 
  * Props:
  * @param {boolean} visible - Controla la visibilidad del modal
+ * @param {Object} cliente - Datos del cliente a editar
  * @param {Function} onClose - Función que se ejecuta al cerrar el modal
- * @param {Function} onSuccess - Función que se ejecuta al crear exitosamente el cliente
+ * @param {Function} onSuccess - Función que se ejecuta al actualizar exitosamente el cliente
  */
-const AddClienteModal = ({ visible, onClose, onSuccess }) => {
-    const { getAuthHeaders } = useAuth();
-    
-    // Estados del formulario - Información Personal
-    const [nombre, setNombre] = useState('');
-    const [apellido, setApellido] = useState('');
-    const [edad, setEdad] = useState('');
-    const [dui, setDui] = useState('');
-    const [telefono, setTelefono] = useState('');
-    const [correo, setCorreo] = useState('');
-
-    // Estados del formulario - Información de Residencia
-    const [departamento, setDepartamento] = useState('');
-    const [ciudad, setCiudad] = useState('');
-    const [direccionCompleta, setDireccionCompleta] = useState('');
-
-    // Estados del formulario - Estado y Seguridad
-    const [estado, setEstado] = useState('Activo');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-
-    // Estado de carga
-    const [loading, setLoading] = useState(false);
-
-    /**
-     * Limpiar todos los campos del formulario
-     */
-    const clearForm = () => {
-        setNombre('');
-        setApellido('');
-        setEdad('');
-        setDui('');
-        setTelefono('');
-        setCorreo('');
-        setDepartamento('');
-        setCiudad('');
-        setDireccionCompleta('');
-        setEstado('Activo');
-        setPassword('');
-        setShowPassword(false);
-    };
-
-    /**
-     * Validar formulario antes de enviar
-     */
-    const validateForm = () => {
-        if (!nombre || nombre.toString().trim() === '') {
-            Alert.alert('Error', 'El nombre es obligatorio');
-            return false;
-        }
-        if (!apellido || apellido.toString().trim() === '') {
-            Alert.alert('Error', 'El apellido es obligatorio');
-            return false;
-        }
-        if (!edad || edad.toString().trim() === '' || isNaN(Number(edad)) || Number(edad) < 18) {
-            Alert.alert('Error', 'La edad debe ser un número mayor a 18 años');
-            return false;
-        }
-        if (!dui || dui.toString().trim() === '') {
-            Alert.alert('Error', 'El DUI es obligatorio');
-            return false;
-        }
-        if (!telefono || telefono.toString().trim() === '') {
-            Alert.alert('Error', 'El teléfono es obligatorio');
-            return false;
-        }
-        if (!correo || correo.toString().trim() === '' || !correo.toString().includes('@')) {
-            Alert.alert('Error', 'Ingresa un correo electrónico válido');
-            return false;
-        }
-        if (!password || password.toString().trim() === '' || password.toString().length < 6) {
-            Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
-            return false;
-        }
-        return true;
-    };
-
-    /**
-     * Crear cliente en el servidor
-     */
-    const createCliente = async () => {
-        if (!validateForm()) return false;
-
-        setLoading(true);
+const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
+    const {
+        // Estados del formulario - Información Personal
+        nombre,
+        setNombre,
+        apellido,
+        setApellido,
+        edad,
+        setEdad,
+        dui,
+        setDui,
+        telefono,
+        setTelefono,
+        correo,
+        setCorreo,
         
-        // Preparar datos según la estructura de tu MongoDB
-        const clienteData = {
-            nombre: nombre.toString().trim(),
-            apellido: apellido.toString().trim(),
-            edad: Number(edad),
-            dui: dui.toString().trim(),
-            telefono: telefono.toString().trim(),
-            correo: correo.toString().trim().toLowerCase(),
-            direccion: {
-                calle: direccionCompleta.toString().trim(),
-                ciudad: ciudad.toString().trim(),
-                departamento: departamento.toString().trim()
-            },
-            estado: estado,
-            password: password.toString().trim()
-        };
+        // Estados del formulario - Información de Residencia
+        departamento,
+        setDepartamento,
+        ciudad,
+        setCiudad,
+        direccionCompleta,
+        setDireccionCompleta,
+        
+        // Estados del formulario - Estado y Seguridad
+        estado,
+        setEstado,
+        password,
+        setPassword,
+        showPassword,
+        setShowPassword,
+        
+        // Estados de control
+        loading,
+        
+        // Funciones
+        loadClienteData,
+        hasChanges,
+        clearForm,
+        updateCliente
+    } = useEditCliente();
 
-        try {
-            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/clientes', {
-                method: 'POST',
-                headers: {
-                    ...getAuthHeaders(),
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(clienteData),
-            });
-
-            if (response.ok) {
-                const newCliente = await response.json();
-                
-                Alert.alert(
-                    'Cliente creado', 
-                    'El cliente ha sido registrado exitosamente.',
-                    [{ text: 'Entendido', style: 'default' }]
-                );
-                
-                // Limpiar formulario
-                clearForm();
-                
-                // Ejecutar callback de éxito
-                if (onSuccess) {
-                    onSuccess(newCliente);
-                }
-                
-                // Cerrar modal
-                onClose();
-                
-                return true;
-            } else {
-                const errorData = await response.json();
-                Alert.alert(
-                    'Error al crear cliente', 
-                    errorData.message || 'No se pudo crear el cliente.',
-                    [{ text: 'Entendido', style: 'default' }]
-                );
-                return false;
-            }
-        } catch (error) {
-            console.error('Error al crear cliente:', error);
-            Alert.alert(
-                'Error de red', 
-                'Hubo un problema al conectar con el servidor.',
-                [{ text: 'Entendido', style: 'default' }]
-            );
-            return false;
-        } finally {
-            setLoading(false);
+    // Cargar datos del cliente cuando se abre el modal
+    useEffect(() => {
+        if (visible && cliente) {
+            loadClienteData(cliente);
         }
-    };
+    }, [visible, cliente]);
 
     /**
      * Manejar el guardado del cliente
      */
     const handleSave = async () => {
-        await createCliente();
+        const success = await updateCliente((updatedCliente) => {
+            if (onSuccess) {
+                onSuccess(updatedCliente);
+            }
+            onClose();
+        });
     };
 
     /**
-     * Cerrar modal y limpiar formulario
+     * Cerrar modal con confirmación si hay cambios
      */
     const handleClose = () => {
-        clearForm();
-        onClose();
+        if (hasChanges()) {
+            Alert.alert(
+                'Cambios sin guardar',
+                '¿Estás seguro de que deseas cerrar sin guardar los cambios?',
+                [
+                    { text: 'Continuar editando', style: 'cancel' },
+                    { 
+                        text: 'Cerrar sin guardar', 
+                        style: 'destructive',
+                        onPress: () => {
+                            clearForm();
+                            onClose();
+                        }
+                    }
+                ]
+            );
+        } else {
+            clearForm();
+            onClose();
+        }
     };
 
     /**
      * Renderizar campo de entrada de texto
      */
-    const renderTextInput = (label, value, onChangeText, placeholder, required = false, keyboardType = 'default', multiline = false) => (
+    const renderTextInput = (label, value, onChangeText, placeholder, required = false, keyboardType = 'default', multiline = false, editable = true) => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
                 {label} {required && <Text style={styles.required}>*</Text>}
             </Text>
             <TextInput
-                style={[styles.textInput, multiline && styles.multilineInput]}
+                style={[
+                    styles.textInput, 
+                    multiline && styles.multilineInput,
+                    !editable && styles.disabledInput
+                ]}
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
@@ -211,6 +134,7 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                 keyboardType={keyboardType}
                 multiline={multiline}
                 numberOfLines={multiline ? 3 : 1}
+                editable={editable}
             />
         </View>
     );
@@ -221,14 +145,14 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
     const renderPasswordInput = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
-                Contraseña <Text style={styles.required}>*</Text>
+                Nueva Contraseña
             </Text>
             <View style={styles.passwordContainer}>
                 <TextInput
                     style={styles.passwordInput}
                     value={password}
                     onChangeText={setPassword}
-                    placeholder="Contraseña para acceder al sistema"
+                    placeholder="Dejar vacío si no desea cambiar"
                     placeholderTextColor="#999999"
                     secureTextEntry={!showPassword}
                 />
@@ -243,7 +167,7 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                     />
                 </TouchableOpacity>
             </View>
-            <Text style={styles.inputHint}>Debe tener al menos 6 caracteres</Text>
+            <Text style={styles.inputHint}>Dejar vacío para mantener la contraseña actual</Text>
         </View>
     );
 
@@ -259,13 +183,13 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                 <TouchableOpacity
                     style={[
                         styles.estadoOption,
-                        estado === 'Activo' && styles.estadoOptionSelected
+                        estado === 'Activo' && styles.estadoOptionActiveSelected
                     ]}
                     onPress={() => setEstado('Activo')}
                 >
                     <Text style={[
                         styles.estadoText,
-                        estado === 'Activo' && styles.estadoTextSelected
+                        estado === 'Activo' && styles.estadoTextActiveSelected
                     ]}>
                         Activo
                     </Text>
@@ -273,13 +197,13 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                 <TouchableOpacity
                     style={[
                         styles.estadoOption,
-                        estado === 'Inactivo' && styles.estadoOptionSelected
+                        estado === 'Inactivo' && styles.estadoOptionInactiveSelected
                     ]}
                     onPress={() => setEstado('Inactivo')}
                 >
                     <Text style={[
                         styles.estadoText,
-                        estado === 'Inactivo' && styles.estadoTextSelected
+                        estado === 'Inactivo' && styles.estadoTextInactiveSelected
                     ]}>
                         Inactivo
                     </Text>
@@ -298,7 +222,17 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
             <SafeAreaView style={styles.container}>
                 {/* Header del modal */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Agregar Nuevo Cliente</Text>
+                    <View style={styles.headerContent}>
+                        <Ionicons name="pencil" size={24} color="#FFFFFF" />
+                        <View style={styles.headerText}>
+                            <Text style={styles.headerTitle}>Editar Cliente</Text>
+                            {cliente && (
+                                <Text style={styles.headerSubtitle}>
+                                    {cliente.nombre} {cliente.apellido}
+                                </Text>
+                            )}
+                        </View>
+                    </View>
                     <TouchableOpacity 
                         style={styles.closeButton}
                         onPress={handleClose}
@@ -317,7 +251,7 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                     {/* Sección: Información Personal */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
-                            <Ionicons name="person" size={20} color="#009BBF" />
+                            <Ionicons name="person" size={20} color="#49AA4C" />
                             <Text style={styles.sectionTitle}>Información Personal</Text>
                         </View>
                         <View style={styles.sectionContent}>
@@ -355,7 +289,7 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                     {/* Sección: Información de Residencia */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
-                            <Ionicons name="home" size={20} color="#49AA4C" />
+                            <Ionicons name="location" size={20} color="#FF8C00" />
                             <Text style={styles.sectionTitle}>Información de Residencia</Text>
                         </View>
                         <View style={styles.sectionContent}>
@@ -371,7 +305,7 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                                 'Dirección Completa', 
                                 direccionCompleta, 
                                 setDireccionCompleta, 
-                                'Colonia Santa Elena, Calle Los Rosales #456, Casa amarilla con portón negro',
+                                'Colonia Santa Elena, Calle Los Rosales #456',
                                 false,
                                 'default',
                                 true
@@ -382,7 +316,7 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                     {/* Sección: Estado del Cliente */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
-                            <Ionicons name="bar-chart" size={20} color="#D0155F" />
+                            <Ionicons name="analytics" size={20} color="#6366F1" />
                             <Text style={styles.sectionTitle}>Estado del Cliente</Text>
                         </View>
                         <View style={styles.sectionContent}>
@@ -390,11 +324,11 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                         </View>
                     </View>
 
-                    {/* Sección: Acceso y Seguridad */}
+                    {/* Sección: Seguridad */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
-                            <Ionicons name="lock-closed" size={20} color="#6B7280" />
-                            <Text style={styles.sectionTitle}>Acceso y Seguridad</Text>
+                            <Ionicons name="key" size={20} color="#10B981" />
+                            <Text style={styles.sectionTitle}>Seguridad</Text>
                         </View>
                         <View style={styles.sectionContent}>
                             {renderPasswordInput()}
@@ -412,17 +346,18 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                         onPress={handleClose}
                         activeOpacity={0.8}
                     >
+                        <Ionicons name="close-circle-outline" size={20} color="#666666" />
                         <Text style={styles.cancelButtonText}>Cancelar</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
-                        style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+                        style={[styles.updateButton, loading && styles.updateButtonDisabled]}
                         onPress={handleSave}
                         activeOpacity={0.8}
                         disabled={loading}
                     >
-                        <Ionicons name="save" size={20} color="#FFFFFF" />
-                        <Text style={styles.saveButtonText}>
-                            {loading ? 'Guardando...' : 'Guardar Cliente'}
+                        <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                        <Text style={styles.updateButtonText}>
+                            {loading ? 'Actualizando...' : 'Actualizar Cliente'}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -437,18 +372,32 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8F9FA',
     },
     header: {
-        backgroundColor: '#009BBF',
+        backgroundColor: '#49AA4C', // Color diferente al de agregar
         paddingHorizontal: 20,
         paddingVertical: 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    headerContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        gap: 12,
+    },
+    headerText: {
+        flex: 1,
+    },
     headerTitle: {
         fontSize: 20,
         fontFamily: 'Lato-Bold',
         color: '#FFFFFF',
-        flex: 1,
+    },
+    headerSubtitle: {
+        fontSize: 14,
+        fontFamily: 'Lato-Regular',
+        color: 'rgba(255, 255, 255, 0.8)',
+        marginTop: 2,
     },
     closeButton: {
         width: 32,
@@ -488,6 +437,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
+        borderLeftWidth: 3,
+        borderLeftColor: '#49AA4C', // Borde de color para diferenciarlo
     },
     row: {
         flexDirection: 'row',
@@ -506,7 +457,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     required: {
-        color: '#D0155F',
+        color: '#49AA4C',
     },
     textInput: {
         borderWidth: 1,
@@ -518,6 +469,10 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Regular',
         color: '#1A1A1A',
         backgroundColor: '#FFFFFF',
+    },
+    disabledInput: {
+        backgroundColor: '#F8F9FA',
+        color: '#666666',
     },
     multilineInput: {
         height: 80,
@@ -563,20 +518,27 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8F9FA',
         alignItems: 'center',
     },
-    estadoOptionSelected: {
-        borderColor: '#009BBF',
-        backgroundColor: '#009BBF',
+    estadoOptionActiveSelected: {
+        borderColor: '#10B981',
+        backgroundColor: '#10B981',
+    },
+    estadoOptionInactiveSelected: {
+        borderColor: '#49AA4C',
+        backgroundColor: '#49AA4C',
     },
     estadoText: {
         fontSize: 14,
         fontFamily: 'Lato-Bold',
         color: '#666666',
     },
-    estadoTextSelected: {
+    estadoTextActiveSelected: {
+        color: '#FFFFFF',
+    },
+    estadoTextInactiveSelected: {
         color: '#FFFFFF',
     },
     spacer: {
-        height: 40,
+        height: 20,
     },
     actionButtons: {
         flexDirection: 'row',
@@ -589,37 +551,45 @@ const styles = StyleSheet.create({
     },
     cancelButton: {
         flex: 1,
-        paddingVertical: 14,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#E5E5E5',
-        backgroundColor: '#F8F9FA',
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingVertical: 14,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#E5E5E5',
+        gap: 8,
     },
     cancelButtonText: {
         fontSize: 16,
         fontFamily: 'Lato-Bold',
         color: '#666666',
     },
-    saveButton: {
+    updateButton: {
         flex: 2,
         flexDirection: 'row',
-        paddingVertical: 14,
-        borderRadius: 8,
-        backgroundColor: '#009BBF',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingVertical: 14,
+        backgroundColor: '#49AA4C',
+        borderRadius: 10,
         gap: 8,
+        shadowColor: '#49AA4C',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    saveButtonDisabled: {
-        backgroundColor: '#CCCCCC',
+    updateButtonDisabled: {
+        backgroundColor: '#999999',
+        shadowColor: 'transparent',
     },
-    saveButtonText: {
+    updateButtonText: {
         fontSize: 16,
         fontFamily: 'Lato-Bold',
         color: '#FFFFFF',
     },
 });
 
-export default AddClienteModal;
+export default EditClienteModal;

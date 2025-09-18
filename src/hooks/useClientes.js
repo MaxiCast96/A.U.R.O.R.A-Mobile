@@ -271,6 +271,18 @@ export const useClientes = () => {
     };
 
     // ===========================================
+    // FUNCIONES DE GESTIÓN DE LISTA
+    // ===========================================
+
+    /**
+     * Función para agregar un cliente a la lista local
+     * @param {Object} newCliente - Nuevo cliente a agregar
+     */
+    const addClienteToList = (newCliente) => {
+        setClientes(prevClientes => [newCliente, ...prevClientes]);
+    };
+
+    // ===========================================
     // FUNCIONES DE REFRESH Y CARGA
     // ===========================================
 
@@ -348,14 +360,14 @@ export const useClientes = () => {
     const filterAndSortClientes = () => {
         let filtered = [...clientes];
 
-        // Aplicar filtro de búsqueda por nombre, apellido, DUI, email o teléfono
+        // Aplicar filtro de búsqueda por nombre, apellido, DUI, correo o teléfono
         if (searchText.trim()) {
             const searchLower = searchText.toLowerCase().trim();
             filtered = filtered.filter(cliente => 
                 cliente.nombre?.toLowerCase().includes(searchLower) ||
                 cliente.apellido?.toLowerCase().includes(searchLower) ||
                 cliente.dui?.toLowerCase().includes(searchLower) ||
-                cliente.email?.toLowerCase().includes(searchLower) ||
+                cliente.correo?.toLowerCase().includes(searchLower) ||
                 cliente.telefono?.includes(searchText.trim())
             );
         }
@@ -454,6 +466,7 @@ export const useClientes = () => {
         loadClientes,
         onRefresh,
         getClientesStats,
+        addClienteToList,
         
         // Funciones CRUD
         createCliente,

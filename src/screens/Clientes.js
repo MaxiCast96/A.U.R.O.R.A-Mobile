@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -18,6 +18,7 @@ import ClientesStatsCard from '../components/Clientes/ClientesStatsCard';
 import ClientesFilter from '../components/Clientes/ClientesFilter';
 import ClienteItem from '../components/Clientes/ClienteItem';
 import AddClienteModal from '../components/Clientes/AddClienteModal';
+import EditClienteModal from '../components/Clientes/EditClienteModal';
 import ClienteDetailModal from '../components/Clientes/ClienteDetailModal';
 
 /**
@@ -38,6 +39,11 @@ import ClienteDetailModal from '../components/Clientes/ClienteDetailModal';
  */
 const Clientes = () => {
     const navigation = useNavigation();
+    
+    // Estado para el modal de editar
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [selectedClienteForEdit, setSelectedClienteForEdit] = useState(null);
+    
     const {
         // Estados de datos
         filteredClientes,
@@ -63,6 +69,7 @@ const Clientes = () => {
         // Funciones CRUD
         deleteCliente,
         updateClienteEstado,
+        updateCliente,
         
         // Funciones de modal de detalle
         handleViewMore,
@@ -71,26 +78,43 @@ const Clientes = () => {
         // Funciones de modal de agregar
         handleOpenAddModal,
         handleCloseAddModal,
-        handleCreateCliente,
         
         // Funciones de filtros
         setSearchText,
         setSelectedFilter,
+        
+        // Función para actualizar lista de clientes
+        addClienteToList,
     } = useClientes();
 
     /**
      * Manejar edición de cliente
      */
     const handleEdit = (cliente) => {
-        // Cerrar modal de detalle primero
-        handleCloseModal();
+        // Cerrar modal de detalle primero si está abierto
+        if (modalVisible) {
+            handleCloseModal();
+        }
         
-        // Por ahora mostrar alert, después se implementará el modal de edición
-        Alert.alert(
-            'Editar Cliente',
-            `Función de editar cliente: ${cliente.nombre} ${cliente.apellido}`,
-            [{ text: 'Entendido', style: 'default' }]
-        );
+        // Abrir modal de editar con los datos del cliente
+        setSelectedClienteForEdit(cliente);
+        setEditModalVisible(true);
+    };
+
+    /**
+     * Cerrar modal de editar cliente
+     */
+    const handleCloseEditModal = () => {
+        setEditModalVisible(false);
+        setSelectedClienteForEdit(null);
+    };
+
+    /**
+     * Manejar éxito al actualizar cliente
+     */
+    const handleEditSuccess = (updatedCliente) => {
+        // Actualizar la lista local usando la función del hook
+        updateCliente(updatedCliente._id, updatedCliente);
     };
 
     /**
@@ -266,7 +290,18 @@ const Clientes = () => {
             <AddClienteModal
                 visible={addModalVisible}
                 onClose={handleCloseAddModal}
-                onSave={handleCreateCliente}
+                onSuccess={(newCliente) => {
+                    // Actualizar la lista local cuando se crea un cliente
+                    addClienteToList(newCliente);
+                }}
+            />
+
+            {/* Modal para editar cliente */}
+            <EditClienteModal
+                visible={editModalVisible}
+                cliente={selectedClienteForEdit}
+                onClose={handleCloseEditModal}
+                onSuccess={handleEditSuccess}
             />
 
             {/* Modal para ver detalles del cliente */}
