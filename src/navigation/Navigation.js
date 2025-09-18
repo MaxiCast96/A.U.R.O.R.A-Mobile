@@ -7,7 +7,7 @@ import SplashScreen from '../screens/SplashScreen';
 import Login from '../screens/Login';
 import Welcome from '../screens/Welcome';
 import Menu from '../screens/Menu';
-// Nuevas pantallas de recuperación de contraseña
+import Clientes from '../screens/Clientes';
 import ForgotPassword from '../screens/ForgotPassword';
 import VerifyCode from '../screens/VerifyCode';
 import ResetPassword from '../screens/ResetPassword';
@@ -58,40 +58,43 @@ export default function Navigation() {
             >
                 {/* Pantalla de carga inicial */}
                 <Stack.Screen name="Splash" component={SplashScreen} />
-                
+
                 {/* Pantalla de Bienvenida */}
                 <Stack.Screen name="Welcome" component={Welcome} />
 
                 {/* Pantalla de login */}
                 <Stack.Screen name="Login" component={Login} />
-                
+
                 {/* ===== PANTALLAS DE RECUPERACIÓN DE CONTRASEÑA ===== */}
-                <Stack.Screen 
-                    name="ForgotPassword" 
+                <Stack.Screen
+                    name="ForgotPassword"
                     component={ForgotPassword}
                 />
-                <Stack.Screen 
-                    name="VerifyCode" 
+                <Stack.Screen
+                    name="VerifyCode"
                     component={VerifyCode}
                 />
-                <Stack.Screen 
-                    name="ResetPassword" 
+                <Stack.Screen
+                    name="ResetPassword"
                     component={ResetPassword}
                 />
-                <Stack.Screen 
-                    name="PasswordSuccess" 
+                <Stack.Screen
+                    name="PasswordSuccess"
                     component={PasswordSuccess}
                 />
-                
+
                 {/* Navegación principal con tabs */}
                 <Stack.Screen name="Main" component={TabNavigator} />
 
                 {/* Navegación de Perfil */}
                 <Stack.Screen name="Profile" component={Profile} />
 
+                {/* Navegación de Clientes */}
+                <Stack.Screen name="Clientes" component={Clientes} />
+
                 {/* Pantalla de menú - acceso directo para navegación desde otras pantallas */}
-                <Stack.Screen 
-                    name="MenuDirect" 
+                <Stack.Screen
+                    name="MenuDirect"
                     component={Menu}
                     options={{
                         headerShown: true,

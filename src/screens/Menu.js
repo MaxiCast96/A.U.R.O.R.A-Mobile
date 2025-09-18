@@ -54,7 +54,7 @@ const MenuScreen = () => {
                     title: 'Clientes', 
                     subtitle: 'Gestión de clientes',
                     color: '#009BBF',
-                    onPress: () => Alert.alert('Clientes', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Clientes')
                 },
                 { 
                     icon: 'person-outline', 
@@ -267,8 +267,6 @@ const MenuScreen = () => {
                         <Text style={styles.essentialsTitle}>Esenciales Óptica</Text>
                         <View style={styles.essentialsGrid}>
 
-                            
-
                             <TouchableOpacity 
                                 style={styles.essentialItem}
                                 onPress={() => navigation.navigate('Citas')}
@@ -281,7 +279,7 @@ const MenuScreen = () => {
 
                             <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => Alert.alert('Clientes', 'Funcionalidad próximamente')}
+                                onPress={() => navigation.navigate('Clientes')}
                             >
                                 <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
                                     <Ionicons name="people-outline" size={24} color="#FFFFFF" />
