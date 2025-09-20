@@ -9,7 +9,9 @@ import {
     TouchableOpacity,
     Alert,
     ActivityIndicator,
-    FlatList
+    FlatList,
+    ToastAndroid,
+    Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -88,6 +90,17 @@ const Clientes = () => {
     } = useClientes();
 
     /**
+     * Mostrar notificación de éxito multiplataforma
+     */
+    const showSuccessMessage = (message) => {
+        if (Platform.OS === 'android') {
+            ToastAndroid.show(message, ToastAndroid.LONG);
+        } else {
+            Alert.alert('Éxito', message, [{ text: 'Entendido', style: 'default' }]);
+        }
+    };
+
+    /**
      * Manejar edición de cliente
      */
     const handleEdit = (cliente) => {
@@ -115,6 +128,20 @@ const Clientes = () => {
     const handleEditSuccess = (updatedCliente) => {
         // Actualizar la lista local usando la función del hook
         updateCliente(updatedCliente._id, updatedCliente);
+        
+        // Mostrar mensaje de éxito
+        showSuccessMessage('Cliente actualizado exitosamente');
+    };
+
+    /**
+     * Manejar éxito al agregar cliente
+     */
+    const handleAddSuccess = (newCliente) => {
+        // Actualizar la lista local cuando se crea un cliente
+        addClienteToList(newCliente);
+        
+        // Mostrar mensaje de éxito
+        showSuccessMessage('Cliente creado exitosamente');
     };
 
     /**
@@ -131,7 +158,10 @@ const Clientes = () => {
                     style: 'destructive',
                     onPress: async () => {
                         handleCloseModal(); // Cerrar modal primero
-                        await deleteCliente(cliente._id);
+                        const success = await deleteCliente(cliente._id);
+                        if (success) {
+                            showSuccessMessage('Cliente eliminado exitosamente');
+                        }
                     }
                 }
             ]
@@ -141,9 +171,12 @@ const Clientes = () => {
     /**
      * Manejar cambio de estado del cliente
      */
-    const handleToggleEstado = (cliente) => {
+    const handleToggleEstado = async (cliente) => {
         const nuevoEstado = cliente.estado?.toLowerCase() === 'activo' ? 'inactivo' : 'activo';
-        updateClienteEstado(cliente._id, nuevoEstado);
+        const success = await updateClienteEstado(cliente._id, nuevoEstado);
+        if (success) {
+            showSuccessMessage(`Cliente ${nuevoEstado === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
+        }
     };
 
     /**
@@ -290,10 +323,7 @@ const Clientes = () => {
             <AddClienteModal
                 visible={addModalVisible}
                 onClose={handleCloseAddModal}
-                onSuccess={(newCliente) => {
-                    // Actualizar la lista local cuando se crea un cliente
-                    addClienteToList(newCliente);
-                }}
+                onSuccess={handleAddSuccess}
             />
 
             {/* Modal para editar cliente */}

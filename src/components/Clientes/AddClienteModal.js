@@ -11,7 +11,21 @@ import {
     Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 import { useAuth } from '../../context/AuthContext';
+import { EL_SALVADOR_DATA } from '../../constants/ElSalvadorData';
+import { 
+    formatDUI, 
+    formatTelefono, 
+    getTelefonoNumbers,
+    getFieldError,
+    validateDUI,
+    validateTelefono,
+    validateEmail,
+    validateRequired,
+    validateEdad,
+    validatePassword
+} from '../../utils/validator';
 
 /**
  * Componente AddClienteModal
@@ -45,8 +59,9 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
-    // Estado de carga
+    // Estados de control
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
 
     /**
      * Limpiar todos los campos del formulario
@@ -64,41 +79,93 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
         setEstado('Activo');
         setPassword('');
         setShowPassword(false);
+        setErrors({});
     };
 
     /**
-     * Validar formulario antes de enviar
+     * Validar un campo específico
+     */
+    const validateField = (field, value) => {
+        const error = getFieldError(field, value);
+        setErrors(prev => ({
+            ...prev,
+            [field]: error
+        }));
+        return !error;
+    };
+
+    /**
+     * Validar formulario completo antes de enviar
      */
     const validateForm = () => {
-        if (!nombre || nombre.toString().trim() === '') {
-            Alert.alert('Error', 'El nombre es obligatorio');
-            return false;
+        const newErrors = {};
+        
+        // Validar campos requeridos
+        const fields = {
+            nombre,
+            apellido,
+            edad,
+            dui,
+            telefono,
+            correo,
+            password
+        };
+
+        let isValid = true;
+
+        Object.keys(fields).forEach(field => {
+            const error = getFieldError(field, fields[field]);
+            if (error) {
+                newErrors[field] = error;
+                isValid = false;
+            }
+        });
+
+        setErrors(newErrors);
+        return isValid;
+    };
+
+    /**
+     * Manejar cambio en el DUI con formateo automático
+     */
+    const handleDUIChange = (value) => {
+        const formattedDUI = formatDUI(value);
+        setDui(formattedDUI);
+        
+        // Validar en tiempo real si ya tiene la longitud completa
+        if (formattedDUI.length === 10) {
+            validateField('dui', formattedDUI);
+        } else if (errors.dui) {
+            setErrors(prev => ({ ...prev, dui: null }));
         }
-        if (!apellido || apellido.toString().trim() === '') {
-            Alert.alert('Error', 'El apellido es obligatorio');
-            return false;
+    };
+
+    /**
+     * Manejar cambio en el teléfono con formateo automático
+     */
+    const handleTelefonoChange = (value) => {
+        const formattedTelefono = formatTelefono(value);
+        setTelefono(formattedTelefono);
+        
+        // Validar en tiempo real
+        const numbers = getTelefonoNumbers(formattedTelefono);
+        if (numbers.length === 8) {
+            validateField('telefono', formattedTelefono);
+        } else if (errors.telefono) {
+            setErrors(prev => ({ ...prev, telefono: null }));
         }
-        if (!edad || edad.toString().trim() === '' || isNaN(Number(edad)) || Number(edad) < 18) {
-            Alert.alert('Error', 'La edad debe ser un número mayor a 18 años');
-            return false;
+    };
+
+    /**
+     * Manejar cambio de departamento
+     */
+    const handleDepartamentoChange = (value) => {
+        setDepartamento(value);
+        setCiudad(''); // Limpiar ciudad cuando cambia departamento
+        
+        if (value) {
+            setErrors(prev => ({ ...prev, departamento: null }));
         }
-        if (!dui || dui.toString().trim() === '') {
-            Alert.alert('Error', 'El DUI es obligatorio');
-            return false;
-        }
-        if (!telefono || telefono.toString().trim() === '') {
-            Alert.alert('Error', 'El teléfono es obligatorio');
-            return false;
-        }
-        if (!correo || correo.toString().trim() === '' || !correo.toString().includes('@')) {
-            Alert.alert('Error', 'Ingresa un correo electrónico válido');
-            return false;
-        }
-        if (!password || password.toString().trim() === '' || password.toString().length < 6) {
-            Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
-            return false;
-        }
-        return true;
     };
 
     /**
@@ -115,7 +182,7 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
             apellido: apellido.toString().trim(),
             edad: Number(edad),
             dui: dui.toString().trim(),
-            telefono: telefono.toString().trim(),
+            telefono: getTelefonoNumbers(telefono), // Solo los números
             correo: correo.toString().trim().toLowerCase(),
             direccion: {
                 calle: direccionCompleta.toString().trim(),
@@ -136,21 +203,15 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                 body: JSON.stringify(clienteData),
             });
 
+            const responseData = await response.json();
+
             if (response.ok) {
-                const newCliente = await response.json();
-                
-                Alert.alert(
-                    'Cliente creado', 
-                    'El cliente ha sido registrado exitosamente.',
-                    [{ text: 'Entendido', style: 'default' }]
-                );
-                
                 // Limpiar formulario
                 clearForm();
                 
                 // Ejecutar callback de éxito
                 if (onSuccess) {
-                    onSuccess(newCliente);
+                    onSuccess(responseData);
                 }
                 
                 // Cerrar modal
@@ -158,10 +219,9 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                 
                 return true;
             } else {
-                const errorData = await response.json();
                 Alert.alert(
                     'Error al crear cliente', 
-                    errorData.message || 'No se pudo crear el cliente.',
+                    responseData.message || 'No se pudo crear el cliente.',
                     [{ text: 'Entendido', style: 'default' }]
                 );
                 return false;
@@ -195,15 +255,19 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
     };
 
     /**
-     * Renderizar campo de entrada de texto
+     * Renderizar campo de entrada de texto con validación
      */
-    const renderTextInput = (label, value, onChangeText, placeholder, required = false, keyboardType = 'default', multiline = false) => (
+    const renderTextInput = (label, value, onChangeText, placeholder, required = false, keyboardType = 'default', multiline = false, field = null) => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
                 {label} {required && <Text style={styles.required}>*</Text>}
             </Text>
             <TextInput
-                style={[styles.textInput, multiline && styles.multilineInput]}
+                style={[
+                    styles.textInput, 
+                    multiline && styles.multilineInput,
+                    errors[field] && styles.inputError
+                ]}
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
@@ -211,7 +275,11 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                 keyboardType={keyboardType}
                 multiline={multiline}
                 numberOfLines={multiline ? 3 : 1}
+                onBlur={field ? () => validateField(field, value) : undefined}
             />
+            {errors[field] && (
+                <Text style={styles.errorText}>{errors[field]}</Text>
+            )}
         </View>
     );
 
@@ -223,7 +291,7 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
             <Text style={styles.inputLabel}>
                 Contraseña <Text style={styles.required}>*</Text>
             </Text>
-            <View style={styles.passwordContainer}>
+            <View style={[styles.passwordContainer, errors.password && styles.inputError]}>
                 <TextInput
                     style={styles.passwordInput}
                     value={password}
@@ -231,6 +299,7 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                     placeholder="Contraseña para acceder al sistema"
                     placeholderTextColor="#999999"
                     secureTextEntry={!showPassword}
+                    onBlur={() => validateField('password', password)}
                 />
                 <TouchableOpacity
                     style={styles.passwordToggle}
@@ -243,9 +312,109 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                     />
                 </TouchableOpacity>
             </View>
+            {errors.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+            )}
             <Text style={styles.inputHint}>Debe tener al menos 6 caracteres</Text>
         </View>
     );
+
+    /**
+ * Renderizar selector de departamento con validación defensiva
+ */
+const renderDepartamentoSelector = () => {
+    // Validación defensiva para evitar errores si EL_SALVADOR_DATA está undefined
+    if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
+        console.warn('EL_SALVADOR_DATA no está disponible');
+        return (
+            <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                    Departamento <Text style={styles.required}>*</Text>
+                </Text>
+                <View style={[styles.pickerContainer, styles.disabledInput]}>
+                    <Text style={styles.errorText}>Error: Datos de departamentos no disponibles</Text>
+                </View>
+            </View>
+        );
+    }
+
+    return (
+        <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>
+                Departamento <Text style={styles.required}>*</Text>
+            </Text>
+            <View style={[styles.pickerContainer, errors.departamento && styles.inputError]}>
+                <Picker
+                    selectedValue={departamento}
+                    onValueChange={handleDepartamentoChange}
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Selecciona un departamento" value="" />
+                    {Object.keys(EL_SALVADOR_DATA).map((dept) => (
+                        <Picker.Item key={dept} label={dept} value={dept} />
+                    ))}
+                </Picker>
+            </View>
+            {errors.departamento && (
+                <Text style={styles.errorText}>{errors.departamento}</Text>
+            )}
+        </View>
+    );
+};
+
+    /**
+ * Renderizar selector de ciudad con validación defensiva
+ */
+const renderCiudadSelector = () => {
+    // Validación defensiva
+    if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
+        return (
+            <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                    Ciudad/Municipio <Text style={styles.required}>*</Text>
+                </Text>
+                <View style={[styles.pickerContainer, styles.disabledInput]}>
+                    <Text style={styles.errorText}>Error: Datos de ciudades no disponibles</Text>
+                </View>
+            </View>
+        );
+    }
+
+    return (
+        <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>
+                Ciudad/Municipio <Text style={styles.required}>*</Text>
+            </Text>
+            <View style={[styles.pickerContainer, errors.ciudad && styles.inputError]}>
+                <Picker
+                    selectedValue={ciudad}
+                    onValueChange={(value) => {
+                        setCiudad(value);
+                        if (value) {
+                            setErrors(prev => ({ ...prev, ciudad: null }));
+                        }
+                    }}
+                    style={styles.picker}
+                    enabled={!!departamento && !!EL_SALVADOR_DATA[departamento]}
+                >
+                    <Picker.Item 
+                        label={departamento ? "Selecciona una ciudad" : "Primero selecciona un departamento"} 
+                        value="" 
+                    />
+                    {departamento && EL_SALVADOR_DATA[departamento]?.map((municipio) => (
+                        <Picker.Item key={municipio} label={municipio} value={municipio} />
+                    ))}
+                </Picker>
+            </View>
+            {errors.ciudad && (
+                <Text style={styles.errorText}>{errors.ciudad}</Text>
+            )}
+            {!departamento && (
+                <Text style={styles.inputHint}>Selecciona primero un departamento</Text>
+            )}
+        </View>
+    );
+};
 
     /**
      * Renderizar selector de estado
@@ -323,29 +492,29 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                         <View style={styles.sectionContent}>
                             <View style={styles.row}>
                                 <View style={styles.halfWidth}>
-                                    {renderTextInput('Nombre', nombre, setNombre, 'Ej: María Elena', true)}
+                                    {renderTextInput('Nombre', nombre, setNombre, 'Ej: María Elena', true, 'default', false, 'nombre')}
                                 </View>
                                 <View style={styles.halfWidth}>
-                                    {renderTextInput('Apellido', apellido, setApellido, 'Ej: Rodríguez Pérez', true)}
+                                    {renderTextInput('Apellido', apellido, setApellido, 'Ej: Rodríguez Pérez', true, 'default', false, 'apellido')}
                                 </View>
                             </View>
                             <View style={styles.row}>
                                 <View style={styles.halfWidth}>
-                                    {renderTextInput('Edad', edad, setEdad, '25', true, 'numeric')}
+                                    {renderTextInput('Edad', edad, setEdad, '25', true, 'numeric', false, 'edad')}
                                     <Text style={styles.inputHint}>Edad mínima: 18 años</Text>
                                 </View>
                                 <View style={styles.halfWidth}>
-                                    {renderTextInput('Número de DUI', dui, setDui, '12345678-9', true)}
+                                    {renderTextInput('Número de DUI', dui, handleDUIChange, '12345678-9', true, 'numeric', false, 'dui')}
                                     <Text style={styles.inputHint}>Formato: 12345678-9</Text>
                                 </View>
                             </View>
                             <View style={styles.row}>
                                 <View style={styles.halfWidth}>
-                                    {renderTextInput('Teléfono', telefono, setTelefono, '+503 78901234', true, 'phone-pad')}
-                                    <Text style={styles.inputHint}>Ingrese 8 dígitos. Ej: 78901234</Text>
+                                    {renderTextInput('Teléfono', telefono, handleTelefonoChange, '+503 78901234', true, 'phone-pad', false, 'telefono')}
+                                    <Text style={styles.inputHint}>Se agrega +503 automáticamente</Text>
                                 </View>
                                 <View style={styles.halfWidth}>
-                                    {renderTextInput('Correo Electrónico', correo, setCorreo, 'maria.rodriguez@email.com', true, 'email-address')}
+                                    {renderTextInput('Correo Electrónico', correo, setCorreo, 'maria.rodriguez@email.com', true, 'email-address', false, 'correo')}
                                     <Text style={styles.inputHint}>Ejemplo: cliente@email.com</Text>
                                 </View>
                             </View>
@@ -361,10 +530,10 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
                         <View style={styles.sectionContent}>
                             <View style={styles.row}>
                                 <View style={styles.halfWidth}>
-                                    {renderTextInput('Departamento', departamento, setDepartamento, 'San Salvador')}
+                                    {renderDepartamentoSelector()}
                                 </View>
                                 <View style={styles.halfWidth}>
-                                    {renderTextInput('Ciudad/Municipio', ciudad, setCiudad, 'San Salvador')}
+                                    {renderCiudadSelector()}
                                 </View>
                             </View>
                             {renderTextInput(
@@ -519,6 +688,10 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
         backgroundColor: '#FFFFFF',
     },
+    inputError: {
+        borderColor: '#DC2626',
+        borderWidth: 2,
+    },
     multilineInput: {
         height: 80,
         textAlignVertical: 'top',
@@ -527,6 +700,12 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontFamily: 'Lato-Regular',
         color: '#666666',
+        marginTop: 4,
+    },
+    errorText: {
+        fontSize: 12,
+        fontFamily: 'Lato-Regular',
+        color: '#DC2626',
         marginTop: 4,
     },
     passwordContainer: {
@@ -548,6 +727,17 @@ const styles = StyleSheet.create({
     passwordToggle: {
         paddingHorizontal: 12,
         paddingVertical: 10,
+    },
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: '#E5E5E5',
+        borderRadius: 8,
+        backgroundColor: '#FFFFFF',
+        overflow: 'hidden',
+    },
+    picker: {
+        height: 50,
+        fontSize: 14,
     },
     estadoContainer: {
         flexDirection: 'row',

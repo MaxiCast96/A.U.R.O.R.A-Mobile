@@ -1,13 +1,25 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { 
+    formatDUI, 
+    formatTelefono, 
+    getTelefonoNumbers,
+    getFieldError,
+    validateDUI,
+    validateTelefono,
+    validateEmail,
+    validateRequired,
+    validateEdad,
+    validatePassword
+} from '../../utils/validators';
 
 /**
  * Hook personalizado para gestionar la creación de nuevos clientes
  * 
  * Este hook encapsula toda la lógica relacionada con:
  * - Estados del formulario de agregar cliente
- * - Validación de campos
+ * - Validación de campos con formateo automático
  * - Envío de datos al servidor
  * - Limpieza del formulario
  * - Manejo de estados de carga
@@ -40,58 +52,100 @@ export const useAddCliente = () => {
 
     // Estados de control
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    // ===========================================
+    // FUNCIONES DE FORMATEO
+    // ===========================================
+
+    /**
+     * Manejar cambio en el DUI con formateo automático
+     */
+    const handleDUIChange = (value) => {
+        const formattedDUI = formatDUI(value);
+        setDui(formattedDUI);
+        
+        // Validar en tiempo real si ya tiene la longitud completa
+        if (formattedDUI.length === 10) {
+            validateField('dui', formattedDUI);
+        } else if (errors.dui) {
+            setErrors(prev => ({ ...prev, dui: null }));
+        }
+    };
+
+    /**
+     * Manejar cambio en el teléfono con formateo automático
+     */
+    const handleTelefonoChange = (value) => {
+        const formattedTelefono = formatTelefono(value);
+        setTelefono(formattedTelefono);
+        
+        // Validar en tiempo real
+        const numbers = getTelefonoNumbers(formattedTelefono);
+        if (numbers.length === 8) {
+            validateField('telefono', formattedTelefono);
+        } else if (errors.telefono) {
+            setErrors(prev => ({ ...prev, telefono: null }));
+        }
+    };
+
+    /**
+     * Manejar cambio de departamento
+     */
+    const handleDepartamentoChange = (value) => {
+        setDepartamento(value);
+        setCiudad(''); // Limpiar ciudad cuando cambia departamento
+        
+        if (value) {
+            setErrors(prev => ({ ...prev, departamento: null }));
+        }
+    };
 
     // ===========================================
     // FUNCIONES DE VALIDACIÓN
     // ===========================================
 
     /**
-     * Validar formulario antes de enviar
+     * Validar un campo específico
+     */
+    const validateField = (field, value) => {
+        const error = getFieldError(field, value);
+        setErrors(prev => ({
+            ...prev,
+            [field]: error
+        }));
+        return !error;
+    };
+
+    /**
+     * Validar formulario completo antes de enviar
      */
     const validateForm = () => {
-        // Validar nombre
-        if (!nombre || nombre.toString().trim() === '') {
-            Alert.alert('Error', 'El nombre es obligatorio');
-            return false;
-        }
+        const newErrors = {};
         
-        // Validar apellido
-        if (!apellido || apellido.toString().trim() === '') {
-            Alert.alert('Error', 'El apellido es obligatorio');
-            return false;
-        }
-        
-        // Validar edad
-        if (!edad || edad.toString().trim() === '' || isNaN(Number(edad)) || Number(edad) < 18) {
-            Alert.alert('Error', 'La edad debe ser un número mayor a 18 años');
-            return false;
-        }
-        
-        // Validar DUI
-        if (!dui || dui.toString().trim() === '') {
-            Alert.alert('Error', 'El DUI es obligatorio');
-            return false;
-        }
-        
-        // Validar teléfono
-        if (!telefono || telefono.toString().trim() === '') {
-            Alert.alert('Error', 'El teléfono es obligatorio');
-            return false;
-        }
-        
-        // Validar correo
-        if (!correo || correo.toString().trim() === '' || !correo.toString().includes('@')) {
-            Alert.alert('Error', 'Ingresa un correo electrónico válido');
-            return false;
-        }
-        
-        // Validar contraseña
-        if (!password || password.toString().trim() === '' || password.toString().length < 6) {
-            Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
-            return false;
-        }
-        
-        return true;
+        // Validar campos requeridos
+        const fields = {
+            nombre,
+            apellido,
+            edad,
+            dui,
+            telefono,
+            correo,
+            password
+        };
+
+        let isValid = true;
+
+        Object.keys(fields).forEach(field => {
+            const error = getFieldError(field, fields[field]);
+            if (error) {
+                newErrors[field] = error;
+                isValid = false;
+            }
+        });
+
+        setErrors(newErrors);
+        return isValid;
     };
 
     // ===========================================
@@ -114,6 +168,7 @@ export const useAddCliente = () => {
         setEstado('Activo');
         setPassword('');
         setShowPassword(false);
+        setErrors({});
     };
 
     // ===========================================
@@ -135,7 +190,7 @@ export const useAddCliente = () => {
             apellido: apellido.toString().trim(),
             edad: Number(edad),
             dui: dui.toString().trim(),
-            telefono: telefono.toString().trim(),
+            telefono: getTelefonoNumbers(telefono), // Solo los números sin +503
             correo: correo.toString().trim().toLowerCase(),
             direccion: {
                 calle: direccionCompleta.toString().trim(),
@@ -156,29 +211,23 @@ export const useAddCliente = () => {
                 body: JSON.stringify(clienteData),
             });
 
+            const responseData = await response.json();
+
             if (response.ok) {
-                const newCliente = await response.json();
-                
-                Alert.alert(
-                    'Cliente creado', 
-                    'El cliente ha sido registrado exitosamente.',
-                    [{ text: 'Entendido', style: 'default' }]
-                );
-                
                 // Limpiar formulario
                 clearForm();
                 
-                // Ejecutar callback de éxito
+                // Ejecutar callback de éxito sin mostrar alert aquí
+                // La notificación se manejará en el componente
                 if (onSuccess) {
-                    onSuccess(newCliente);
+                    onSuccess(responseData);
                 }
                 
                 return true;
             } else {
-                const errorData = await response.json();
                 Alert.alert(
                     'Error al crear cliente', 
-                    errorData.message || 'No se pudo crear el cliente.',
+                    responseData.message || 'No se pudo crear el cliente.',
                     [{ text: 'Entendido', style: 'default' }]
                 );
                 return false;
@@ -232,10 +281,21 @@ export const useAddCliente = () => {
         
         // Estados de control
         loading,
+        errors,
         
-        // Funciones
+        // Funciones de formateo
+        handleDUIChange,
+        handleTelefonoChange,
+        handleDepartamentoChange,
+        
+        // Funciones de validación
         validateForm,
+        validateField,
+        
+        // Funciones de limpieza
         clearForm,
+        
+        // Funciones de creación
         createCliente
     };
 };
