@@ -8,6 +8,7 @@ import Login from '../screens/Login';
 import Welcome from '../screens/Welcome';
 import Menu from '../screens/Menu';
 import Clientes from '../screens/Clientes';
+import Empleados from '../screens/Empleados';
 import ForgotPassword from '../screens/ForgotPassword';
 import VerifyCode from '../screens/VerifyCode';
 import ResetPassword from '../screens/ResetPassword';
@@ -38,7 +39,8 @@ const LoadingScreen = () => (
  * 2. Login (si no está autenticado) o Main (si está autenticado)
  * 3. Main (tab navigator con las pantallas principales)
  * 4. Menu (pantalla de operaciones - accesible desde tabs y directamente)
- * 5. Flujo de recuperación de contraseña (ForgotPassword -> VerifyCode -> ResetPassword -> PasswordSuccess)
+ * 5. Pantallas de gestión (Clientes, Empleados, etc.)
+ * 6. Flujo de recuperación de contraseña (ForgotPassword -> VerifyCode -> ResetPassword -> PasswordSuccess)
  */
 export default function Navigation() {
     const { isAuthenticated, isLoading } = useAuth();
@@ -86,11 +88,15 @@ export default function Navigation() {
                 {/* Navegación principal con tabs */}
                 <Stack.Screen name="Main" component={TabNavigator} />
 
-                {/* Navegación de Perfil */}
+                {/* ===== PANTALLAS DE PERFIL ===== */}
                 <Stack.Screen name="Profile" component={Profile} />
 
+                {/* ===== PANTALLAS DE GESTIÓN ===== */}
                 {/* Navegación de Clientes */}
                 <Stack.Screen name="Clientes" component={Clientes} />
+
+                {/* Navegación de Empleados */}
+                <Stack.Screen name="Empleados" component={Empleados} />
 
                 {/* Pantalla de menú - acceso directo para navegación desde otras pantallas */}
                 <Stack.Screen

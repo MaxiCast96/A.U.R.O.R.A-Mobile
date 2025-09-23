@@ -61,7 +61,7 @@ const MenuScreen = () => {
                     title: 'Empleados', 
                     subtitle: 'Gestión de empleados',
                     color: '#009BBF',
-                    onPress: () => Alert.alert('Empleados', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Empleados')
                 },
                 { 
                     icon: 'eye-outline', 
@@ -289,19 +289,19 @@ const MenuScreen = () => {
 
                             <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => Alert.alert('Lentes', 'Funcionalidad próximamente')}
+                                onPress={() => navigation.navigate('Empleados')}
                             >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#6B7280' }]}>
-                                    <Ionicons name="glasses-outline" size={24} color="#FFFFFF" />
+                                <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
+                                    <Ionicons name="person-outline" size={24} color="#FFFFFF" />
                                 </View>
-                                <Text style={styles.essentialText}>Lentes</Text>
+                                <Text style={styles.essentialText}>Empleados</Text>
                             </TouchableOpacity>
 
                              <TouchableOpacity 
                                 style={styles.essentialItem}
                                 onPress={() => Alert.alert('Reportes', 'Funcionalidad próximamente')}
                             >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
+                                <View style={[styles.essentialIcon, { backgroundColor: '#6B7280' }]}>
                                     <Ionicons name="analytics-outline" size={24} color="#FFFFFF" />
                                 </View>
                                 <Text style={styles.essentialText}>Reportes</Text>
