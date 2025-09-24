@@ -80,7 +80,7 @@ const MenuScreen = () => {
                     title: 'Lentes', 
                     subtitle: 'Catálogo de lentes',
                     color: '#49AA4C',
-                    onPress: () => Alert.alert('Lentes', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Lentes') // ← ACTUALIZADO
                 },
                 { 
                     icon: 'bag-outline', 
@@ -281,7 +281,7 @@ const MenuScreen = () => {
                                 style={styles.essentialItem}
                                 onPress={() => navigation.navigate('Clientes')}
                             >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
+                                <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
                                     <Ionicons name="people-outline" size={24} color="#FFFFFF" />
                                 </View>
                                 <Text style={styles.essentialText}>Clientes</Text>
@@ -289,12 +289,12 @@ const MenuScreen = () => {
 
                             <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Empleados')}
+                                onPress={() => navigation.navigate('Lentes')} // ← NUEVO BOTÓN AGREGADO
                             >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
-                                    <Ionicons name="person-outline" size={24} color="#FFFFFF" />
+                                <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
+                                    <Ionicons name="glasses-outline" size={24} color="#FFFFFF" />
                                 </View>
-                                <Text style={styles.essentialText}>Empleados</Text>
+                                <Text style={styles.essentialText}>Lentes</Text>
                             </TouchableOpacity>
 
                              <TouchableOpacity 
