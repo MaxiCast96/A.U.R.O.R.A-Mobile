@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -16,12 +16,14 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAddEmpleado } from '../../hooks/useEmpleado/useAddEmpleado';
 import { EL_SALVADOR_DATA } from '../../constants/ElSalvadorData';
+import AddOptometristaModal from '../Optometristas/AddOptometristaModal';
 
 /**
  * Componente AddEmpleadoModal
  * 
  * Modal para agregar nuevos empleados con formulario organizado por secciones
  * siguiendo el diseño del sitio web de escritorio.
+ * Ahora incluye flujo especial para optometristas.
  * 
  * Props:
  * @param {boolean} visible - Controla la visibilidad del modal
@@ -29,6 +31,10 @@ import { EL_SALVADOR_DATA } from '../../constants/ElSalvadorData';
  * @param {Function} onSuccess - Función que se ejecuta al crear exitosamente el empleado
  */
 const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
+    // Estado para controlar el flujo de optometristas
+    const [showOptometristaModal, setShowOptometristaModal] = useState(false);
+    const [empleadoDataForOptometrista, setEmpleadoDataForOptometrista] = useState(null);
+
     const {
         // Estados del formulario - Información Personal
         nombre,
@@ -88,6 +94,7 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         
         // Funciones de validación
         validateField,
+        validateBasicData,
         
         // Funciones de limpieza
         clearForm,
@@ -97,12 +104,45 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
     } = useAddEmpleado();
 
     /**
-     * Manejar el guardado del empleado
+     * Determinar si el puesto seleccionado es Optometrista
      */
-    const handleSave = async () => {
-        const success = await createEmpleado(onSuccess);
-        if (success) {
-            onClose();
+    const isOptometrista = puesto === 'Optometrista';
+
+    /**
+     * Manejar el guardado del empleado o continuar con optometrista
+     */
+    const handleSaveOrContinue = async () => {
+        if (isOptometrista) {
+            // Para optometristas, validar datos básicos y continuar al paso 2
+            if (await validateBasicData()) {
+                // Preparar datos del empleado para el modal de optometrista
+                const empleadoData = {
+                    nombre: nombre.trim(),
+                    apellido: apellido.trim(),
+                    dui: dui.trim(),
+                    telefono: telefono,
+                    correo: correo.trim().toLowerCase(),
+                    cargo: puesto,
+                    sucursalId: sucursal,
+                    fechaContratacion: fechaContratacion.toISOString(),
+                    password: password.trim(),
+                    salario: parseFloat(salario),
+                    estado: estado,
+                    departamento: departamento.trim(),
+                    municipio: ciudad.trim(),
+                    direccionDetallada: direccionCompleta.trim(),
+                    fotoPerfil: fotoPerfil
+                };
+                
+                setEmpleadoDataForOptometrista(empleadoData);
+                setShowOptometristaModal(true);
+            }
+        } else {
+            // Para empleados regulares, proceder con el guardado normal
+            const success = await createEmpleado(onSuccess);
+            if (success) {
+                onClose();
+            }
         }
     };
 
@@ -111,7 +151,29 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
      */
     const handleClose = () => {
         clearForm();
+        setShowOptometristaModal(false);
+        setEmpleadoDataForOptometrista(null);
         onClose();
+    };
+
+    /**
+     * Manejar éxito en la creación del optometrista
+     */
+    const handleOptometristaSuccess = (optometristaData) => {
+        setShowOptometristaModal(false);
+        setEmpleadoDataForOptometrista(null);
+        clearForm();
+        onSuccess(optometristaData);
+        onClose();
+    };
+
+    /**
+     * Manejar cancelación del modal de optometrista
+     */
+    const handleOptometristaCancel = () => {
+        setShowOptometristaModal(false);
+        setEmpleadoDataForOptometrista(null);
+        // No cerrar el modal principal, permitir al usuario modificar datos
     };
 
     /**
@@ -380,6 +442,11 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
             {errors.puesto && (
                 <Text style={styles.errorText}>{errors.puesto}</Text>
             )}
+            {isOptometrista && (
+                <Text style={[styles.inputHint, styles.optometristaHint]}>
+                    💡 Se recopilará información adicional del optometrista en el siguiente paso
+                </Text>
+            )}
         </View>
     );
 
@@ -446,161 +513,185 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
     );
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            presentationStyle="pageSheet"
-            onRequestClose={handleClose}
-        >
-            <SafeAreaView style={styles.container}>
-                {/* Header del modal */}
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Agregar Nuevo Empleado</Text>
-                    <TouchableOpacity 
-                        style={styles.closeButton}
-                        onPress={handleClose}
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons name="close" size={24} color="#FFFFFF" />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Contenido del formulario */}
-                <ScrollView 
-                    style={styles.content}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.scrollContent}
-                >
-                    {/* Sección: Foto de Perfil */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionContent}>
-                            {renderFotoPerfilSection()}
-                        </View>
-                    </View>
-
-                    {/* Sección: Información Personal */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <Ionicons name="person" size={20} color="#009BBF" />
-                            <Text style={styles.sectionTitle}>Información Personal</Text>
-                        </View>
-                        <View style={styles.sectionContent}>
-                            <View style={styles.row}>
-                                <View style={styles.halfWidth}>
-                                    {renderTextInput('Nombre', nombre, setNombre, 'Ej: Juan Carlos', true, 'default', false, 'nombre')}
-                                </View>
-                                <View style={styles.halfWidth}>
-                                    {renderTextInput('Apellido', apellido, setApellido, 'Ej: García López', true, 'default', false, 'apellido')}
-                                </View>
-                            </View>
-                            <View style={styles.row}>
-                                <View style={styles.halfWidth}>
-                                    {renderTextInput('Número de DUI', dui, handleDUIChange, '12345678-9', true, 'numeric', false, 'dui')}
-                                    <Text style={styles.inputHint}>Formato: 12345678-9</Text>
-                                </View>
-                                <View style={styles.halfWidth}>
-                                    {renderTextInput('Teléfono', telefono, handleTelefonoChange, '+503 78901234', true, 'phone-pad', false, 'telefono')}
-                                    <Text style={styles.inputHint}>Se agrega +503 automáticamente</Text>
-                                </View>
-                            </View>
-                            {renderTextInput('Correo Electrónico', correo, setCorreo, 'juan.garcia@email.com', true, 'email-address', false, 'correo')}
-                            <Text style={styles.inputHint}>Ejemplo: empleado@email.com</Text>
-                        </View>
-                    </View>
-
-                    {/* Sección: Información de Residencia */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <Ionicons name="home" size={20} color="#49AA4C" />
-                            <Text style={styles.sectionTitle}>Información de Residencia</Text>
-                        </View>
-                        <View style={styles.sectionContent}>
-                            <View style={styles.row}>
-                                <View style={styles.halfWidth}>
-                                    {renderDepartamentoSelector()}
-                                </View>
-                                <View style={styles.halfWidth}>
-                                    {renderCiudadSelector()}
-                                </View>
-                            </View>
-                            {renderTextInput(
-                                'Dirección Completa', 
-                                direccionCompleta, 
-                                setDireccionCompleta, 
-                                'Colonia Santa Elena, Calle Los Rosales #456, Casa amarilla con portón negro',
-                                false,
-                                'default',
-                                true
-                            )}
-                        </View>
-                    </View>
-
-                    {/* Sección: Información Laboral */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <Ionicons name="briefcase" size={20} color="#6B46C1" />
-                            <Text style={styles.sectionTitle}>Información Laboral</Text>
-                        </View>
-                        <View style={styles.sectionContent}>
-                            <View style={styles.row}>
-                                <View style={styles.halfWidth}>
-                                    {renderSucursalSelector()}
-                                </View>
-                                <View style={styles.halfWidth}>
-                                    {renderPuestoSelector()}
-                                </View>
-                            </View>
-                            <View style={styles.row}>
-                                <View style={styles.halfWidth}>
-                                    {renderTextInput('Salario (USD)', salario, setSalario, '500.00', true, 'numeric', false, 'salario')}
-                                    <Text style={styles.inputHint}>Salario mensual en dólares</Text>
-                                </View>
-                                <View style={styles.halfWidth}>
-                                    {renderDatePicker()}
-                                </View>
-                            </View>
-                            {renderEstadoSelector()}
-                        </View>
-                    </View>
-
-                    {/* Sección: Acceso y Seguridad */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <Ionicons name="lock-closed" size={20} color="#6B7280" />
-                            <Text style={styles.sectionTitle}>Acceso y Seguridad</Text>
-                        </View>
-                        <View style={styles.sectionContent}>
-                            {renderPasswordInput()}
-                        </View>
-                    </View>
-
-                    {/* Espaciador */}
-                    <View style={styles.spacer} />
-                </ScrollView>
-
-                {/* Botones de acción */}
-                <View style={styles.actionButtons}>
-                    <TouchableOpacity 
-                        style={styles.cancelButton}
-                        onPress={handleClose}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.cancelButtonText}>Cancelar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={[styles.saveButton, loading && styles.saveButtonDisabled]}
-                        onPress={handleSave}
-                        activeOpacity={0.8}
-                        disabled={loading}
-                    >
-                        <Ionicons name="save" size={20} color="#FFFFFF" />
-                        <Text style={styles.saveButtonText}>
-                            {loading ? 'Guardando...' : 'Guardar Empleado'}
+        <>
+            <Modal
+                visible={visible}
+                animationType="slide"
+                presentationStyle="pageSheet"
+                onRequestClose={handleClose}
+            >
+                <SafeAreaView style={styles.container}>
+                    {/* Header del modal */}
+                    <View style={styles.header}>
+                        <Text style={styles.headerTitle}>
+                            {isOptometrista ? 'Agregar Nuevo Optometrista (Paso 1 de 2)' : 'Agregar Nuevo Empleado'}
                         </Text>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
-        </Modal>
+                        <TouchableOpacity 
+                            style={styles.closeButton}
+                            onPress={handleClose}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="close" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Contenido del formulario */}
+                    <ScrollView 
+                        style={styles.content}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.scrollContent}
+                    >
+                        {/* Sección: Foto de Perfil */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionContent}>
+                                {renderFotoPerfilSection()}
+                            </View>
+                        </View>
+
+                        {/* Sección: Información Personal */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <Ionicons name="person" size={20} color="#009BBF" />
+                                <Text style={styles.sectionTitle}>Información Personal</Text>
+                            </View>
+                            <View style={styles.sectionContent}>
+                                <View style={styles.row}>
+                                    <View style={styles.halfWidth}>
+                                        {renderTextInput('Nombre', nombre, setNombre, 'Ej: Juan Carlos', true, 'default', false, 'nombre')}
+                                    </View>
+                                    <View style={styles.halfWidth}>
+                                        {renderTextInput('Apellido', apellido, setApellido, 'Ej: García López', true, 'default', false, 'apellido')}
+                                    </View>
+                                </View>
+                                <View style={styles.row}>
+                                    <View style={styles.halfWidth}>
+                                        {renderTextInput('Número de DUI', dui, handleDUIChange, '12345678-9', true, 'numeric', false, 'dui')}
+                                        <Text style={styles.inputHint}>Formato: 12345678-9</Text>
+                                    </View>
+                                    <View style={styles.halfWidth}>
+                                        {renderTextInput('Teléfono', telefono, handleTelefonoChange, '+503 78901234', true, 'phone-pad', false, 'telefono')}
+                                        <Text style={styles.inputHint}>Se agrega +503 automáticamente</Text>
+                                    </View>
+                                </View>
+                                {renderTextInput('Correo Electrónico', correo, setCorreo, 'juan.garcia@email.com', true, 'email-address', false, 'correo')}
+                                <Text style={styles.inputHint}>Ejemplo: empleado@email.com</Text>
+                            </View>
+                        </View>
+
+                        {/* Sección: Información de Residencia */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <Ionicons name="home" size={20} color="#49AA4C" />
+                                <Text style={styles.sectionTitle}>Información de Residencia</Text>
+                            </View>
+                            <View style={styles.sectionContent}>
+                                <View style={styles.row}>
+                                    <View style={styles.halfWidth}>
+                                        {renderDepartamentoSelector()}
+                                    </View>
+                                    <View style={styles.halfWidth}>
+                                        {renderCiudadSelector()}
+                                    </View>
+                                </View>
+                                {renderTextInput(
+                                    'Dirección Completa', 
+                                    direccionCompleta, 
+                                    setDireccionCompleta, 
+                                    'Colonia Santa Elena, Calle Los Rosales #456, Casa amarilla con portón negro',
+                                    false,
+                                    'default',
+                                    true
+                                )}
+                            </View>
+                        </View>
+
+                        {/* Sección: Información Laboral */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <Ionicons name="briefcase" size={20} color="#6B46C1" />
+                                <Text style={styles.sectionTitle}>Información Laboral</Text>
+                            </View>
+                            <View style={styles.sectionContent}>
+                                <View style={styles.row}>
+                                    <View style={styles.halfWidth}>
+                                        {renderSucursalSelector()}
+                                    </View>
+                                    <View style={styles.halfWidth}>
+                                        {renderPuestoSelector()}
+                                    </View>
+                                </View>
+                                <View style={styles.row}>
+                                    <View style={styles.halfWidth}>
+                                        {renderTextInput('Salario (USD)', salario, setSalario, '500.00', true, 'numeric', false, 'salario')}
+                                        <Text style={styles.inputHint}>Salario mensual en dólares</Text>
+                                    </View>
+                                    <View style={styles.halfWidth}>
+                                        {renderDatePicker()}
+                                    </View>
+                                </View>
+                                {renderEstadoSelector()}
+                            </View>
+                        </View>
+
+                        {/* Sección: Acceso y Seguridad */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <Ionicons name="lock-closed" size={20} color="#6B7280" />
+                                <Text style={styles.sectionTitle}>Acceso y Seguridad</Text>
+                            </View>
+                            <View style={styles.sectionContent}>
+                                {renderPasswordInput()}
+                            </View>
+                        </View>
+
+                        {/* Espaciador */}
+                        <View style={styles.spacer} />
+                    </ScrollView>
+
+                    {/* Botones de acción */}
+                    <View style={styles.actionButtons}>
+                        <TouchableOpacity 
+                            style={styles.cancelButton}
+                            onPress={handleClose}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.cancelButtonText}>Cancelar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            style={[
+                                isOptometrista ? styles.continueButton : styles.saveButton, 
+                                loading && styles.saveButtonDisabled
+                            ]}
+                            onPress={handleSaveOrContinue}
+                            activeOpacity={0.8}
+                            disabled={loading}
+                        >
+                            <Ionicons 
+                                name={isOptometrista ? "arrow-forward" : "save"} 
+                                size={20} 
+                                color="#FFFFFF" 
+                            />
+                            <Text style={styles.saveButtonText}>
+                                {loading 
+                                    ? 'Procesando...' 
+                                    : isOptometrista 
+                                        ? 'Continuar' 
+                                        : 'Guardar Empleado'
+                                }
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </SafeAreaView>
+            </Modal>
+
+            {/* Modal para datos específicos del optometrista */}
+            <AddOptometristaModal
+                visible={showOptometristaModal}
+                onClose={handleOptometristaCancel}
+                onSuccess={handleOptometristaSuccess}
+                empleadoData={empleadoDataForOptometrista}
+            />
+        </>
     );
 };
 
@@ -705,6 +796,10 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Regular',
         color: '#666666',
         marginTop: 4,
+    },
+    optometristaHint: {
+        color: '#009BBF',
+        fontFamily: 'Lato-Bold',
     },
     errorText: {
         fontSize: 12,
@@ -867,6 +962,16 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         borderRadius: 8,
         backgroundColor: '#009BBF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    continueButton: {
+        flex: 2,
+        flexDirection: 'row',
+        paddingVertical: 14,
+        borderRadius: 8,
+        backgroundColor: '#49AA4C',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
