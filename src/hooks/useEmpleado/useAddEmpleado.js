@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
@@ -9,26 +9,10 @@ import {
     getFieldError
 } from '../../utils/validator';
 
-/**
- * Hook personalizado para gestionar la creación de nuevos empleados
- * 
- * Este hook encapsula toda la lógica relacionada con:
- * - Estados del formulario de agregar empleado
- * - Validación de campos con formateo automático
- * - Gestión de imágenes (cámara/galería/subida)
- * - Envío de datos al servidor
- * - Limpieza del formulario
- * - Manejo de estados de carga
- * 
- * @returns {Object} Objeto con estados y funciones para agregar empleados
- */
 export const useAddEmpleado = () => {
     const { getAuthHeaders } = useAuth();
     
-    // ===========================================
-    // ESTADOS DEL FORMULARIO
-    // ===========================================
-    // Información Personal
+    // Estados del formulario - Información Personal
     const [nombre, setNombre] = useState('');
     const [apellido, setApellido] = useState('');
     const [dui, setDui] = useState('');
@@ -36,12 +20,12 @@ export const useAddEmpleado = () => {
     const [correo, setCorreo] = useState('');
     const [fotoPerfil, setFotoPerfil] = useState(null);
 
-    // Información de Residencia
+    // Estados del formulario - Información de Residencia
     const [departamento, setDepartamento] = useState('');
     const [ciudad, setCiudad] = useState('');
     const [direccionCompleta, setDireccionCompleta] = useState('');
 
-    // Información Laboral
+    // Estados del formulario - Información Laboral
     const [sucursal, setSucursal] = useState('');
     const [puesto, setPuesto] = useState('');
     const [salario, setSalario] = useState('');
@@ -58,15 +42,48 @@ export const useAddEmpleado = () => {
     const [errors, setErrors] = useState({});
     const [uploadingImage, setUploadingImage] = useState(false);
 
-    // ===========================================
-    // OPCIONES PARA SELECTORES
-    // ===========================================
-    const sucursales = [
-        { label: 'Seleccione sucursal', value: '' },
-        { label: 'Sucursal Centro', value: 'Centro' },
-        { label: 'Sucursal Escalón', value: 'Escalón' },
-        { label: 'Sucursal Santa Rosa', value: 'Santa Rosa' }
-    ];
+    // Opciones de sucursales - cargadas dinámicamente
+    const [sucursales, setSucursales] = useState([
+        { label: 'Cargando sucursales...', value: '' }
+    ]);
+
+    // Cargar sucursales del backend
+    const loadSucursales = async () => {
+        try {
+            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/sucursales', {
+                method: 'GET',
+                headers: getAuthHeaders(),
+            });
+
+            if (response.ok) {
+                const sucursalesData = await response.json();
+                const sucursalesOptions = [
+                    { label: 'Seleccione sucursal', value: '' },
+                    ...sucursalesData.map(sucursal => ({
+                        label: sucursal.nombre,
+                        value: sucursal._id // Usar ObjectId real
+                    }))
+                ];
+                setSucursales(sucursalesOptions);
+                console.log('Sucursales cargadas:', sucursalesOptions);
+            } else {
+                console.error('Error cargando sucursales');
+                setSucursales([
+                    { label: 'Error cargando sucursales', value: '' }
+                ]);
+            }
+        } catch (error) {
+            console.error('Error al cargar sucursales:', error);
+            setSucursales([
+                { label: 'Seleccione sucursal', value: '' }
+            ]);
+        }
+    };
+
+    // Cargar sucursales al inicializar el hook
+    useEffect(() => {
+        loadSucursales();
+    }, []);
 
     const puestos = [
         { label: 'Seleccione puesto', value: '' },
@@ -78,13 +95,7 @@ export const useAddEmpleado = () => {
         { label: 'Recepcionista', value: 'Recepcionista' }
     ];
 
-    // ===========================================
-    // FUNCIONES DE FORMATEO
-    // ===========================================
-
-    /**
-     * Manejar cambio en el DUI con formateo automático
-     */
+    // Funciones de formateo
     const handleDUIChange = (value) => {
         const formattedDUI = formatDUI(value);
         setDui(formattedDUI);
@@ -96,9 +107,6 @@ export const useAddEmpleado = () => {
         }
     };
 
-    /**
-     * Manejar cambio en el teléfono con formateo automático
-     */
     const handleTelefonoChange = (value) => {
         const formattedTelefono = formatTelefono(value);
         setTelefono(formattedTelefono);
@@ -111,9 +119,6 @@ export const useAddEmpleado = () => {
         }
     };
 
-    /**
-     * Manejar cambio de departamento
-     */
     const handleDepartamentoChange = (value) => {
         setDepartamento(value);
         setCiudad('');
@@ -123,9 +128,6 @@ export const useAddEmpleado = () => {
         }
     };
 
-    /**
-     * Manejar cambio de fecha
-     */
     const handleDateChange = (event, selectedDate) => {
         setShowDatePicker(false);
         if (selectedDate) {
@@ -133,14 +135,19 @@ export const useAddEmpleado = () => {
         }
     };
 
-    // ===========================================
-    // FUNCIONES DE GESTIÓN DE IMÁGENES
-    // ===========================================
+    // Gestión de imágenes
+    const handleImagePicker = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        
+        if (status !== 'granted') {
+            Alert.alert(
+                'Permisos necesarios',
+                'Necesitamos acceso a tu galería para seleccionar una imagen',
+                [{ text: 'Entendido', style: 'default' }]
+            );
+            return;
+        }
 
-    /**
-     * Mostrar selector de imagen
-     */
-    const handleImagePicker = () => {
         Alert.alert(
             'Cambiar foto de perfil',
             'Selecciona una opción',
@@ -163,9 +170,6 @@ export const useAddEmpleado = () => {
         );
     };
 
-    /**
-     * Seleccionar imagen desde cámara o galería
-     */
     const pickImage = async (source) => {
         try {
             let result;
@@ -179,6 +183,11 @@ export const useAddEmpleado = () => {
             };
 
             if (source === 'camera') {
+                const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                if (status !== 'granted') {
+                    Alert.alert('Error', 'Se necesitan permisos de cámara');
+                    return;
+                }
                 result = await ImagePicker.launchCameraAsync(options);
             } else {
                 result = await ImagePicker.launchImageLibraryAsync(options);
@@ -186,6 +195,7 @@ export const useAddEmpleado = () => {
 
             if (!result.canceled && result.assets && result.assets[0]) {
                 setFotoPerfil(result.assets[0].uri);
+                console.log('Imagen seleccionada:', result.assets[0].uri);
             }
         } catch (error) {
             console.error('Error al seleccionar imagen:', error);
@@ -193,17 +203,17 @@ export const useAddEmpleado = () => {
         }
     };
 
-    /**
-     * Subir imagen al servidor
-     */
-    const uploadImageToServer = async (imageUri) => {
+    // Función limpia de subida a Cloudinary
+    const uploadImageToCloudinary = async (imageUri) => {
         if (!imageUri) return null;
 
         try {
             setUploadingImage(true);
+            console.log('Subiendo imagen a Cloudinary...');
             
             const formData = new FormData();
-            const filename = imageUri.split('/').pop() || 'empleado-photo.jpg';
+            
+            const filename = imageUri.split('/').pop() || `empleado_${Date.now()}.jpg`;
             const match = /\.(\w+)$/.exec(filename);
             const type = match ? `image/${match[1]}` : 'image/jpeg';
 
@@ -213,37 +223,39 @@ export const useAddEmpleado = () => {
                 type: type,
             });
 
-            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/upload/empleado-photo', {
+            // Usar el preset configurado en Cloudinary
+            formData.append('upload_preset', 'empleados_unsigned');
+
+            console.log('Usando preset: empleados_unsigned');
+
+            const response = await fetch(`https://api.cloudinary.com/v1_1/dv6zckgk4/image/upload`, {
                 method: 'POST',
                 headers: {
-                    ...getAuthHeaders(),
-                    'Content-Type': 'multipart/form-data',
+                    'Accept': 'application/json',
                 },
                 body: formData,
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                return data.photoUrl || data.url || data.secure_url;
+            const responseData = await response.json();
+            console.log('Respuesta de Cloudinary:', responseData);
+
+            if (response.ok && responseData.secure_url) {
+                console.log('Imagen subida exitosamente:', responseData.secure_url);
+                return responseData.secure_url;
             } else {
-                throw new Error('Error al subir imagen');
+                console.error('Error de Cloudinary:', responseData);
+                throw new Error(responseData.error?.message || 'Error al subir imagen');
             }
+
         } catch (error) {
-            console.error('Error al subir imagen:', error);
-            Alert.alert('Error', 'No se pudo subir la imagen del empleado');
-            return null;
+            console.error('Error subiendo imagen:', error);
+            throw error;
         } finally {
             setUploadingImage(false);
         }
     };
 
-    // ===========================================
-    // FUNCIONES DE VALIDACIÓN
-    // ===========================================
-
-    /**
-     * Validar un campo específico
-     */
+    // Validaciones
     const validateField = (field, value) => {
         const error = getFieldError(field, value);
         setErrors(prev => ({
@@ -253,45 +265,56 @@ export const useAddEmpleado = () => {
         return !error;
     };
 
-    /**
-     * Validar formulario completo antes de enviar
-     */
     const validateForm = () => {
         const newErrors = {};
-        
-        // Validar campos requeridos
-        const fields = {
-            nombre,
-            apellido,
-            dui,
-            telefono,
-            correo,
-            password
-        };
-
         let isValid = true;
 
-        Object.keys(fields).forEach(field => {
-            const error = getFieldError(field, fields[field]);
+        // Validar campos requeridos básicos
+        const requiredFields = {
+            nombre: nombre.trim(),
+            apellido: apellido.trim(),
+            dui: dui.trim(),
+            telefono: telefono.trim(),
+            correo: correo.trim(),
+            password: password.trim()
+        };
+
+        Object.keys(requiredFields).forEach(field => {
+            const error = getFieldError(field, requiredFields[field]);
             if (error) {
                 newErrors[field] = error;
                 isValid = false;
             }
         });
 
-        // Validar campos específicos de empleado
-        if (!sucursal) {
+        // Validar sucursal
+        if (!sucursal || sucursal === '') {
             newErrors.sucursal = 'La sucursal es requerida';
             isValid = false;
         }
 
-        if (!puesto) {
+        // Validar puesto
+        if (!puesto || puesto === '') {
             newErrors.puesto = 'El puesto es requerido';
             isValid = false;
         }
 
-        if (!salario || isNaN(parseFloat(salario)) || parseFloat(salario) <= 0) {
+        // Validar salario
+        const salarioNum = parseFloat(salario);
+        if (!salario || isNaN(salarioNum) || salarioNum <= 0) {
             newErrors.salario = 'El salario debe ser un número válido mayor a 0';
+            isValid = false;
+        }
+
+        // Validar departamento
+        if (!departamento) {
+            newErrors.departamento = 'El departamento es requerido';
+            isValid = false;
+        }
+
+        // Validar ciudad
+        if (!ciudad) {
+            newErrors.ciudad = 'La ciudad es requerida';
             isValid = false;
         }
 
@@ -299,13 +322,7 @@ export const useAddEmpleado = () => {
         return isValid;
     };
 
-    // ===========================================
-    // FUNCIONES DE LIMPIEZA
-    // ===========================================
-
-    /**
-     * Limpiar todos los campos del formulario
-     */
+    // Limpiar formulario
     const clearForm = () => {
         setNombre('');
         setApellido('');
@@ -326,49 +343,92 @@ export const useAddEmpleado = () => {
         setErrors({});
     };
 
-    // ===========================================
-    // FUNCIONES DE CREACIÓN
-    // ===========================================
-
-    /**
-     * Crear un nuevo empleado en el servidor
-     * @param {Function} onSuccess - Callback ejecutado cuando se crea exitosamente
-     */
+    // Función principal simplificada
     const createEmpleado = async (onSuccess) => {
-        if (!validateForm()) return false;
+        console.log('Iniciando creación de empleado...');
+        
+        if (!validateForm()) {
+            console.log('Formulario no válido:', errors);
+            return false;
+        }
 
         setLoading(true);
         
         try {
-            // Subir imagen si existe
-            let photoUrl = null;
+            let photoUrl = "";
+            
+            // Manejar imagen si existe, preguntar si no existe
             if (fotoPerfil) {
-                photoUrl = await uploadImageToServer(fotoPerfil);
+                console.log('Subiendo imagen primero...');
+                try {
+                    photoUrl = await uploadImageToCloudinary(fotoPerfil);
+                    console.log('URL de imagen obtenida:', photoUrl);
+                } catch (imageError) {
+                    console.log('Error subiendo imagen:', imageError.message);
+                    
+                    // Preguntar si continuar sin imagen cuando falla la subida
+                    const continuar = await new Promise((resolve) => {
+                        Alert.alert(
+                            'Error al subir imagen',
+                            '¿Deseas crear el empleado sin foto de perfil?',
+                            [
+                                { text: 'Cancelar', onPress: () => resolve(false) },
+                                { text: 'Continuar sin foto', onPress: () => resolve(true) }
+                            ]
+                        );
+                    });
+                    
+                    if (!continuar) {
+                        setLoading(false);
+                        return false;
+                    }
+                    photoUrl = "";
+                }
+            } else {
+                // Preguntar si quiere agregar imagen cuando no hay ninguna
+                const agregarImagen = await new Promise((resolve) => {
+                    Alert.alert(
+                        'Sin foto de perfil',
+                        '¿Deseas crear el empleado sin foto de perfil? Podrás agregar una después.',
+                        [
+                            { text: 'Agregar foto', onPress: () => resolve(false) },
+                            { text: 'Continuar sin foto', onPress: () => resolve(true) }
+                        ]
+                    );
+                });
+                
+                if (!agregarImagen) {
+                    setLoading(false);
+                    // Abrir selector de imagen
+                    handleImagePicker();
+                    return false;
+                }
             }
 
-            // Preparar datos según la estructura de MongoDB
+            // Crear empleado con o sin imagen
             const empleadoData = {
-                nombre: nombre.toString().trim(),
-                apellido: apellido.toString().trim(),
-                dui: dui.toString().trim(),
+                nombre: nombre.trim(),
+                apellido: apellido.trim(),
+                dui: dui.trim(),
                 telefono: getTelefonoNumbers(telefono),
-                correo: correo.toString().trim().toLowerCase(),
-                direccion: {
-                    calle: direccionCompleta.toString().trim(),
-                    ciudad: ciudad.toString().trim(),
-                    departamento: departamento.toString().trim()
-                },
-                sucursalId: {
-                    nombre: sucursal
-                },
+                correo: correo.trim().toLowerCase(),
                 cargo: puesto,
-                salario: parseFloat(salario),
+                sucursalId: sucursal,
                 fechaContratacion: fechaContratacion.toISOString(),
+                password: password.trim(),
+                salario: parseFloat(salario),
                 estado: estado,
-                password: password.toString().trim(),
-                fotoPerfil: photoUrl,
-                isVerified: false
+                departamento: departamento.trim(),
+                municipio: ciudad.trim(),
+                direccionDetallada: direccionCompleta.trim(),
+                fotoPerfil: photoUrl
             };
+
+            console.log('Creando empleado:', {
+                ...empleadoData,
+                password: '***OCULTA***',
+                fotoPerfil: photoUrl ? 'CON_IMAGEN' : 'SIN_IMAGEN'
+            });
 
             const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/empleados', {
                 method: 'POST',
@@ -380,16 +440,25 @@ export const useAddEmpleado = () => {
             });
 
             const responseData = await response.json();
+            console.log('Respuesta del servidor:', responseData);
 
             if (response.ok) {
+                console.log('Empleado creado exitosamente');
                 clearForm();
                 
                 if (onSuccess) {
-                    onSuccess(responseData);
+                    onSuccess(responseData.empleado || responseData);
                 }
+                
+                Alert.alert(
+                    'Empleado creado',
+                    `${responseData.message || 'El empleado ha sido registrado exitosamente.'} ${photoUrl ? 'Con imagen!' : ''}`,
+                    [{ text: 'Entendido', style: 'default' }]
+                );
                 
                 return true;
             } else {
+                console.error('Error del servidor:', responseData);
                 Alert.alert(
                     'Error al crear empleado', 
                     responseData.message || 'No se pudo crear el empleado.',
@@ -398,10 +467,10 @@ export const useAddEmpleado = () => {
                 return false;
             }
         } catch (error) {
-            console.error('Error al crear empleado:', error);
+            console.error('Error general:', error);
             Alert.alert(
-                'Error de red', 
-                'Hubo un problema al conectar con el servidor.',
+                'Error de conexión', 
+                'Hubo un problema al conectar con el servidor. Verifica tu conexión.',
                 [{ text: 'Entendido', style: 'default' }]
             );
             return false;
@@ -410,9 +479,6 @@ export const useAddEmpleado = () => {
         }
     };
 
-    // ===========================================
-    // RETORNO DEL HOOK
-    // ===========================================
     return {
         // Estados del formulario - Información Personal
         nombre,
@@ -432,7 +498,7 @@ export const useAddEmpleado = () => {
         departamento,
         setDepartamento,
         ciudad,
-        setCiudad, // <-- AGREGADO
+        setCiudad,
         direccionCompleta,
         setDireccionCompleta,
         
@@ -458,9 +524,9 @@ export const useAddEmpleado = () => {
         
         // Estados de control
         loading,
-        setLoading, // <-- AGREGADO
+        setLoading,
         errors,
-        setErrors, // <-- AGREGADO
+        setErrors,
         uploadingImage,
         
         // Opciones para selectores
@@ -476,7 +542,7 @@ export const useAddEmpleado = () => {
         // Funciones de gestión de imágenes
         handleImagePicker,
         pickImage,
-        uploadImageToServer,
+        uploadImageToServer: uploadImageToCloudinary,
         
         // Funciones de validación
         validateForm,

@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8F9FA',
     },
     header: {
-        backgroundColor: '#009BBF',
+        backgroundColor: '#49AA4C',
         paddingHorizontal: 20,
         paddingVertical: 16,
         flexDirection: 'row',
@@ -790,8 +790,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     estadoOptionSelected: {
-        borderColor: '#009BBF',
-        backgroundColor: '#009BBF',
+        borderColor: '#49AA4C',
+        backgroundColor: '#49AA4C',
     },
     estadoText: {
         fontSize: 14,
@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: '#009BBF',
+        backgroundColor: '#49AA4C',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -898,7 +898,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingVertical: 14,
         borderRadius: 8,
-        backgroundColor: '#009BBF',
+        backgroundColor: '#49AA4C',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
