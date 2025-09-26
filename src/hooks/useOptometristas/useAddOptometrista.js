@@ -73,8 +73,7 @@ export const useAddOptometrista = () => {
 
         setErrors(newErrors);
         return isValid;
-    };
-    };
+    }
 
     /**
      * Subir imagen a Cloudinary
@@ -390,15 +389,15 @@ export const useAddOptometrista = () => {
         setLoading,
         errors,
         setErrors,
-        uploadingImage,
 
-        // Opciones
-        especialidades,
+    // Opciones
+    especialidades,
 
-        // Funciones principales
-        createOptometrista,
-        clearOptometristaForm,
-        validateOptometristaForm,
-        validateField,
-        uploadImageToCloudinary
-    };
+    // Funciones principales
+    createOptometrista,
+    clearOptometristaForm,
+    validateOptometristaForm,
+    validateField,
+    uploadImageToCloudinary
+};
+};
