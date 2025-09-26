@@ -79,16 +79,45 @@ export const useAccesorios = () => {
             console.log('🚀 Iniciando creación de accesorio...');
             console.log('📋 Datos a enviar:', JSON.stringify(accesorioData, null, 2));
             
-            const headers = getAuthHeaders();
-            console.log('🔑 Headers:', headers);
+            // Obtener headers base SIN Content-Type
+            const { Authorization } = getAuthHeaders();
+            
+            // Preparar FormData para el envío (igual que Lentes)
+            const formData = new FormData();
+            
+            // Agregar campos básicos
+            Object.keys(accesorioData).forEach(key => {
+                if (key === 'sucursales') {
+                    formData.append('sucursales', JSON.stringify(accesorioData.sucursales));
+                } else if (key === 'imagenes') {
+                    // Agregar imágenes como archivos
+                    accesorioData.imagenes.forEach((imageUri, index) => {
+                        formData.append('imagenes', {
+                            uri: imageUri,
+                            type: 'image/jpeg',
+                            name: `accesorio-image-${index}.jpg`,
+                        });
+                    });
+                } else if (key === 'promocionId') {
+                    // Solo enviar promocionId si está en promoción
+                    if (accesorioData.enPromocion && accesorioData.promocionId) {
+                        formData.append(key, accesorioData[key]);
+                    }
+                } else {
+                    formData.append(key, String(accesorioData[key]));
+                }
+            });
+
+            console.log('📤 Enviando como FormData multipart...');
+            console.log('🔑 Headers solo con Authorization...');
             
             const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/accesorios', {
                 method: 'POST',
                 headers: {
-                    ...headers,
-                    'Content-Type': 'application/json',
+                    'Authorization': Authorization,
+                    // NO incluir Content-Type - se asigna automáticamente para multipart
                 },
-                body: JSON.stringify(accesorioData),
+                body: formData,
             });
             
             console.log('📡 Respuesta POST:', response.status, response.statusText);

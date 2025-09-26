@@ -104,13 +104,11 @@ const LenteItem = ({ lente, onViewDetail, onEdit, onDelete }) => {
         <View style={styles.lenteInfo}>
           {/* Imagen del lente */}
           <View style={styles.imageContainer}>
-            {lente.imagenes?.[0] || lente.imagen ? (
+            {lente.imagenes?.[0] ? (
               <Image 
-                source={{ uri: lente.imagenes?.[0] || lente.imagen }}
+                source={{ uri: lente.imagenes[0] }}
                 style={styles.lenteImage}
-                onError={(error) => {
-                  console.log('Error cargando imagen lente:', error.nativeEvent.error);
-                }}
+                onError={() => console.log('Error cargando imagen lente')}
               />
             ) : (
               <View style={styles.imagePlaceholder}>

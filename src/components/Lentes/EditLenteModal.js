@@ -73,17 +73,17 @@ const EditLenteModal = ({
   // Cargar datos del lente cuando se abre el modal
   useEffect(() => {
     if (lente && visible) {
-      console.log('🔄 Cargando datos para edición:', lente);
+      console.log('Cargando datos para edición:', lente);
       
       // Normalizar imágenes
       const normalizeImages = (images) => {
         if (!images || !Array.isArray(images)) return [];
         return images.map(img => {
           if (typeof img === 'string') {
-            return img.startsWith('http') ? img : `https://res.cloudinary.com/tu-cloud-name/image/upload/${img}`;
+            return img.startsWith('http') ? img : `https://res.cloudinary.com/dv6zckgk4/image/upload/${img}`;
           }
           if (typeof img === 'object' && img !== null) {
-            return img.secure_url || img.url || (img.public_id ? `https://res.cloudinary.com/tu-cloud-name/image/upload/${img.public_id}` : '');
+            return img.secure_url || img.url || (img.public_id ? `https://res.cloudinary.com/dv6zckgk4/image/upload/${img.public_id}` : '');
           }
           return '';
         }).filter(url => url && url.length > 0);
@@ -122,7 +122,7 @@ const EditLenteModal = ({
         sucursales: normalizeSucursales(lente.sucursales)
       };
 
-      console.log('📝 Datos normalizados para edición:', editData);
+      console.log('Datos normalizados para edición:', editData);
       setForm(editData);
       setOriginalForm(editData);
     }
@@ -134,6 +134,53 @@ const EditLenteModal = ({
     const marca = marcas.find(m => m._id === form.marcaId);
     return Array.isArray(marca?.lineas) ? marca.lineas : [];
   }, [form.marcaId, marcas]);
+
+  /**
+   * Función para subir imagen a Cloudinary
+   */
+  const uploadImageToCloudinary = async (imageUri) => {
+    if (!imageUri) return null;
+
+    try {
+      console.log('Subiendo nueva imagen a Cloudinary...');
+      
+      const formData = new FormData();
+      
+      const filename = imageUri.split('/').pop() || `lente_edit_${Date.now()}.jpg`;
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+      formData.append('file', {
+        uri: imageUri,
+        name: filename,
+        type: type,
+      });
+
+      formData.append('upload_preset', 'lentes_unsigned');
+
+      const response = await fetch(`https://api.cloudinary.com/v1_1/dv6zckgk4/image/upload`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok && responseData.secure_url) {
+        console.log('Nueva imagen subida exitosamente:', responseData.secure_url);
+        return responseData.secure_url;
+      } else {
+        console.error('Error de Cloudinary en edición:', responseData);
+        throw new Error(responseData.error?.message || 'Error al subir imagen');
+      }
+
+    } catch (error) {
+      console.error('Error subiendo imagen en edición:', error);
+      throw error;
+    }
+  };
 
   /**
    * Verificar si hay cambios en el formulario
@@ -199,31 +246,101 @@ const EditLenteModal = ({
   };
 
   /**
-   * Selector de imágenes
+   * Selector de imágenes con subida a Cloudinary
    */
   const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permisos necesarios',
+        'Necesitamos acceso a tu galería para seleccionar imágenes'
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Agregar más imágenes',
+      'Selecciona una opción',
+      [
+        {
+          text: 'Cámara',
+          onPress: () => pickImage('camera'),
+        },
+        {
+          text: 'Galería',
+          onPress: () => pickImage('gallery'),
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel'
+        }
+      ]
+    );
+  };
+
+  const pickImage = async (source) => {
     try {
       setUploadingImage(true);
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
+      let result;
+
+      const options = {
+        mediaTypes: 'Images',
+        allowsMultipleSelection: source === 'gallery',
         quality: 0.8,
         allowsEditing: false,
-      });
-      
+      };
+
+      if (source === 'camera') {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Error', 'Se necesitan permisos de cámara');
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync(options);
+      } else {
+        result = await ImagePicker.launchImageLibraryAsync(options);
+      }
+
       if (!result.canceled && result.assets) {
-        const newImages = result.assets.map(asset => asset.uri);
-        setForm(prev => ({ 
-          ...prev, 
-          imagenes: [...prev.imagenes, ...newImages] 
-        }));
-        if (errors.imagenes) {
-          setErrors(prev => ({ ...prev, imagenes: null }));
+        console.log('Subiendo nuevas imágenes a Cloudinary...');
+        
+        try {
+          // Subir cada imagen a Cloudinary
+          const uploadPromises = result.assets.map(asset => 
+            uploadImageToCloudinary(asset.uri)
+          );
+          
+          // Esperar a que todas se suban
+          const cloudinaryUrls = await Promise.all(uploadPromises);
+          
+          // Filtrar URLs válidas
+          const validUrls = cloudinaryUrls.filter(url => url !== null);
+          
+          if (validUrls.length > 0) {
+            // Actualizar formulario con URLs de Cloudinary
+            setForm(prev => ({ 
+              ...prev, 
+              imagenes: [...prev.imagenes, ...validUrls] 
+            }));
+            
+            if (errors.imagenes) {
+              setErrors(prev => ({ ...prev, imagenes: null }));
+            }
+            
+            console.log(`${validUrls.length} nuevas imágenes subidas exitosamente`);
+          } else {
+            Alert.alert('Error', 'No se pudieron subir las imágenes');
+          }
+          
+        } catch (error) {
+          console.error('Error subiendo imágenes:', error);
+          Alert.alert('Error', 'Error al subir imágenes a Cloudinary');
         }
       }
     } catch (error) {
       console.error('Error al seleccionar imágenes:', error);
-      alert('Error al seleccionar imágenes');
+      Alert.alert('Error', 'No se pudieron seleccionar las imágenes');
     } finally {
       setUploadingImage(false);
     }
@@ -276,7 +393,7 @@ const EditLenteModal = ({
   };
 
   /**
-   * Guardar cambios - Solo envía lo que se modificó
+   * Guardar cambios - Las imágenes ya son URLs de Cloudinary
    */
   const handleSave = () => {
     if (!lente) {
@@ -288,10 +405,10 @@ const EditLenteModal = ({
       return;
     }
 
-    console.log('💾 Guardando cambios del lente:', lente._id);
-    console.log('📋 Datos del formulario ANTES de transformar:', form);
+    console.log('Guardando cambios del lente:', lente._id);
+    console.log('Datos del formulario ANTES de transformar:', form);
 
-    // TRANSFORMAR LOS DATOS IGUAL QUE EN CREAR
+    // Las imágenes ya son URLs de Cloudinary válidas
     const medidas = form.medidas || {};
     const dataToSend = {
       nombre: form.nombre?.trim(),
@@ -309,6 +426,7 @@ const EditLenteModal = ({
         altura: Number(medidas.altura),
         ancho: Number(medidas.ancho),
       },
+      // Las imágenes ya son URLs de Cloudinary
       imagenes: Array.isArray(form.imagenes) ? form.imagenes : [],
       enPromocion: !!form.enPromocion,
       promocionId: form.enPromocion ? form.promocionId : undefined,
@@ -323,7 +441,7 @@ const EditLenteModal = ({
         : [],
     };
 
-    console.log('🚀 Datos TRANSFORMADOS para actualizar:', JSON.stringify(dataToSend, null, 2));
+    console.log('Datos TRANSFORMADOS para actualizar:', JSON.stringify(dataToSend, null, 2));
 
     onSave(dataToSend);
   };
@@ -611,7 +729,7 @@ const EditLenteModal = ({
               >
                 <Ionicons name="camera" size={32} color="#00BCD4" />
                 <Text style={styles.imagePickerText}>
-                  {uploadingImage ? 'Subiendo imágenes...' : '📷 Agregar más imágenes'}
+                  {uploadingImage ? 'Subiendo imágenes...' : 'Agregar más imágenes'}
                 </Text>
               </TouchableOpacity>
               {errors.imagenes && (
