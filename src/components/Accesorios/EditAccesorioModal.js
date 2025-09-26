@@ -16,53 +16,36 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 
 /**
- * Componente EditLenteModal
+ * Componente EditAccesorioModal
  * 
- * Modal para editar lentes existentes con formulario organizado por secciones
- * siguiendo el diseño del EditEmpleadoModal.
- * 
- * Props:
- * @param {boolean} visible - Controla la visibilidad del modal
- * @param {Function} onClose - Función que se ejecuta al cerrar el modal
- * @param {Function} onSave - Función que se ejecuta al guardar cambios
- * @param {Object} lente - Objeto del lente a editar
- * @param {Array} categorias - Lista de categorías disponibles
- * @param {Array} marcas - Lista de marcas disponibles
- * @param {Array} promociones - Lista de promociones disponibles
- * @param {Array} sucursales - Lista de sucursales disponibles
- * @param {Array} materiales - Lista de materiales hardcodeados
- * @param {Array} colores - Lista de colores hardcodeados
- * @param {Array} tiposLente - Lista de tipos de lente hardcodeados
+ * Modal para editar accesorios existentes con formulario organizado por secciones
+ * siguiendo el diseño del EditLenteModal.
  */
-const EditLenteModal = ({
+const EditAccesorioModal = ({
   visible,
   onClose,
   onSave,
-  lente,
+  accesorio,
   categorias = [],
   marcas = [],
   promociones = [],
   sucursales = [],
   materiales = [],
   colores = [],
-  tiposLente = [],
 }) => {
   const [form, setForm] = useState({
     nombre: '',
     descripcion: '',
-    categoriaId: '',
+    tipo: '',
     marcaId: '',
+    linea: '',
     material: '',
     color: '',
-    tipoLente: '',
     precioBase: '',
     precioActual: '',
-    linea: '',
-    medidas: { anchoPuente: '', altura: '', ancho: '' },
     imagenes: [],
     enPromocion: false,
     promocionId: '',
-    fechaCreacion: '',
     sucursales: [],
   });
 
@@ -70,23 +53,40 @@ const EditLenteModal = ({
   const [errors, setErrors] = useState({});
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  // Cargar datos del lente cuando se abre el modal
+  // Cargar datos del accesorio cuando se abre el modal
   useEffect(() => {
-    if (lente && visible) {
-      console.log('🔄 Cargando datos para edición:', lente);
+    if (accesorio && visible) {
+      console.log('📄 Cargando datos para edición:', accesorio);
+      console.log('🖼️ Imágenes originales:', accesorio.imagenes);
       
       // Normalizar imágenes
       const normalizeImages = (images) => {
-        if (!images || !Array.isArray(images)) return [];
-        return images.map(img => {
+        if (!images || !Array.isArray(images)) {
+          console.log('⚠️ No hay imágenes o no es array:', images);
+          return [];
+        }
+        
+        const normalized = images.map((img, index) => {
+          console.log(`📷 Procesando imagen ${index}:`, typeof img, img);
+          
           if (typeof img === 'string') {
-            return img.startsWith('http') ? img : `https://res.cloudinary.com/tu-cloud-name/image/upload/${img}`;
+            return img;
           }
           if (typeof img === 'object' && img !== null) {
-            return img.secure_url || img.url || (img.public_id ? `https://res.cloudinary.com/tu-cloud-name/image/upload/${img.public_id}` : '');
+            const url = img.secure_url || img.url || img.public_id || '';
+            console.log(`🔗 URL extraída del objeto:`, url);
+            return url;
           }
+          console.log('❌ Imagen inválida:', img);
           return '';
-        }).filter(url => url && url.length > 0);
+        }).filter(url => {
+          const isValid = url && url.length > 0;
+          if (!isValid) console.log('🚫 Filtrando imagen inválida:', url);
+          return isValid;
+        });
+        
+        console.log('✅ Imágenes normalizadas:', normalized);
+        return normalized;
       };
 
       // Normalizar sucursales
@@ -100,33 +100,26 @@ const EditLenteModal = ({
       };
 
       const editData = {
-        nombre: lente.nombre || '',
-        descripcion: lente.descripcion || '',
-        categoriaId: lente.categoriaId?._id || lente.categoriaId || '',
-        marcaId: lente.marcaId?._id || lente.marcaId || '',
-        material: lente.material || '',
-        color: lente.color || '',
-        tipoLente: lente.tipoLente || '',
-        precioBase: lente.precioBase?.toString() || '',
-        precioActual: (lente.precioActual || lente.precioBase)?.toString() || '',
-        linea: lente.linea || '',
-        medidas: {
-          anchoPuente: lente.medidas?.anchoPuente?.toString() || '',
-          altura: lente.medidas?.altura?.toString() || '',
-          ancho: lente.medidas?.ancho?.toString() || '',
-        },
-        imagenes: normalizeImages(lente.imagenes),
-        enPromocion: Boolean(lente.enPromocion),
-        promocionId: lente.promocionId?._id || lente.promocionId || '',
-        fechaCreacion: lente.fechaCreacion ? new Date(lente.fechaCreacion).toISOString().split('T')[0] : '',
-        sucursales: normalizeSucursales(lente.sucursales)
+        nombre: accesorio.nombre || '',
+        descripcion: accesorio.descripcion || '',
+        tipo: accesorio.tipo?._id || accesorio.tipo || '',
+        marcaId: accesorio.marcaId?._id || accesorio.marcaId || '',
+        linea: accesorio.linea || '',
+        material: accesorio.material || '',
+        color: accesorio.color || '',
+        precioBase: accesorio.precioBase?.toString() || '',
+        precioActual: (accesorio.precioActual || accesorio.precioBase)?.toString() || '',
+        imagenes: normalizeImages(accesorio.imagenes),
+        enPromocion: Boolean(accesorio.enPromocion),
+        promocionId: accesorio.promocionId?._id || accesorio.promocionId || '',
+        sucursales: normalizeSucursales(accesorio.sucursales)
       };
 
       console.log('📝 Datos normalizados para edición:', editData);
       setForm(editData);
       setOriginalForm(editData);
     }
-  }, [lente, visible]);
+  }, [accesorio, visible]);
 
   // Obtiene las líneas de producto de la marca seleccionada
   const lineasMarca = useMemo(() => {
@@ -150,11 +143,10 @@ const EditLenteModal = ({
     
     if (!form.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
     if (!form.descripcion.trim()) newErrors.descripcion = 'La descripción es requerida';
-    if (!form.categoriaId) newErrors.categoriaId = 'La categoría es requerida';
+    if (!form.tipo) newErrors.tipo = 'La categoría es requerida';
     if (!form.marcaId) newErrors.marcaId = 'La marca es requerida';
     if (!form.material) newErrors.material = 'El material es requerido';
     if (!form.color) newErrors.color = 'El color es requerido';
-    if (!form.tipoLente) newErrors.tipoLente = 'El tipo de lente es requerido';
     if (!form.linea) newErrors.linea = 'La línea es requerida';
     
     // Validación de precios
@@ -173,12 +165,6 @@ const EditLenteModal = ({
         newErrors.precioActual = 'El precio promocional debe ser menor al precio base';
       }
     }
-    
-    // Validación de medidas
-    const { anchoPuente, altura, ancho } = form.medidas;
-    if (!anchoPuente || Number(anchoPuente) <= 0) newErrors.medidas = 'Medidas inválidas';
-    if (!altura || Number(altura) <= 0) newErrors.medidas = 'Medidas inválidas';
-    if (!ancho || Number(ancho) <= 0) newErrors.medidas = 'Medidas inválidas';
     
     // Validación de imágenes y sucursales
     if (!form.imagenes || form.imagenes.length === 0) {
@@ -223,7 +209,7 @@ const EditLenteModal = ({
       }
     } catch (error) {
       console.error('Error al seleccionar imágenes:', error);
-      alert('Error al seleccionar imágenes');
+      Alert.alert('Error', 'Error al seleccionar imágenes');
     } finally {
       setUploadingImage(false);
     }
@@ -276,11 +262,11 @@ const EditLenteModal = ({
   };
 
   /**
-   * Guardar cambios - Solo envía lo que se modificó
+   * Guardar cambios
    */
   const handleSave = () => {
-    if (!lente) {
-      alert('Error: No hay lente seleccionado para editar');
+    if (!accesorio) {
+      Alert.alert('Error', 'No hay accesorio seleccionado para editar');
       return;
     }
 
@@ -288,31 +274,23 @@ const EditLenteModal = ({
       return;
     }
 
-    console.log('💾 Guardando cambios del lente:', lente._id);
+    console.log('💾 Guardando cambios del accesorio:', accesorio._id);
     console.log('📋 Datos del formulario ANTES de transformar:', form);
+    console.log('🖼️ Imágenes en formulario antes de guardar:', form.imagenes);
 
-    // TRANSFORMAR LOS DATOS IGUAL QUE EN CREAR
-    const medidas = form.medidas || {};
     const dataToSend = {
       nombre: form.nombre?.trim(),
       descripcion: form.descripcion?.trim(),
-      categoriaId: form.categoriaId,
+      tipo: form.tipo,
       marcaId: form.marcaId,
+      linea: form.linea?.trim(),
       material: form.material?.trim(),
       color: form.color?.trim(),
-      tipoLente: form.tipoLente?.trim(),
       precioBase: Number(form.precioBase),
       precioActual: form.enPromocion ? Number(form.precioActual) : Number(form.precioBase),
-      linea: form.linea?.trim(),
-      medidas: {
-        anchoPuente: Number(medidas.anchoPuente),
-        altura: Number(medidas.altura),
-        ancho: Number(medidas.ancho),
-      },
       imagenes: Array.isArray(form.imagenes) ? form.imagenes : [],
       enPromocion: !!form.enPromocion,
       promocionId: form.enPromocion ? form.promocionId : undefined,
-      fechaCreacion: form.fechaCreacion,
       sucursales: Array.isArray(form.sucursales) ? form.sucursales
         .map(s => ({
           sucursalId: s.sucursalId,
@@ -324,6 +302,7 @@ const EditLenteModal = ({
     };
 
     console.log('🚀 Datos TRANSFORMADOS para actualizar:', JSON.stringify(dataToSend, null, 2));
+    console.log('📸 Imágenes que se enviarán al backend:', dataToSend.imagenes);
 
     onSave(dataToSend);
   };
@@ -352,7 +331,7 @@ const EditLenteModal = ({
     }
   };
 
-  if (!lente) return null;
+  if (!accesorio) return null;
 
   /**
    * Renderizar campo de entrada de texto con validación
@@ -427,7 +406,7 @@ const EditLenteModal = ({
       <SafeAreaView style={styles.container}>
         {/* Header del modal */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Editar Lente</Text>
+          <Text style={styles.headerTitle}>Editar Accesorio</Text>
           <TouchableOpacity 
             style={styles.closeButton}
             onPress={handleClose}
@@ -451,10 +430,10 @@ const EditLenteModal = ({
             </View>
             <View style={styles.sectionContent}>
               {renderTextInput(
-                'Nombre del lente', 
+                'Nombre del accesorio', 
                 form.nombre, 
                 (v) => setForm(prev => ({ ...prev, nombre: v })), 
-                'Ej: Lente Progresivo Premium',
+                'Ej: Estuche Premium',
                 true,
                 'default',
                 false,
@@ -464,7 +443,7 @@ const EditLenteModal = ({
                 'Descripción del producto', 
                 form.descripcion, 
                 (v) => setForm(prev => ({ ...prev, descripcion: v })), 
-                'Describe las características del lente...',
+                'Describe las características del accesorio...',
                 true,
                 'default',
                 true,
@@ -482,12 +461,12 @@ const EditLenteModal = ({
             <View style={styles.sectionContent}>
               {renderPicker(
                 'Categoría',
-                form.categoriaId,
-                (v) => setForm(prev => ({ ...prev, categoriaId: v })),
+                form.tipo,
+                (v) => setForm(prev => ({ ...prev, tipo: v })),
                 categorias,
                 'Selecciona una categoría',
                 true,
-                'categoriaId'
+                'tipo'
               )}
               
               {renderPicker(
@@ -514,16 +493,6 @@ const EditLenteModal = ({
                 'linea',
                 !form.marcaId || lineasMarca.length === 0
               )}
-
-              {renderPicker(
-                'Tipo de lente',
-                form.tipoLente,
-                (v) => setForm(prev => ({ ...prev, tipoLente: v })),
-                tiposLente.map(tipo => ({ label: tipo, value: tipo.toLowerCase() })),
-                'Selecciona el tipo de lente',
-                true,
-                'tipoLente'
-              )}
             </View>
           </View>
 
@@ -538,7 +507,7 @@ const EditLenteModal = ({
                 'Material',
                 form.material,
                 (v) => setForm(prev => ({ ...prev, material: v })),
-                materiales,
+                materiales.map(material => ({ label: material, value: material })),
                 'Seleccione el material',
                 true,
                 'material'
@@ -548,60 +517,19 @@ const EditLenteModal = ({
                 'Color',
                 form.color,
                 (v) => setForm(prev => ({ ...prev, color: v })),
-                colores,
+                colores.map(color => ({ label: color, value: color })),
                 'Seleccione el color',
                 true,
                 'color'
               )}
-
-              {/* Medidas del Lente */}
-              <Text style={styles.subsectionTitle}>Medidas del Lente (mm)</Text>
-              <View style={styles.row}>
-                <View style={styles.inputSmall}>
-                  {renderTextInput(
-                    'Puente', 
-                    form.medidas.anchoPuente, 
-                    (v) => setForm(prev => ({ ...prev, medidas: { ...prev.medidas, anchoPuente: v } })), 
-                    '18',
-                    true,
-                    'numeric',
-                    false,
-                    'medidas'
-                  )}
-                </View>
-                <View style={styles.inputSmall}>
-                  {renderTextInput(
-                    'Altura', 
-                    form.medidas.altura, 
-                    (v) => setForm(prev => ({ ...prev, medidas: { ...prev.medidas, altura: v } })), 
-                    '50',
-                    true,
-                    'numeric',
-                    false,
-                    'medidas'
-                  )}
-                </View>
-                <View style={styles.inputSmall}>
-                  {renderTextInput(
-                    'Ancho', 
-                    form.medidas.ancho, 
-                    (v) => setForm(prev => ({ ...prev, medidas: { ...prev.medidas, ancho: v } })), 
-                    '140',
-                    true,
-                    'numeric',
-                    false,
-                    'medidas'
-                  )}
-                </View>
-              </View>
             </View>
           </View>
 
-          {/* Sección: Imágenes del Lente */}
+          {/* Sección: Imágenes del Accesorio */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="camera" size={20} color="#4CAF50" />
-              <Text style={styles.sectionTitle}>Imágenes del Lente</Text>
+              <Text style={styles.sectionTitle}>Imágenes del Accesorio</Text>
             </View>
             <View style={styles.sectionContent}>
               <TouchableOpacity 
@@ -647,7 +575,7 @@ const EditLenteModal = ({
                 'Precio Base ($)', 
                 form.precioBase, 
                 (v) => setForm(prev => ({ ...prev, precioBase: v })), 
-                '150.00',
+                '25.00',
                 true,
                 'numeric',
                 false,
@@ -656,7 +584,7 @@ const EditLenteModal = ({
               
               {/* Toggle promoción */}
               <View style={styles.toggleContainer}>
-                <Text style={styles.toggleLabel}>¿Lente en promoción?</Text>
+                <Text style={styles.toggleLabel}>¿Accesorio en promoción?</Text>
                 <TouchableOpacity 
                   style={[styles.toggle, form.enPromocion && styles.toggleActive]} 
                   onPress={() => setForm(prev => ({ 
@@ -687,7 +615,7 @@ const EditLenteModal = ({
                     'Precio Promocional ($)', 
                     form.precioActual, 
                     (v) => setForm(prev => ({ ...prev, precioActual: v })), 
-                    '120.00',
+                    '20.00',
                     true,
                     'numeric',
                     false,
@@ -755,7 +683,7 @@ const EditLenteModal = ({
             activeOpacity={0.8}
           >
             <Ionicons name="save" size={20} color="#FFFFFF" />
-            <Text style={styles.saveButtonText}>Actualizar Lente</Text>
+            <Text style={styles.saveButtonText}>Actualizar Accesorio</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -821,17 +749,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  subsectionTitle: {
-    fontSize: 14,
-    fontFamily: 'Lato-Bold',
-    color: '#666666',
-    marginBottom: 12,
-    marginTop: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-  },
   inputGroup: {
     marginBottom: 16,
   },
@@ -862,9 +779,6 @@ const styles = StyleSheet.create({
   multilineInput: {
     height: 80,
     textAlignVertical: 'top',
-  },
-  inputSmall: {
-    flex: 1,
   },
   errorText: {
     fontSize: 12,
@@ -1052,4 +966,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditLenteModal;
+export default EditAccesorioModal;

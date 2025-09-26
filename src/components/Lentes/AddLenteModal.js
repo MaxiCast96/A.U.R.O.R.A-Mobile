@@ -1,8 +1,37 @@
 import React, { useState, useMemo } from 'react';
-import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import {
+  Modal,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Image,
+  SafeAreaView
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 
+/**
+ * Componente AddLenteModal
+ * 
+ * Modal para agregar nuevos lentes con formulario organizado por secciones
+ * siguiendo el diseño del AddEmpleadoModal.
+ * 
+ * Props:
+ * @param {boolean} visible - Controla la visibilidad del modal
+ * @param {Function} onClose - Función que se ejecuta al cerrar el modal
+ * @param {Function} onSave - Función que se ejecuta al guardar el lente
+ * @param {Array} categorias - Lista de categorías disponibles
+ * @param {Array} marcas - Lista de marcas disponibles
+ * @param {Array} promociones - Lista de promociones disponibles
+ * @param {Array} sucursales - Lista de sucursales disponibles
+ * @param {Array} materiales - Lista de materiales hardcodeados
+ * @param {Array} colores - Lista de colores hardcodeados
+ * @param {Array} tiposLente - Lista de tipos de lente hardcodeados
+ */
 const AddLenteModal = ({
   visible,
   onClose,
@@ -34,6 +63,9 @@ const AddLenteModal = ({
     sucursales: [],
   });
 
+  const [errors, setErrors] = useState({});
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   // Obtiene las líneas de producto de la marca seleccionada
   const lineasMarca = useMemo(() => {
     if (!form.marcaId) return [];
@@ -41,62 +73,68 @@ const AddLenteModal = ({
     return Array.isArray(marca?.lineas) ? marca.lineas : [];
   }, [form.marcaId, marcas]);
 
-  // VALIDACIÓN COMPLETA
+  /**
+   * Validación completa del formulario
+   */
   const validate = () => {
-    const errors = [];
+    const newErrors = {};
     
-    if (!form.nombre.trim()) errors.push('El nombre es requerido');
-    if (!form.descripcion.trim()) errors.push('La descripción es requerida');
-    if (!form.categoriaId) errors.push('La categoría es requerida');
-    if (!form.marcaId) errors.push('La marca es requerida');
-    if (!form.material) errors.push('El material es requerido');
-    if (!form.color) errors.push('El color es requerido');
-    if (!form.tipoLente) errors.push('El tipo de lente es requerido');
-    if (!form.linea) errors.push('La línea es requerida');
+    if (!form.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
+    if (!form.descripcion.trim()) newErrors.descripcion = 'La descripción es requerida';
+    if (!form.categoriaId) newErrors.categoriaId = 'La categoría es requerida';
+    if (!form.marcaId) newErrors.marcaId = 'La marca es requerida';
+    if (!form.material) newErrors.material = 'El material es requerido';
+    if (!form.color) newErrors.color = 'El color es requerido';
+    if (!form.tipoLente) newErrors.tipoLente = 'El tipo de lente es requerido';
+    if (!form.linea) newErrors.linea = 'La línea es requerida';
     
     // Validación de precios
     const precioBase = Number(form.precioBase);
     if (!form.precioBase || isNaN(precioBase) || precioBase <= 0) {
-      errors.push('El precio base debe ser mayor a 0');
+      newErrors.precioBase = 'El precio base debe ser mayor a 0';
     }
     
     if (form.enPromocion) {
-      if (!form.promocionId) errors.push('Debe seleccionar una promoción');
+      if (!form.promocionId) newErrors.promocionId = 'Debe seleccionar una promoción';
       
       const precioActual = Number(form.precioActual);
       if (!form.precioActual || isNaN(precioActual) || precioActual <= 0) {
-        errors.push('El precio promocional debe ser mayor a 0');
+        newErrors.precioActual = 'El precio promocional debe ser mayor a 0';
       } else if (precioActual >= precioBase) {
-        errors.push('El precio promocional debe ser menor al precio base');
+        newErrors.precioActual = 'El precio promocional debe ser menor al precio base';
       }
     }
     
     // Validación de medidas
     const { anchoPuente, altura, ancho } = form.medidas;
-    if (!anchoPuente || Number(anchoPuente) <= 0) errors.push('Ancho de puente inválido');
-    if (!altura || Number(altura) <= 0) errors.push('Altura inválida');
-    if (!ancho || Number(ancho) <= 0) errors.push('Ancho inválido');
+    if (!anchoPuente || Number(anchoPuente) <= 0) newErrors.medidas = 'Medidas inválidas';
+    if (!altura || Number(altura) <= 0) newErrors.medidas = 'Medidas inválidas';
+    if (!ancho || Number(ancho) <= 0) newErrors.medidas = 'Medidas inválidas';
     
     // Validación de imágenes y sucursales
     if (!form.imagenes || form.imagenes.length === 0) {
-      errors.push('Se requiere al menos una imagen');
+      newErrors.imagenes = 'Se requiere al menos una imagen';
     }
     
     if (!form.sucursales || form.sucursales.length === 0) {
-      errors.push('Debe seleccionar al menos una sucursal');
+      newErrors.sucursales = 'Debe seleccionar al menos una sucursal';
     }
     
     const hasNegativeStock = form.sucursales.some(s => Number(s.stock) < 0);
     if (hasNegativeStock) {
-      errors.push('El stock no puede ser negativo');
+      newErrors.sucursales = 'El stock no puede ser negativo';
     }
 
-    return errors.length > 0 ? errors.join('\n') : null;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  // Selector de imágenes
+  /**
+   * Selector de imágenes
+   */
   const handlePickImage = async () => {
     try {
+      setUploadingImage(true);
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
@@ -110,14 +148,21 @@ const AddLenteModal = ({
           ...prev, 
           imagenes: [...prev.imagenes, ...newImages] 
         }));
+        if (errors.imagenes) {
+          setErrors(prev => ({ ...prev, imagenes: null }));
+        }
       }
     } catch (error) {
       console.error('Error al seleccionar imágenes:', error);
       alert('Error al seleccionar imágenes');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
-  // Eliminar imagen
+  /**
+   * Eliminar imagen
+   */
   const handleRemoveImage = (index) => {
     setForm(prev => ({
       ...prev,
@@ -125,7 +170,9 @@ const AddLenteModal = ({
     }));
   };
 
-  // Manejo de sucursales
+  /**
+   * Manejo de sucursales
+   */
   const handleToggleSucursal = (sucursal) => {
     const exists = form.sucursales.find(x => x.sucursalId === sucursal._id);
     if (exists) {
@@ -143,6 +190,10 @@ const AddLenteModal = ({
         }]
       }));
     }
+    
+    if (errors.sucursales) {
+      setErrors(prev => ({ ...prev, sucursales: null }));
+    }
   };
 
   const handleStockChange = (sucursalId, value) => {
@@ -155,7 +206,9 @@ const AddLenteModal = ({
     }));
   };
 
-  // Resetear formulario
+  /**
+   * Resetear formulario
+   */
   const resetForm = () => {
     setForm({
       nombre: '',
@@ -175,13 +228,14 @@ const AddLenteModal = ({
       fechaCreacion: new Date().toISOString().split('T')[0],
       sucursales: [],
     });
+    setErrors({});
   };
 
-  // AQUÍ ESTÁ LA CLAVE: TRANSFORMACIÓN DE DATOS ANTES DE ENVIAR
+  /**
+   * Guardar lente - Transformación de datos antes de enviar
+   */
   const handleSave = () => {
-    const error = validate();
-    if (error) {
-      alert(error);
+    if (!validate()) {
       return;
     }
 
@@ -215,17 +269,11 @@ const AddLenteModal = ({
           nombreSucursal: s.nombreSucursal,
           stock: Number(s.stock ?? 0),
         }))
-        .filter(s => s.sucursalId) // Solo sucursales válidas
+        .filter(s => s.sucursalId)
         : [],
     };
 
     console.log('🚀 Datos TRANSFORMADOS para enviar:', JSON.stringify(dataToSend, null, 2));
-
-    // Verificar que los datos críticos están presentes
-    if (!dataToSend.categoriaId || !dataToSend.marcaId) {
-      alert('Error: Faltan datos críticos (categoría o marca)');
-      return;
-    }
 
     onSave(dataToSend);
     resetForm();
@@ -236,183 +284,270 @@ const AddLenteModal = ({
     onClose();
   };
 
+  /**
+   * Renderizar campo de entrada de texto con validación
+   */
+  const renderTextInput = (label, value, onChangeText, placeholder, required = false, keyboardType = 'default', multiline = false, field = null) => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>
+        {label} {required && <Text style={styles.required}>*</Text>}
+      </Text>
+      <TextInput
+        style={[
+          styles.textInput, 
+          multiline && styles.multilineInput,
+          errors[field] && styles.inputError
+        ]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#999999"
+        keyboardType={keyboardType}
+        multiline={multiline}
+        numberOfLines={multiline ? 3 : 1}
+      />
+      {errors[field] && (
+        <Text style={styles.errorText}>{errors[field]}</Text>
+      )}
+    </View>
+  );
+
+  /**
+   * Renderizar selector
+   */
+  const renderPicker = (label, selectedValue, onValueChange, options, placeholder, required = false, field = null, disabled = false) => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>
+        {label} {required && <Text style={styles.required}>*</Text>}
+      </Text>
+      <View style={[
+        styles.pickerContainer, 
+        errors[field] && styles.inputError,
+        disabled && styles.disabledInput
+      ]}>
+        <Picker
+          selectedValue={selectedValue}
+          onValueChange={onValueChange}
+          style={styles.picker}
+          enabled={!disabled}
+        >
+          <Picker.Item label={placeholder} value="" />
+          {options.map((option) => (
+            <Picker.Item 
+              key={option.value || option._id || option} 
+              label={option.label || option.nombre || option} 
+              value={option.value || option._id || option} 
+            />
+          ))}
+        </Picker>
+      </View>
+      {errors[field] && (
+        <Text style={styles.errorText}>{errors[field]}</Text>
+      )}
+    </View>
+  );
+
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={styles.title}>Agregar Nuevo Lente</Text>
-            
-            {/* Información Básica */}
-            <View style={styles.section}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={handleClose}
+    >
+      <SafeAreaView style={styles.container}>
+        {/* Header del modal */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Agregar Nuevo Lente</Text>
+          <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={handleClose}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="close" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Contenido del formulario */}
+        <ScrollView 
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Sección: Información Básica */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="information-circle" size={20} color="#00BCD4" />
               <Text style={styles.sectionTitle}>Información Básica</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Nombre del lente"
-                value={form.nombre}
-                onChangeText={v => setForm(prev => ({ ...prev, nombre: v }))}
-              />
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Descripción del producto"
-                value={form.descripcion}
-                onChangeText={v => setForm(prev => ({ ...prev, descripcion: v }))}
-                multiline
-                numberOfLines={3}
-              />
             </View>
+            <View style={styles.sectionContent}>
+              {renderTextInput(
+                'Nombre del lente', 
+                form.nombre, 
+                (v) => setForm(prev => ({ ...prev, nombre: v })), 
+                'Ej: Lente Progresivo Premium',
+                true,
+                'default',
+                false,
+                'nombre'
+              )}
+              {renderTextInput(
+                'Descripción del producto', 
+                form.descripcion, 
+                (v) => setForm(prev => ({ ...prev, descripcion: v })), 
+                'Describe las características del lente...',
+                true,
+                'default',
+                true,
+                'descripcion'
+              )}
+            </View>
+          </View>
 
-            {/* Categorización */}
-            <View style={styles.section}>
+          {/* Sección: Categorización */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="pricetags" size={20} color="#9C27B0" />
               <Text style={styles.sectionTitle}>Categorización</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={form.categoriaId}
-                  onValueChange={v => setForm(prev => ({ ...prev, categoriaId: v }))}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Selecciona una categoría" value="" />
-                  {categorias.map(cat => (
-                    <Picker.Item key={cat._id} label={cat.nombre} value={cat._id} />
-                  ))}
-                </Picker>
-              </View>
-              
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={form.marcaId}
-                  onValueChange={v => setForm(prev => ({ ...prev, marcaId: v, linea: '' }))}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Selecciona una marca" value="" />
-                  {marcas.map(m => (
-                    <Picker.Item key={m._id} label={m.nombre} value={m._id} />
-                  ))}
-                </Picker>
-              </View>
-
-              <View style={styles.pickerContainer}>
-                <Picker
-                  enabled={!!form.marcaId && lineasMarca.length > 0}
-                  selectedValue={form.linea}
-                  onValueChange={v => setForm(prev => ({ ...prev, linea: v }))}
-                  style={[styles.picker, (!form.marcaId || lineasMarca.length === 0) && styles.pickerDisabled]}
-                >
-                  <Picker.Item 
-                    label={
-                      !form.marcaId 
-                        ? "Primero selecciona una marca" 
-                        : lineasMarca.length === 0 
-                          ? "No hay líneas disponibles" 
-                          : "Selecciona una línea"
-                    } 
-                    value="" 
-                  />
-                  {lineasMarca.map(linea => (
-                    <Picker.Item key={linea} label={linea} value={linea} />
-                  ))}
-                </Picker>
-              </View>
-
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={form.tipoLente}
-                  onValueChange={v => setForm(prev => ({ ...prev, tipoLente: v }))}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Selecciona el tipo de lente" value="" />
-                  {tiposLente.map(tipo => (
-                    <Picker.Item 
-                      key={tipo}
-                      label={tipo} 
-                      value={tipo.toLowerCase()} 
-                    />
-                  ))}
-                </Picker>
-              </View>
             </View>
+            <View style={styles.sectionContent}>
+              {renderPicker(
+                'Categoría',
+                form.categoriaId,
+                (v) => setForm(prev => ({ ...prev, categoriaId: v })),
+                categorias,
+                'Selecciona una categoría',
+                true,
+                'categoriaId'
+              )}
+              
+              {renderPicker(
+                'Marca',
+                form.marcaId,
+                (v) => setForm(prev => ({ ...prev, marcaId: v, linea: '' })),
+                marcas,
+                'Selecciona una marca',
+                true,
+                'marcaId'
+              )}
 
-            {/* Características Físicas */}
-            <View style={styles.section}>
+              {renderPicker(
+                'Línea de producto',
+                form.linea,
+                (v) => setForm(prev => ({ ...prev, linea: v })),
+                lineasMarca,
+                !form.marcaId 
+                  ? "Primero selecciona una marca" 
+                  : lineasMarca.length === 0 
+                    ? "No hay líneas disponibles" 
+                    : "Selecciona una línea",
+                true,
+                'linea',
+                !form.marcaId || lineasMarca.length === 0
+              )}
+
+              {renderPicker(
+                'Tipo de lente',
+                form.tipoLente,
+                (v) => setForm(prev => ({ ...prev, tipoLente: v })),
+                tiposLente.map(tipo => ({ label: tipo, value: tipo.toLowerCase() })),
+                'Selecciona el tipo de lente',
+                true,
+                'tipoLente'
+              )}
+            </View>
+          </View>
+
+          {/* Sección: Características Físicas */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="layers" size={20} color="#FF9800" />
               <Text style={styles.sectionTitle}>Características Físicas</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={form.material}
-                  onValueChange={v => setForm(prev => ({ ...prev, material: v }))}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Seleccione el material" value="" />
-                  {materiales.map(material => (
-                    <Picker.Item 
-                      key={material}
-                      label={material}
-                      value={material}
-                    />
-                  ))}
-                </Picker>
-              </View>
+            </View>
+            <View style={styles.sectionContent}>
+              {renderPicker(
+                'Material',
+                form.material,
+                (v) => setForm(prev => ({ ...prev, material: v })),
+                materiales,
+                'Seleccione el material',
+                true,
+                'material'
+              )}
               
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={form.color}
-                  onValueChange={v => setForm(prev => ({ ...prev, color: v }))}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Seleccione el color" value="" />
-                  {colores.map(color => (
-                    <Picker.Item 
-                      key={color}
-                      label={color}
-                      value={color}
-                    />
-                  ))}
-                </Picker>
-              </View>
-            </View>
+              {renderPicker(
+                'Color',
+                form.color,
+                (v) => setForm(prev => ({ ...prev, color: v })),
+                colores,
+                'Seleccione el color',
+                true,
+                'color'
+              )}
 
-            {/* Medidas del Lente */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Medidas del Lente (mm)</Text>
+              {/* Medidas del Lente */}
+              <Text style={styles.subsectionTitle}>Medidas del Lente (mm)</Text>
               <View style={styles.row}>
-                <TextInput
-                  style={[styles.input, styles.inputSmall]}
-                  placeholder="Puente"
-                  value={form.medidas.anchoPuente}
-                  keyboardType="numeric"
-                  onChangeText={v => setForm(prev => ({ 
-                    ...prev, 
-                    medidas: { ...prev.medidas, anchoPuente: v } 
-                  }))}
-                />
-                <TextInput
-                  style={[styles.input, styles.inputSmall]}
-                  placeholder="Altura"
-                  value={form.medidas.altura}
-                  keyboardType="numeric"
-                  onChangeText={v => setForm(prev => ({ 
-                    ...prev, 
-                    medidas: { ...prev.medidas, altura: v } 
-                  }))}
-                />
-                <TextInput
-                  style={[styles.input, styles.inputSmall]}
-                  placeholder="Ancho"
-                  value={form.medidas.ancho}
-                  keyboardType="numeric"
-                  onChangeText={v => setForm(prev => ({ 
-                    ...prev, 
-                    medidas: { ...prev.medidas, ancho: v } 
-                  }))}
-                />
+                <View style={styles.inputSmall}>
+                  {renderTextInput(
+                    'Puente', 
+                    form.medidas.anchoPuente, 
+                    (v) => setForm(prev => ({ ...prev, medidas: { ...prev.medidas, anchoPuente: v } })), 
+                    '18',
+                    true,
+                    'numeric',
+                    false,
+                    'medidas'
+                  )}
+                </View>
+                <View style={styles.inputSmall}>
+                  {renderTextInput(
+                    'Altura', 
+                    form.medidas.altura, 
+                    (v) => setForm(prev => ({ ...prev, medidas: { ...prev.medidas, altura: v } })), 
+                    '50',
+                    true,
+                    'numeric',
+                    false,
+                    'medidas'
+                  )}
+                </View>
+                <View style={styles.inputSmall}>
+                  {renderTextInput(
+                    'Ancho', 
+                    form.medidas.ancho, 
+                    (v) => setForm(prev => ({ ...prev, medidas: { ...prev.medidas, ancho: v } })), 
+                    '140',
+                    true,
+                    'numeric',
+                    false,
+                    'medidas'
+                  )}
+                </View>
               </View>
             </View>
+          </View>
 
-            {/* Imágenes del Lente */}
-            <View style={styles.section}>
+          {/* Sección: Imágenes del Lente */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="camera" size={20} color="#4CAF50" />
               <Text style={styles.sectionTitle}>Imágenes del Lente</Text>
-              <TouchableOpacity style={styles.imagePicker} onPress={handlePickImage}>
-                <Text style={styles.imagePickerText}>📷 Subir Imágenes</Text>
+            </View>
+            <View style={styles.sectionContent}>
+              <TouchableOpacity 
+                style={[styles.imagePicker, errors.imagenes && styles.imagePickerError]} 
+                onPress={handlePickImage}
+                disabled={uploadingImage}
+              >
+                <Ionicons name="camera" size={32} color="#00BCD4" />
+                <Text style={styles.imagePickerText}>
+                  {uploadingImage ? 'Subiendo imágenes...' : '📷 Subir Imágenes'}
+                </Text>
               </TouchableOpacity>
+              {errors.imagenes && (
+                <Text style={styles.errorText}>{errors.imagenes}</Text>
+              )}
+              
               {form.imagenes.length > 0 && (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageContainer}>
                   {form.imagenes.map((img, idx) => (
@@ -422,26 +557,35 @@ const AddLenteModal = ({
                         style={styles.removeImageButton} 
                         onPress={() => handleRemoveImage(idx)}
                       >
-                        <Text style={styles.removeImageText}>×</Text>
+                        <Ionicons name="close" size={16} color="#FFFFFF" />
                       </TouchableOpacity>
                     </View>
                   ))}
                 </ScrollView>
               )}
             </View>
+          </View>
 
-            {/* Información de Precios */}
-            <View style={styles.section}>
+          {/* Sección: Información de Precios */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="card" size={20} color="#4CAF50" />
               <Text style={styles.sectionTitle}>Información de Precios</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Precio Base ($)"
-                value={form.precioBase}
-                keyboardType="numeric"
-                onChangeText={v => setForm(prev => ({ ...prev, precioBase: v }))}
-              />
+            </View>
+            <View style={styles.sectionContent}>
+              {renderTextInput(
+                'Precio Base ($)', 
+                form.precioBase, 
+                (v) => setForm(prev => ({ ...prev, precioBase: v })), 
+                '150.00',
+                true,
+                'numeric',
+                false,
+                'precioBase'
+              )}
               
-              <View style={styles.row}>
+              {/* Toggle promoción */}
+              <View style={styles.toggleContainer}>
                 <Text style={styles.toggleLabel}>¿Lente en promoción?</Text>
                 <TouchableOpacity 
                   style={[styles.toggle, form.enPromocion && styles.toggleActive]} 
@@ -460,32 +604,40 @@ const AddLenteModal = ({
 
               {form.enPromocion && (
                 <>
-                  <View style={styles.pickerContainer}>
-                    <Picker
-                      selectedValue={form.promocionId}
-                      onValueChange={v => setForm(prev => ({ ...prev, promocionId: v }))}
-                      style={styles.picker}
-                    >
-                      <Picker.Item label="Selecciona una promoción" value="" />
-                      {promociones.map(p => (
-                        <Picker.Item key={p._id} label={p.nombre} value={p._id} />
-                      ))}
-                    </Picker>
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Precio Promocional ($)"
-                    value={form.precioActual}
-                    keyboardType="numeric"
-                    onChangeText={v => setForm(prev => ({ ...prev, precioActual: v }))}
-                  />
+                  {renderPicker(
+                    'Promoción',
+                    form.promocionId,
+                    (v) => setForm(prev => ({ ...prev, promocionId: v })),
+                    promociones,
+                    'Selecciona una promoción',
+                    true,
+                    'promocionId'
+                  )}
+                  {renderTextInput(
+                    'Precio Promocional ($)', 
+                    form.precioActual, 
+                    (v) => setForm(prev => ({ ...prev, precioActual: v })), 
+                    '120.00',
+                    true,
+                    'numeric',
+                    false,
+                    'precioActual'
+                  )}
                 </>
               )}
             </View>
+          </View>
 
-            {/* Disponibilidad por Sucursal */}
-            <View style={styles.section}>
+          {/* Sección: Disponibilidad por Sucursal */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="business" size={20} color="#6B46C1" />
               <Text style={styles.sectionTitle}>Disponibilidad por Sucursal</Text>
+            </View>
+            <View style={styles.sectionContent}>
+              {errors.sucursales && (
+                <Text style={styles.errorText}>{errors.sucursales}</Text>
+              )}
               {sucursales.map(s => {
                 const selected = form.sucursales.find(x => x.sucursalId === s._id);
                 return (
@@ -494,9 +646,9 @@ const AddLenteModal = ({
                       onPress={() => handleToggleSucursal(s)}
                       style={styles.sucursalCheckbox}
                     >
-                      <Text style={styles.checkboxText}>
-                        {selected ? '☑️' : '⬜'}
-                      </Text>
+                      <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
+                        {selected && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                      </View>
                       <Text style={styles.sucursalName}>{s.nombre}</Text>
                     </TouchableOpacity>
                     {selected && (
@@ -512,232 +664,321 @@ const AddLenteModal = ({
                 );
               })}
             </View>
-          </ScrollView>
-
-          {/* Botones de acción */}
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveText}>Crear Lente</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-              <Text style={styles.closeText}>Cancelar</Text>
-            </TouchableOpacity>
           </View>
+
+          {/* Espaciador */}
+          <View style={styles.spacer} />
+        </ScrollView>
+
+        {/* Botones de acción */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity 
+            style={styles.cancelButton}
+            onPress={handleClose}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.saveButton}
+            onPress={handleSave}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="save" size={20} color="#FFFFFF" />
+            <Text style={styles.saveButtonText}>Crear Lente</Text>
+          </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.3)', 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
   },
-  modal: { 
-    backgroundColor: '#fff', 
-    padding: 20, 
-    borderRadius: 16, 
-    width: '95%', 
-    maxHeight: '95%',
+  header: {
+    backgroundColor: '#00BCD4',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: 'Lato-Bold',
+    color: '#FFFFFF',
+    flex: 1,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  section: {
+    marginHorizontal: 20,
+    marginTop: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: 'Lato-Bold',
+    color: '#1A1A1A',
+  },
+  sectionContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  title: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#1a1a1a'
+  subsectionTitle: {
+    fontSize: 14,
+    fontFamily: 'Lato-Bold',
+    color: '#666666',
+    marginBottom: 12,
+    marginTop: 8,
   },
-  section: { 
-    marginBottom: 20, 
-    backgroundColor: '#f8f9fa', 
-    borderRadius: 12, 
-    padding: 16 
+  row: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  sectionTitle: { 
-    fontWeight: 'bold', 
-    marginBottom: 12, 
-    fontSize: 16, 
-    color: '#00bcd4' 
+  inputGroup: {
+    marginBottom: 16,
   },
-  input: { 
-    borderWidth: 1, 
-    borderColor: '#e1e5e9', 
-    borderRadius: 8, 
-    padding: 12, 
-    marginBottom: 12, 
-    backgroundColor: '#fff',
-    fontSize: 16
+  inputLabel: {
+    fontSize: 14,
+    fontFamily: 'Lato-Bold',
+    color: '#1A1A1A',
+    marginBottom: 8,
   },
-  textArea: {
+  required: {
+    color: '#F44336',
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: 'Lato-Regular',
+    color: '#1A1A1A',
+    backgroundColor: '#FFFFFF',
+  },
+  inputError: {
+    borderColor: '#F44336',
+    borderWidth: 2,
+  },
+  multilineInput: {
     height: 80,
-    textAlignVertical: 'top'
+    textAlignVertical: 'top',
   },
   inputSmall: {
     flex: 1,
-    marginRight: 8
+  },
+  errorText: {
+    fontSize: 12,
+    fontFamily: 'Lato-Regular',
+    color: '#F44336',
+    marginTop: 4,
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#e1e5e9',
+    borderColor: '#E5E5E5',
     borderRadius: 8,
-    backgroundColor: '#fff',
-    marginBottom: 12
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
   },
   picker: {
-    height: 50
+    height: 50,
+    fontSize: 14,
   },
-  pickerDisabled: {
-    opacity: 0.5
+  disabledInput: {
+    opacity: 0.5,
+    backgroundColor: '#F5F5F5',
   },
-  row: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginBottom: 12 
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   toggleLabel: {
     flex: 1,
     fontSize: 16,
-    color: '#333'
+    fontFamily: 'Lato-Regular',
+    color: '#1A1A1A',
   },
   toggle: {
-    backgroundColor: '#e1e5e9',
+    backgroundColor: '#E5E5E5',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     minWidth: 60,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   toggleActive: {
-    backgroundColor: '#00bcd4'
+    backgroundColor: '#00BCD4',
   },
   toggleText: {
-    color: '#666',
-    fontWeight: '600'
+    color: '#666666',
+    fontFamily: 'Lato-Bold',
+    fontSize: 14,
   },
   toggleTextActive: {
-    color: '#fff'
+    color: '#FFFFFF',
   },
-  imagePicker: { 
-    backgroundColor: '#e0f7fa', 
-    padding: 16, 
-    borderRadius: 8, 
-    marginBottom: 12, 
+  imagePicker: {
+    backgroundColor: '#F8F9FA',
+    padding: 20,
+    borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#00bcd4',
-    borderStyle: 'dashed'
+    borderColor: '#00BCD4',
+    borderStyle: 'dashed',
+    marginBottom: 12,
   },
-  imagePickerText: { 
-    color: '#00bcd4', 
-    fontWeight: 'bold',
-    fontSize: 16 
+  imagePickerError: {
+    borderColor: '#F44336',
+  },
+  imagePickerText: {
+    color: '#00BCD4',
+    fontFamily: 'Lato-Bold',
+    fontSize: 16,
+    marginTop: 8,
   },
   imageContainer: {
-    marginBottom: 8
+    marginTop: 12,
   },
   imageWrapper: {
     position: 'relative',
-    marginRight: 8
+    marginRight: 12,
   },
-  imagePreview: { 
-    width: 80, 
-    height: 80, 
+  imagePreview: {
+    width: 80,
+    height: 80,
     borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#e1e5e9'
+    backgroundColor: '#F0F0F0',
   },
   removeImageButton: {
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: '#ff4444',
+    backgroundColor: '#F44336',
     borderRadius: 12,
     width: 24,
     height: 24,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
-  removeImageText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16
-  },
-  sucursalRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  sucursalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
     marginBottom: 8,
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8
   },
   sucursalCheckbox: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center'
-  },
-  checkboxText: {
-    marginRight: 8,
-    fontSize: 18
-  },
-  sucursalName: { 
-    flex: 1,
-    fontSize: 16,
-    color: '#333'
-  },
-  stockInput: { 
-    width: 80, 
-    borderWidth: 1, 
-    borderColor: '#e1e5e9', 
-    borderRadius: 6, 
-    padding: 8, 
-    backgroundColor: '#fff',
-    textAlign: 'center'
-  },
-  actions: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    marginTop: 20,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#e1e5e9'
-  },
-  saveButton: { 
-    backgroundColor: '#00bcd4', 
-    paddingHorizontal: 24, 
-    paddingVertical: 12, 
-    borderRadius: 8,
-    flex: 1,
-    marginRight: 8,
-    alignItems: 'center'
-  },
-  saveText: { 
-    color: '#fff', 
-    fontWeight: 'bold',
-    fontSize: 16
-  },
-  closeButton: { 
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 24, 
-    paddingVertical: 12, 
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 8,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd'
   },
-  closeText: { 
-    color: '#666', 
-    fontWeight: 'bold',
-    fontSize: 16
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#E5E5E5',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  checkboxSelected: {
+    backgroundColor: '#00BCD4',
+    borderColor: '#00BCD4',
+  },
+  sucursalName: {
+    fontSize: 14,
+    fontFamily: 'Lato-Regular',
+    color: '#1A1A1A',
+    flex: 1,
+  },
+  stockInput: {
+    width: 80,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 6,
+    padding: 8,
+    backgroundColor: '#FFFFFF',
+    textAlign: 'center',
+    fontSize: 14,
+    fontFamily: 'Lato-Regular',
+  },
+  spacer: {
+    height: 40,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    backgroundColor: '#F8F9FA',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontFamily: 'Lato-Bold',
+    color: '#666666',
+  },
+  saveButton: {
+    flex: 2,
+    flexDirection: 'row',
+    paddingVertical: 14,
+    borderRadius: 8,
+    backgroundColor: '#00BCD4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontFamily: 'Lato-Bold',
+    color: '#FFFFFF',
   },
 });
 

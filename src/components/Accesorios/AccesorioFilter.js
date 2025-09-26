@@ -6,34 +6,31 @@ import {
   TouchableOpacity,
   Modal,
   FlatList,
-  ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 /**
- * Componente LentesFilter
+ * Componente AccesoriosFilter
  * 
- * Proporciona filtros dropdown para la lista de lentes siguiendo
- * el diseño de EmpleadosFilter pero adaptado para lentes.
+ * Proporciona filtros dropdown para la lista de accesorios siguiendo
+ * el diseño de LentesFilter pero adaptado para accesorios.
  * 
  * Props:
  * @param {string} selectedFilter - Filtro seleccionado actualmente
  * @param {Function} onFilterChange - Callback para cambio de filtro
  */
-const LentesFilter = ({ selectedFilter, onFilterChange }) => {
+const AccesoriosFilter = ({ selectedFilter, onFilterChange }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Opciones de filtro para lentes
+  // Opciones de filtro para accesorios
   const filtroOptions = [
-    { id: 'Todos', label: 'Todos los lentes', icon: 'glasses-outline' },
+    { id: 'Todos', label: 'Todos los accesorios', icon: 'bag-outline' },
     { id: 'En Promoción', label: 'En Promoción', icon: 'pricetag-outline' },
     { id: 'Sin Promoción', label: 'Sin Promoción', icon: 'pricetag' },
-    { id: 'Con Stock', label: 'Con Stock', icon: 'layers-outline' },
-    { id: 'Sin Stock', label: 'Sin Stock', icon: 'layers' },
-    { id: 'Monofocal', label: 'Monofocal', icon: 'ellipse-outline' },
-    { id: 'Bifocal', label: 'Bifocal', icon: 'ellipse' },
-    { id: 'Progresivo', label: 'Progresivo', icon: 'radio-button-on' },
-    { id: 'Ocupacional', label: 'Ocupacional', icon: 'business-outline' }
+    { id: 'Con Stock', label: 'Con Stock', icon: 'cube-outline' },
+    { id: 'Sin Stock', label: 'Sin Stock', icon: 'cube' },
+    { id: 'Precio Alto', label: 'Precio Alto', icon: 'trending-up-outline' },
+    { id: 'Precio Bajo', label: 'Precio Bajo', icon: 'trending-down-outline' },
   ];
 
   /**
@@ -41,7 +38,7 @@ const LentesFilter = ({ selectedFilter, onFilterChange }) => {
    */
   const getSelectedLabel = () => {
     const selected = filtroOptions.find(option => option.id === selectedFilter);
-    return selected ? selected.label : 'Todos los lentes';
+    return selected ? selected.label : 'Todos los accesorios';
   };
 
   /**
@@ -49,7 +46,7 @@ const LentesFilter = ({ selectedFilter, onFilterChange }) => {
    */
   const getSelectedIcon = () => {
     const selected = filtroOptions.find(option => option.id === selectedFilter);
-    return selected ? selected.icon : 'glasses-outline';
+    return selected ? selected.icon : 'bag-outline';
   };
 
   /**
@@ -121,7 +118,7 @@ const LentesFilter = ({ selectedFilter, onFilterChange }) => {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filtrar Lentes</Text>
+              <Text style={styles.modalTitle}>Filtrar Accesorios</Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
                 onPress={() => setModalVisible(false)}
@@ -265,4 +262,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LentesFilter;
+export default AccesoriosFilter;

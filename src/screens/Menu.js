@@ -80,14 +80,14 @@ const MenuScreen = () => {
                     title: 'Lentes', 
                     subtitle: 'Catálogo de lentes',
                     color: '#49AA4C',
-                    onPress: () => navigation.navigate('Lentes') // ← ACTUALIZADO
+                    onPress: () => navigation.navigate('Lentes')
                 },
                 { 
                     icon: 'bag-outline', 
                     title: 'Accesorios', 
                     subtitle: 'Accesorios para lentes',
                     color: '#49AA4C',
-                    onPress: () => Alert.alert('Accesorios', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Accesorios') // ← ACTUALIZADO
                 },
                 { 
                     icon: 'cube-outline', 
@@ -289,7 +289,7 @@ const MenuScreen = () => {
 
                             <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Lentes')} // ← NUEVO BOTÓN AGREGADO
+                                onPress={() => navigation.navigate('Lentes')}
                             >
                                 <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
                                     <Ionicons name="glasses-outline" size={24} color="#FFFFFF" />
@@ -299,12 +299,12 @@ const MenuScreen = () => {
 
                              <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => Alert.alert('Reportes', 'Funcionalidad próximamente')}
+                                onPress={() => navigation.navigate('Accesorios')} // ← NUEVO BOTÓN AGREGADO
                             >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#6B7280' }]}>
-                                    <Ionicons name="analytics-outline" size={24} color="#FFFFFF" />
+                                <View style={[styles.essentialIcon, { backgroundColor: '#FF9800' }]}>
+                                    <Ionicons name="bag-outline" size={24} color="#FFFFFF" />
                                 </View>
-                                <Text style={styles.essentialText}>Reportes</Text>
+                                <Text style={styles.essentialText}>Accesorios</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

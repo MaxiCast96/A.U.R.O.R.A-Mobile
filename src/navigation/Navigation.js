@@ -9,7 +9,8 @@ import Welcome from '../screens/Welcome';
 import Menu from '../screens/Menu';
 import Clientes from '../screens/Clientes';
 import Empleados from '../screens/Empleados';
-import Lentes from '../screens/Lentes'; // Nueva importación
+import Lentes from '../screens/Lentes';
+import Accesorios from '../screens/Accesorios'; // Nueva importación
 import ForgotPassword from '../screens/ForgotPassword';
 import VerifyCode from '../screens/VerifyCode';
 import ResetPassword from '../screens/ResetPassword';
@@ -40,7 +41,7 @@ const LoadingScreen = () => (
  * 2. Login (si no está autenticado) o Main (si está autenticado)
  * 3. Main (tab navigator con las pantallas principales)
  * 4. Menu (pantalla de operaciones - accesible desde tabs y directamente)
- * 5. Pantallas de gestión (Clientes, Empleados, Lentes, etc.)
+ * 5. Pantallas de gestión (Clientes, Empleados, Lentes, Accesorios, etc.)
  * 6. Flujo de recuperación de contraseña (ForgotPassword -> VerifyCode -> ResetPassword -> PasswordSuccess)
  */
 export default function Navigation() {
@@ -99,8 +100,11 @@ export default function Navigation() {
                 {/* Navegación de Empleados */}
                 <Stack.Screen name="Empleados" component={Empleados} />
 
-                {/* Navegación de Lentes - NUEVA PANTALLA */}
+                {/* Navegación de Lentes */}
                 <Stack.Screen name="Lentes" component={Lentes} />
+
+                {/* Navegación de Accesorios - NUEVA PANTALLA */}
+                <Stack.Screen name="Accesorios" component={Accesorios} />
 
                 {/* Pantalla de menú - acceso directo para navegación desde otras pantallas */}
                 <Stack.Screen
