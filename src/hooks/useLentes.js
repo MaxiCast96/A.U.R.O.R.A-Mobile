@@ -2,335 +2,352 @@ import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
-/**
- * Hook personalizado para gestionar lentes
- * 
- * Este hook encapsula toda la lógica relacionada con:
- * - Carga y gestión de datos de lentes
- * - Filtrado y búsqueda
- * - Operaciones CRUD (crear, leer, actualizar, eliminar)
- * - Manejo de estados de carga y modales
- * - Cálculo de estadísticas
- * 
- * @returns {Object} Objeto con estados y funciones para gestionar lentes
- */
 export const useLentes = () => {
-    // ===========================================
-    // ESTADOS PRINCIPALES
-    // ===========================================
     const { getAuthHeaders } = useAuth();
-    
-    // Datos principales
+
+    // Estados principales
     const [lentes, setLentes] = useState([]);
     const [filteredLentes, setFilteredLentes] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    
-    // Estados de modales
+
+    // Modales
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedLente, setSelectedLente] = useState(null);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [addModalVisible, setAddModalVisible] = useState(false);
-    
-    // Estados de filtros
+
+    // Filtros y búsqueda
     const [searchText, setSearchText] = useState('');
-    const [selectedFilter, setSelectedFilter] = useState('todos');
+    const [selectedTipoFilter, setSelectedTipoFilter] = useState('Todos');
 
-    // ===========================================
-    // FUNCIONES DE DATOS
-    // ===========================================
-
-    /**
-     * Cargar lentes desde el servidor
-     */
-    const loadLentes = async (isRefreshing = false) => {
-        if (isRefreshing) {
-            setRefreshing(true);
-        } else {
-            setLoading(true);
-        }
-
+    // CARGAR LENTES
+    const loadLentes = async () => {
         try {
+            setLoading(true);
+            console.log('🔄 Cargando lentes...');
+            
             const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/lentes', {
                 method: 'GET',
                 headers: getAuthHeaders(),
             });
-
+            
+            console.log('📡 Respuesta del servidor:', response.status, response.statusText);
+            
             if (response.ok) {
                 const data = await response.json();
-                setLentes(data);
+                console.log('📦 Datos recibidos:', data);
+                console.log('📦 Tipo de datos:', typeof data);
+                
+                // Determinar estructura de respuesta
+                let lentesArray = [];
+                if (Array.isArray(data)) {
+                    lentesArray = data;
+                    console.log('✅ Datos son array directo');
+                } else if (Array.isArray(data.lentes)) {
+                    lentesArray = data.lentes;
+                    console.log('✅ Datos en propiedad "lentes"');
+                } else if (Array.isArray(data.data)) {
+                    lentesArray = data.data;
+                    console.log('✅ Datos en propiedad "data"');
+                } else {
+                    console.warn('⚠️ Estructura de respuesta desconocida');
+                    lentesArray = [];
+                }
+                
+                console.log('📊 Total lentes cargados:', lentesArray.length);
+                setLentes(lentesArray);
             } else {
-                Alert.alert('Error', 'No se pudieron cargar los lentes');
+                console.error('❌ Error de servidor:', response.status);
+                const errorText = await response.text();
+                console.error('❌ Detalle del error:', errorText);
+                Alert.alert('Error de conexión', 'No se pudieron cargar los lentes.');
+                setLentes([]);
             }
         } catch (error) {
-            console.error('Error loading lentes:', error);
-            Alert.alert('Error de red', 'No se pudo conectar con el servidor');
+            console.error('💥 Error de red al cargar lentes:', error);
+            Alert.alert('Error de red', 'Hubo un problema al conectar con el servidor.');
+            setLentes([]);
         } finally {
-            if (isRefreshing) {
-                setRefreshing(false);
-            } else {
-                setLoading(false);
-            }
+            setLoading(false);
         }
     };
 
-    /**
-     * Función para refrescar datos
-     */
-    const onRefresh = () => {
-        loadLentes(true);
-    };
-
-    // ===========================================
-    // FUNCIONES DE FILTRADO
-    // ===========================================
-
-    /**
-     * Aplicar filtros a la lista de lentes
-     */
-    const applyFilters = () => {
-        let filtered = [...lentes];
-
-        // Aplicar búsqueda por texto
-        if (searchText.trim() !== '') {
-            const searchLower = searchText.toLowerCase();
-            filtered = filtered.filter(lente => 
-                lente.nombre?.toLowerCase().includes(searchLower) ||
-                lente.descripcion?.toLowerCase().includes(searchLower) ||
-                lente.material?.toLowerCase().includes(searchLower) ||
-                lente.color?.toLowerCase().includes(searchLower) ||
-                lente.tipoLente?.toLowerCase().includes(searchLower) ||
-                (typeof lente.marcaId === 'object' ? lente.marcaId?.nombre?.toLowerCase().includes(searchLower) : false) ||
-                (typeof lente.categoriaId === 'object' ? lente.categoriaId?.nombre?.toLowerCase().includes(searchLower) : false)
-            );
-        }
-
-        // Aplicar filtros por tipo
-        switch (selectedFilter) {
-            case 'promocion':
-                filtered = filtered.filter(lente => lente.enPromocion === true);
-                break;
-            case 'sinPromocion':
-                filtered = filtered.filter(lente => lente.enPromocion !== true);
-                break;
-            case 'conStock':
-                filtered = filtered.filter(lente => {
-                    const stockTotal = getStockTotal(lente);
-                    return stockTotal > 0;
-                });
-                break;
-            case 'sinStock':
-                filtered = filtered.filter(lente => {
-                    const stockTotal = getStockTotal(lente);
-                    return stockTotal === 0;
-                });
-                break;
-            case 'monofocal':
-                filtered = filtered.filter(lente => 
-                    lente.tipoLente?.toLowerCase().includes('monofocal')
-                );
-                break;
-            case 'bifocal':
-                filtered = filtered.filter(lente => 
-                    lente.tipoLente?.toLowerCase().includes('bifocal')
-                );
-                break;
-            case 'progresivo':
-                filtered = filtered.filter(lente => 
-                    lente.tipoLente?.toLowerCase().includes('progresivo')
-                );
-                break;
-            case 'ocupacional':
-                filtered = filtered.filter(lente => 
-                    lente.tipoLente?.toLowerCase().includes('ocupacional')
-                );
-                break;
-            default:
-                // 'todos' - no aplicar filtro adicional
-                break;
-        }
-
-        setFilteredLentes(filtered);
-    };
-
-    // ===========================================
-    // FUNCIONES DE UTILIDAD
-    // ===========================================
-
-    /**
-     * Calcular stock total de un lente
-     */
-    const getStockTotal = (lente) => {
-        if (!lente.sucursales || lente.sucursales.length === 0) return 0;
-        return lente.sucursales.reduce((total, sucursal) => total + (sucursal.stock || 0), 0);
-    };
-
-    /**
-     * Calcular estadísticas de lentes
-     */
-    const getLentesStats = () => {
-        const total = lentes.length;
-        const enPromocion = lentes.filter(lente => lente.enPromocion === true).length;
-        
-        let stockTotal = 0;
-        let valorInventario = 0;
-        
-        lentes.forEach(lente => {
-            const stock = getStockTotal(lente);
-            stockTotal += stock;
-            valorInventario += (lente.precioActual || 0) * stock;
-        });
-
-        return {
-            total,
-            enPromocion,
-            stockTotal,
-            valorInventario
-        };
-    };
-
-    // ===========================================
-    // FUNCIONES CRUD
-    // ===========================================
-
-    /**
-     * Agregar nuevo lente a la lista local
-     */
-    const addLenteToList = (newLente) => {
-        setLentes(prevLentes => [newLente, ...prevLentes]);
-    };
-
-    /**
-     * Actualizar lente en la lista local
-     */
-    const updateLente = (lenteId, updatedLente) => {
-        setLentes(prevLentes => 
-            prevLentes.map(lente => 
-                lente._id === lenteId ? { ...lente, ...updatedLente } : lente
-            )
-        );
-    };
-
-    /**
-     * Eliminar lente
-     */
-    const deleteLente = async (lenteId) => {
+    // CREAR LENTE - CON DEBUG COMPLETO
+    const createLente = async (lenteData) => {
         try {
-            const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/lentes/${lenteId}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders(),
+            console.log('🚀 Iniciando creación de lente...');
+            console.log('📝 Datos a enviar:', JSON.stringify(lenteData, null, 2));
+            
+            const headers = getAuthHeaders();
+            console.log('🔑 Headers:', headers);
+            
+            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/lentes', {
+                method: 'POST',
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(lenteData),
             });
-
+            
+            console.log('📡 Respuesta POST:', response.status, response.statusText);
+            
             if (response.ok) {
-                setLentes(prevLentes => prevLentes.filter(lente => lente._id !== lenteId));
+                const responseData = await response.json();
+                console.log('✅ Lente creado - Respuesta completa:', responseData);
+                console.log('✅ Tipo de respuesta:', typeof responseData);
+                
+                // Extraer el lente creado según diferentes estructuras posibles
+                let newLente = null;
+                if (responseData.lente) {
+                    newLente = responseData.lente;
+                    console.log('✅ Lente extraído de "lente"');
+                } else if (responseData.data) {
+                    newLente = responseData.data;
+                    console.log('✅ Lente extraído de "data"');
+                } else if (responseData._id || responseData.id) {
+                    newLente = responseData;
+                    console.log('✅ Respuesta es el lente directo');
+                } else {
+                    console.warn('⚠️ No se pudo extraer lente de la respuesta');
+                    console.warn('⚠️ Recargando lista completa...');
+                    await loadLentes();
+                    Alert.alert('Lente creado', 'El lente ha sido registrado exitosamente.');
+                    return true;
+                }
+                
+                if (newLente) {
+                    console.log('📄 Nuevo lente a agregar:', newLente);
+                    // Agregar al inicio de la lista
+                    setLentes(prev => {
+                        const updated = [newLente, ...prev];
+                        console.log('📊 Lista actualizada - Total:', updated.length);
+                        return updated;
+                    });
+                }
+                
+                Alert.alert('Lente creado', 'El lente ha sido registrado exitosamente.');
                 return true;
+                
             } else {
-                const errorData = await response.json();
-                Alert.alert('Error', errorData.message || 'No se pudo eliminar el lente');
+                const errorData = await response.json().catch(() => ({}));
+                const errorMessage = errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`;
+                
+                console.error('❌ Error del servidor al crear:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    errorData
+                });
+                
+                Alert.alert('Error al crear lente', errorMessage);
                 return false;
             }
         } catch (error) {
-            console.error('Error deleting lente:', error);
-            Alert.alert('Error', 'No se pudo eliminar el lente');
+            console.error('💥 Error de red al crear lente:', error);
+            console.error('💥 Stack:', error.stack);
+            Alert.alert('Error de red', 'Hubo un problema al conectar con el servidor.');
             return false;
         }
     };
 
-    // ===========================================
-    // FUNCIONES DE MODALES
-    // ===========================================
+    // ACTUALIZAR LENTE
+    const updateLente = async (lenteId, lenteData) => {
+        try {
+            console.log('🔄 Actualizando lente:', lenteId);
+            
+            const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/lentes/${lenteId}`, {
+                method: 'PUT',
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(lenteData),
+            });
+            
+            if (response.ok) {
+                const updatedLente = await response.json();
+                console.log('✅ Lente actualizado:', updatedLente);
+                
+                setLentes(prev =>
+                    prev.map(lente => 
+                        (lente._id === lenteId || lente.id === lenteId) ? updatedLente : lente
+                    )
+                );
+                Alert.alert('Lente actualizado', 'Los datos del lente han sido actualizados.');
+                return true;
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                Alert.alert('Error al actualizar lente', errorData.message || 'No se pudo actualizar el lente.');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error al actualizar lente:', error);
+            Alert.alert('Error de red', 'Hubo un problema al conectar con el servidor.');
+            return false;
+        }
+    };
 
-    /**
-     * Abrir modal de detalles
-     */
+    // ELIMINAR LENTE
+    const deleteLente = async (lenteId) => {
+        try {
+            console.log('🗑️ Eliminando lente:', lenteId);
+            
+            const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/lentes/${lenteId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+            });
+            
+            if (response.ok) {
+                setLentes(prev => prev.filter(lente => 
+                    lente._id !== lenteId && lente.id !== lenteId
+                ));
+                Alert.alert('Lente eliminado', 'El lente ha sido eliminado exitosamente.');
+                return true;
+            } else {
+                Alert.alert('Error al eliminar lente', 'No se pudo eliminar el lente.');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error al eliminar lente:', error);
+            Alert.alert('Error de red', 'Hubo un problema al conectar con el servidor.');
+            return false;
+        }
+    };
+
+    // REFRESCAR
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadLentes();
+        setRefreshing(false);
+    };
+
+    // HANDLERS DE MODAL
     const handleViewMore = (lente, index) => {
         setSelectedLente(lente);
         setSelectedIndex(index);
         setModalVisible(true);
     };
 
-    /**
-     * Cerrar modal de detalles
-     */
     const handleCloseModal = () => {
         setModalVisible(false);
         setSelectedLente(null);
         setSelectedIndex(0);
     };
 
-    /**
-     * Abrir modal de agregar
-     */
-    const handleOpenAddModal = () => {
-        setAddModalVisible(true);
+    const handleOpenAddModal = () => setAddModalVisible(true);
+    const handleCloseAddModal = () => setAddModalVisible(false);
+
+    const handleCreateLente = async (lenteData) => {
+        const success = await createLente(lenteData);
+        if (success) handleCloseAddModal();
+        return success;
     };
 
-    /**
-     * Cerrar modal de agregar
-     */
-    const handleCloseAddModal = () => {
-        setAddModalVisible(false);
+    // FILTRADO
+    const filterAndSortLentes = () => {
+        let filtered = [...lentes];
+        
+        if (searchText.trim()) {
+            const searchLower = searchText.toLowerCase().trim();
+            filtered = filtered.filter(lente =>
+                lente.nombre?.toLowerCase().includes(searchLower) ||
+                lente.marcaId?.nombre?.toLowerCase().includes(searchLower) ||
+                lente.categoriaId?.nombre?.toLowerCase().includes(searchLower)
+            );
+        }
+        
+        switch (selectedTipoFilter) {
+            case 'En Promoción':
+                filtered = filtered.filter(lente => lente.enPromocion);
+                break;
+            case 'Sin Promoción':
+                filtered = filtered.filter(lente => !lente.enPromocion);
+                break;
+            case 'Con Stock':
+                filtered = filtered.filter(lente =>
+                    Array.isArray(lente.sucursales)
+                        ? lente.sucursales.some(s => s.stock > 0)
+                        : (lente.stock > 0)
+                );
+                break;
+            case 'Sin Stock':
+                filtered = filtered.filter(lente =>
+                    Array.isArray(lente.sucursales)
+                        ? lente.sucursales.every(s => s.stock === 0)
+                        : (lente.stock === 0)
+                );
+                break;
+            case 'Monofocal':
+            case 'Bifocal':
+            case 'Progresivo':
+            case 'Ocupacional':
+                filtered = filtered.filter(lente => lente.tipoLente?.toLowerCase() === selectedTipoFilter.toLowerCase());
+                break;
+            default:
+                // 'Todos' no filtra nada
+        }
+        
+        // Ordenar por fecha de creación (más reciente primero)
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        return filtered;
     };
 
-    // ===========================================
-    // EFECTOS
-    // ===========================================
+    // ESTADÍSTICAS
+    const getLentesStats = () => {
+        const total = Array.isArray(lentes) ? lentes.length : 0;
+        const promocion = Array.isArray(lentes) ? lentes.filter(l => l.enPromocion).length : 0;
+        const stock = Array.isArray(lentes)
+            ? lentes.reduce((acc, l) => acc + (
+                Array.isArray(l.sucursales)
+                    ? l.sucursales.reduce((sum, s) => sum + (s.stock || 0), 0)
+                    : (l.stock || 0)
+              ), 0)
+            : 0;
+        const valorInventario = Array.isArray(lentes)
+            ? lentes.reduce((acc, l) => {
+                const precio = l.precioActual || l.precioBase || 0;
+                const stockLente = Array.isArray(l.sucursales)
+                    ? l.sucursales.reduce((sum, s) => sum + (s.stock || 0), 0)
+                    : (l.stock || 0);
+                return acc + (precio * stockLente);
+              }, 0)
+            : 0;
+        return { total, promocion, stock, valorInventario };
+    };
 
-    // Cargar lentes al montar el componente
+    useEffect(() => {
+        setFilteredLentes(filterAndSortLentes());
+    }, [lentes, searchText, selectedTipoFilter]);
+
     useEffect(() => {
         loadLentes();
     }, []);
 
-    // Aplicar filtros cuando cambien los datos o filtros
-    useEffect(() => {
-        applyFilters();
-    }, [lentes, searchText, selectedFilter]);
-
-    // ===========================================
-    // RETORNO DEL HOOK
-    // ===========================================
     return {
-        // Estados de datos
         lentes,
         filteredLentes,
         loading,
         refreshing,
-        
-        // Estados de modal de detalle
         modalVisible,
         selectedLente,
         selectedIndex,
-        
-        // Estados de modal de agregar
         addModalVisible,
-        
-        // Estados de filtros
         searchText,
-        selectedFilter,
-        
-        // Funciones de datos
+        selectedTipoFilter,
         loadLentes,
         onRefresh,
         getLentesStats,
-        
-        // Funciones CRUD
-        addLenteToList,
+        createLente,
         updateLente,
         deleteLente,
-        
-        // Funciones de modal de detalle
         handleViewMore,
         handleCloseModal,
-        
-        // Funciones de modal de agregar
         handleOpenAddModal,
         handleCloseAddModal,
-        
-        // Funciones de filtros
+        handleCreateLente,
         setSearchText,
-        setSelectedFilter,
-        
-        // Funciones de utilidad
-        getStockTotal
+        setSelectedTipoFilter,
+        filterAndSortLentes
     };
 };

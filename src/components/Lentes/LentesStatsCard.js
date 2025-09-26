@@ -3,119 +3,122 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 /**
- * Componente para mostrar estadísticas de lentes
+ * Componente LentesStatsCard
  * 
- * Muestra cuatro tarjetas con:
- * - Total de lentes
- * - Lentes en promoción
- * - Stock total
- * - Valor del inventario
+ * Muestra estadísticas resumidas de lentes en formato de cards
+ * dentro del header de la pantalla siguiendo el diseño de Empleados.
  * 
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.stats - Objeto con estadísticas { total, enPromocion, stockTotal, valorInventario }
+ * Props:
+ * @param {Object} stats - Objeto con estadísticas: { total, promocion, stock, valorInventario }
  */
 const LentesStatsCard = ({ stats }) => {
-    const statsData = [
-        {
-            title: 'Total de Lentes',
-            value: stats.total || 0,
-            icon: 'glasses-outline',
-            backgroundColor: '#009BBF15',
-            iconColor: '#009BBF',
-            textColor: '#009BBF'
-        },
-        {
-            title: 'En Promoción',
-            value: stats.enPromocion || 0,
-            icon: 'pricetag-outline',
-            backgroundColor: '#FF8C0015',
-            iconColor: '#FF8C00',
-            textColor: '#FF8C00'
-        },
-        {
-            title: 'Stock Total',
-            value: stats.stockTotal || 0,
-            icon: 'cube-outline',
-            backgroundColor: '#49AA4C15',
-            iconColor: '#49AA4C',
-            textColor: '#49AA4C'
-        },
-        {
-            title: 'Valor Inventario',
-            value: `$${(stats.valorInventario || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}`,
-            icon: 'cash-outline',
-            backgroundColor: '#6366F115',
-            iconColor: '#6366F1',
-            textColor: '#6366F1'
-        }
-    ];
+  /**
+   * Formatear valores numéricos
+   */
+  const formatNumber = (value) => {
+    if (!value) return '0';
+    return value.toString();
+  };
 
-    const renderStatCard = (stat, index) => (
-        <View key={index} style={styles.statCard}>
-            <View style={styles.statHeader}>
-                <Text style={styles.statTitle} numberOfLines={2}>{stat.title}</Text>
-                <View style={[styles.iconContainer, { backgroundColor: stat.backgroundColor }]}>
-                    <Ionicons name={stat.icon} size={18} color={stat.iconColor} />
-                </View>
-            </View>
-            <Text style={[styles.statValue, { color: stat.textColor }]} numberOfLines={1}>
-                {stat.value}
-            </Text>
-        </View>
-    );
+  /**
+   * Formatear moneda
+   */
+  const formatCurrency = (value) => {
+    if (!value) return '$0.00';
+    return `$${parseFloat(value).toFixed(2)}`;
+  };
 
-    return (
-        <View style={styles.container}>
-            {statsData.map((stat, index) => renderStatCard(stat, index))}
+  return (
+    <View style={styles.container}>
+      {/* Total de Lentes */}
+      <View style={styles.statItem}>
+        <View style={styles.statIconContainer}>
+          <Ionicons name="glasses" size={16} color="#FFFFFF" />
         </View>
-    );
+        <Text style={styles.statNumber}>{formatNumber(stats.total)}</Text>
+        <Text style={styles.statLabel}>Total Lentes</Text>
+      </View>
+
+      <View style={styles.statDivider} />
+
+      {/* En Promoción */}
+      <View style={styles.statItem}>
+        <View style={styles.statIconContainer}>
+          <Ionicons name="pricetag" size={16} color="#FFFFFF" />
+        </View>
+        <Text style={styles.statNumber}>{formatNumber(stats.promocion)}</Text>
+        <Text style={styles.statLabel}>En Promoción</Text>
+      </View>
+
+      <View style={styles.statDivider} />
+
+      {/* Stock Total */}
+      <View style={styles.statItem}>
+        <View style={styles.statIconContainer}>
+          <Ionicons name="layers" size={16} color="#FFFFFF" />
+        </View>
+        <Text style={styles.statNumber}>{formatNumber(stats.stock)}</Text>
+        <Text style={styles.statLabel}>Stock Total</Text>
+      </View>
+
+      <View style={styles.statDivider} />
+
+      {/* Valor Inventario */}
+      <View style={styles.statItem}>
+        <View style={styles.statIconContainer}>
+          <Ionicons name="cash" size={16} color="#FFFFFF" />
+        </View>
+        <Text style={styles.statNumber}>{formatCurrency(stats.valorInventario)}</Text>
+        <Text style={styles.statLabel}>Valor Inventario</Text>
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        gap: 10,
-    },
-    statCard: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-        minHeight: 85,
-    },
-    statHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 8,
-    },
-    statTitle: {
-        fontSize: 11,
-        fontFamily: 'Lato-Regular',
-        color: '#666666',
-        flex: 1,
-        lineHeight: 14,
-    },
-    iconContainer: {
-        width: 28,
-        height: 28,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: 6,
-    },
-    statValue: {
-        fontSize: 20,
-        fontFamily: 'Lato-Bold',
-        lineHeight: 24,
-    },
+  container: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+    paddingHorizontal: 4,
+  },
+  statIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  statNumber: {
+    fontSize: 18,
+    fontFamily: 'Lato-Bold',
+    color: '#FFFFFF',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  statLabel: {
+    fontSize: 11,
+    fontFamily: 'Lato-Regular',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    lineHeight: 14,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 4,
+  },
 });
 
 export default LentesStatsCard;
