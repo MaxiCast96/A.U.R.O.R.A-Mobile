@@ -87,14 +87,14 @@ const MenuScreen = () => {
                     title: 'Accesorios', 
                     subtitle: 'Accesorios para lentes',
                     color: '#49AA4C',
-                    onPress: () => navigation.navigate('Accesorios') // ← ACTUALIZADO
+                    onPress: () => navigation.navigate('Accesorios')
                 },
                 { 
                     icon: 'cube-outline', 
                     title: 'Personalizados', 
                     subtitle: 'Productos personalizados',
                     color: '#49AA4C',
-                    onPress: () => Alert.alert('Personalizados', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Personalizados') // ← ACTUALIZADO
                 },
                 { 
                     icon: 'pricetag-outline', 
@@ -299,13 +299,40 @@ const MenuScreen = () => {
 
                              <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Accesorios')} // ← NUEVO BOTÓN AGREGADO
+                                onPress={() => navigation.navigate('Accesorios')}
                             >
                                 <View style={[styles.essentialIcon, { backgroundColor: '#FF9800' }]}>
                                     <Ionicons name="bag-outline" size={24} color="#FFFFFF" />
                                 </View>
                                 <Text style={styles.essentialText}>Accesorios</Text>
                             </TouchableOpacity>
+                        </View>
+                        
+                        {/* Segunda fila de esenciales con Personalizados */}
+                        <View style={styles.essentialsGrid}>
+                            <TouchableOpacity 
+                                style={styles.essentialItem}
+                                onPress={() => navigation.navigate('Personalizados')} // ← NUEVO BOTÓN AGREGADO
+                            >
+                                <View style={[styles.essentialIcon, { backgroundColor: '#9C27B0' }]}>
+                                    <Ionicons name="cube-outline" size={24} color="#FFFFFF" />
+                                </View>
+                                <Text style={styles.essentialText}>Personalizados</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                style={styles.essentialItem}
+                                onPress={() => navigation.navigate('Empleados')}
+                            >
+                                <View style={[styles.essentialIcon, { backgroundColor: '#6B46C1' }]}>
+                                    <Ionicons name="person-outline" size={24} color="#FFFFFF" />
+                                </View>
+                                <Text style={styles.essentialText}>Empleados</Text>
+                            </TouchableOpacity>
+
+                            {/* Espacios vacíos para mantener el grid */}
+                            <View style={styles.essentialItem} />
+                            <View style={styles.essentialItem} />
                         </View>
                     </View>
                 )}
@@ -435,6 +462,7 @@ const styles = StyleSheet.create({
     essentialsGrid: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginBottom: 16,
     },
     essentialItem: {
         alignItems: 'center',
