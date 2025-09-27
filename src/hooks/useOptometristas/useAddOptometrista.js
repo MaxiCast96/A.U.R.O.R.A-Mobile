@@ -260,7 +260,7 @@ export const useAddOptometrista = () => {
             console.log('Creando optometrista:', optometristaData);
 
             // Crear el optometrista - CORREGIDA LA RUTA
-            const optometristaResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/empleados/optometrista', {
+            const optometristaResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/optometrista', {
                 method: 'POST',
                 headers: {
                     ...getAuthHeaders(),
