@@ -85,6 +85,7 @@ export const useAddOptometrista = () => {
 
         setErrors(newErrors);
         return isValid;
+
     };
 
     /**
@@ -276,7 +277,11 @@ export const useAddOptometrista = () => {
                 disponibilidad: `${optometristaData.disponibilidad.length} horarios`
             });
 
+
             // Crear el optometrista
+
+            // Crear el optometrista - CORREGIDA LA RUTA
+
             const optometristaResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/optometrista', {
                 method: 'POST',
                 headers: {
@@ -406,10 +411,9 @@ export const useAddOptometrista = () => {
         setLoading,
         errors,
         setErrors,
-        uploadingImage,
 
-        // Opciones
-        especialidades,
+    // Opciones
+    especialidades,
 
         // Funciones principales
         createOptometrista,
