@@ -15,7 +15,7 @@ export const useAddOptometrista = () => {
     // Estados de horarios
     const [disponibilidad, setDisponibilidad] = useState([]);
     
-    // Estados de sucursales
+    // Estados de sucursales - CORREGIDO para manejar ObjectIds
     const [sucursalesAsignadas, setSucursalesAsignadas] = useState([]);
 
     // Estados de control
@@ -71,9 +71,20 @@ export const useAddOptometrista = () => {
             }
         }
 
+        // Validar horarios de disponibilidad
+        if (!Array.isArray(disponibilidad) || disponibilidad.length === 0) {
+            newErrors.disponibilidad = 'Debe configurar al menos una hora de disponibilidad';
+            isValid = false;
+        }
+
+        // Validar sucursales asignadas - CORREGIDO
+        if (!Array.isArray(sucursalesAsignadas) || sucursalesAsignadas.length === 0) {
+            newErrors.sucursalesAsignadas = 'Debe seleccionar al menos una sucursal';
+            isValid = false;
+        }
+
         setErrors(newErrors);
         return isValid;
-    };
     };
 
     /**
@@ -242,7 +253,7 @@ export const useAddOptometrista = () => {
                 return false;
             }
 
-            // Preparar datos del optometrista
+            // Preparar datos del optometrista - CORREGIDO PARA SUCURSALES
             const optometristaData = {
                 empleadoId: empleadoId,
                 especialidad: especialidad.trim(),
@@ -255,13 +266,18 @@ export const useAddOptometrista = () => {
                     horaInicio: item.horaInicio || item.hora,
                     horaFin: item.horaFin || getNextHour(item.hora)
                 })),
-                sucursalesAsignadas: sucursalesAsignadas || []
+                // CORREGIDO: Asegurar que sucursalesAsignadas sea un array de ObjectIds válidos
+                sucursalesAsignadas: Array.isArray(sucursalesAsignadas) ? sucursalesAsignadas : []
             };
 
-            console.log('Creando optometrista:', optometristaData);
+            console.log('Creando optometrista con datos:', {
+                ...optometristaData,
+                sucursalesAsignadas: optometristaData.sucursalesAsignadas,
+                disponibilidad: `${optometristaData.disponibilidad.length} horarios`
+            });
 
-            // Crear el optometrista - CORREGIDA LA RUTA
-            const optometristaResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/empleados/optometrista', {
+            // Crear el optometrista
+            const optometristaResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/optometrista', {
                 method: 'POST',
                 headers: {
                     ...getAuthHeaders(),
@@ -401,4 +417,5 @@ export const useAddOptometrista = () => {
         validateOptometristaForm,
         validateField,
         uploadImageToCloudinary
-    };
+    }
+}

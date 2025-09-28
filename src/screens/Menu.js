@@ -68,7 +68,7 @@ const MenuScreen = () => {
                     title: 'Optometristas', 
                     subtitle: 'Gestión de optometristas',
                     color: '#009BBF',
-                    onPress: () => Alert.alert('Optometristas', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Optometristas') 
                 }
             ]
         },
@@ -289,12 +289,12 @@ const MenuScreen = () => {
 
                             <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Empleados')}
+                                onPress={() => navigation.navigate('Lentes')}
                             >
                                 <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
-                                    <Ionicons name="person-outline" size={24} color="#FFFFFF" />
+                                    <Ionicons name="glasses-outline" size={24} color="#FFFFFF" />
                                 </View>
-                                <Text style={styles.essentialText}>Empleados</Text>
+                                <Text style={styles.essentialText}>Lentes</Text>
                             </TouchableOpacity>
 
                              <TouchableOpacity 

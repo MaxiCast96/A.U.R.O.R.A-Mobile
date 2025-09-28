@@ -13,6 +13,7 @@ import ForgotPassword from '../screens/ForgotPassword';
 import VerifyCode from '../screens/VerifyCode';
 import ResetPassword from '../screens/ResetPassword';
 import PasswordSuccess from '../screens/PasswordSucces';
+import Optometristas from '../screens/Optometristas';
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -97,6 +98,9 @@ export default function Navigation() {
 
                 {/* Navegación de Empleados */}
                 <Stack.Screen name="Empleados" component={Empleados} />
+                
+                {/* Navegación de Empleados */}
+                <Stack.Screen name="Optometristas" component={Optometristas} />
 
                 {/* Pantalla de menú - acceso directo para navegación desde otras pantallas */}
                 <Stack.Screen
