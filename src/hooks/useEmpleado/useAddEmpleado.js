@@ -265,6 +265,66 @@ export const useAddEmpleado = () => {
         return !error;
     };
 
+    /**
+     * Validar datos básicos del empleado (para flujo de optometristas)
+     */
+    const validateBasicData = async () => {
+        const newErrors = {};
+        let isValid = true;
+
+        // Validar campos requeridos básicos
+        const requiredFields = {
+            nombre: nombre.trim(),
+            apellido: apellido.trim(),
+            dui: dui.trim(),
+            telefono: telefono.trim(),
+            correo: correo.trim(),
+            password: password.trim()
+        };
+
+        Object.keys(requiredFields).forEach(field => {
+            const error = getFieldError(field, requiredFields[field]);
+            if (error) {
+                newErrors[field] = error;
+                isValid = false;
+            }
+        });
+
+        // Validar sucursal
+        if (!sucursal || sucursal === '') {
+            newErrors.sucursal = 'La sucursal es requerida';
+            isValid = false;
+        }
+
+        // Validar puesto
+        if (!puesto || puesto === '') {
+            newErrors.puesto = 'El puesto es requerido';
+            isValid = false;
+        }
+
+        // Validar salario
+        const salarioNum = parseFloat(salario);
+        if (!salario || isNaN(salarioNum) || salarioNum <= 0) {
+            newErrors.salario = 'El salario debe ser un número válido mayor a 0';
+            isValid = false;
+        }
+
+        // Validar departamento
+        if (!departamento) {
+            newErrors.departamento = 'El departamento es requerido';
+            isValid = false;
+        }
+
+        // Validar ciudad
+        if (!ciudad) {
+            newErrors.ciudad = 'La ciudad es requerida';
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
+
     const validateForm = () => {
         const newErrors = {};
         let isValid = true;
@@ -547,6 +607,7 @@ export const useAddEmpleado = () => {
         // Funciones de validación
         validateForm,
         validateField,
+        validateBasicData, // Nueva función agregada
         
         // Funciones de limpieza
         clearForm,

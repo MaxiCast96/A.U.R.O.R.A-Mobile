@@ -18,6 +18,7 @@ import ForgotPassword from '../screens/ForgotPassword';
 import VerifyCode from '../screens/VerifyCode';
 import ResetPassword from '../screens/ResetPassword';
 import PasswordSuccess from '../screens/PasswordSucces';
+import Optometristas from '../screens/Optometristas';
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 import { SettingsProvider, useSettings } from '../context/SettingsContext';
@@ -45,7 +46,7 @@ const LoadingScreen = () => (
  * 2. Login (si no está autenticado) o Main (si está autenticado)
  * 3. Main (tab navigator con las pantallas principales)
  * 4. Menu (pantalla de operaciones - accesible desde tabs y directamente)
- * 5. Pantallas de gestión (Clientes, Empleados, etc.)
+ * 5. Pantallas de gestión (Clientes, Empleados, Lentes, Accesorios, Personalizados, etc.)
  * 6. Flujo de recuperación de contraseña (ForgotPassword -> VerifyCode -> ResetPassword -> PasswordSuccess)
  */
 const ThemedNavigation = () => {
