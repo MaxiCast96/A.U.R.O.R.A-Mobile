@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Modal,
   View,
@@ -8,7 +8,6 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
-  Alert,
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,9 +33,9 @@ const AddPersonalizadoModal = ({
     descripcion: '',
     categoria: '',
     marcaId: '',
-    material: '',              // Campo de texto libre
-    color: '',                 // Campo de texto libre
-    tipoLente: '',            // Campo de texto libre
+    material: '',
+    color: '',
+    tipoLente: '',
     precioCalculado: '',
     fechaEntregaEstimada: '',
     cotizacion: {
@@ -48,121 +47,41 @@ const AddPersonalizadoModal = ({
   const [errors, setErrors] = useState({});
   const [showDatePicker, setShowDatePicker] = useState(null);
 
-  // Función helper para procesar datos de manera segura
-  const processDataArray = (data, label) => {
-    console.log(`=== ${label} DEBUG ===`);
-    console.log('Datos recibidos:', data);
-    console.log('Tipo:', typeof data);
-    console.log('Es array:', Array.isArray(data));
-    
-    if (!data) {
-      console.log(`${label}: datos nulos o undefined`);
-      return [];
-    }
-
-    if (Array.isArray(data)) {
-      console.log(`${label}: es array con ${data.length} elementos`);
-      if (data.length > 0) {
-        console.log(`Primer elemento:`, data[0]);
-        console.log(`Estructura:`, Object.keys(data[0]));
-      }
-      return data;
-    }
-
-    if (typeof data === 'object' && Array.isArray(data.data)) {
-      console.log(`${label}: objeto con propiedad data`);
-      return data.data;
-    }
-
-    const arrayProps = ['items', 'results', 'list', 'records', 'lentes'];
-    for (const prop of arrayProps) {
-      if (Array.isArray(data[prop])) {
-        console.log(`${label}: encontrado en propiedad ${prop}`);
-        return data[prop];
-      }
-    }
-
-    console.warn(`${label}: estructura desconocida`, data);
+  // Procesar opciones de manera segura
+  const processArray = (data) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (typeof data === 'object' && Array.isArray(data.data)) return data.data;
     return [];
   };
 
-  // Procesar opciones
-  const clienteOptions = useMemo(() => {
-    const processed = processDataArray(clientes, 'CLIENTES');
-    return processed.map(c => ({
+  const clienteOptions = useMemo(() =>
+    processArray(clientes).map(c => ({
       value: c._id || c.id,
-      label: c.nombre || c.fullName || c.razonSocial || c.email || `Cliente ${(c._id || c.id || '').slice(-8)}` || 'Cliente sin nombre'
-    }));
-  }, [clientes]);
+      label: c.nombre || c.fullName || c.razonSocial || c.email || 'Cliente sin nombre'
+    })), [clientes]);
 
-  const lenteOptions = useMemo(() => {
-    const processed = processDataArray(lentes, 'LENTES/PRODUCTOS BASE');
-    
-    if (processed.length === 0) {
-      console.error('🚨 CRÍTICO: No hay lentes disponibles');
-      console.error('🚨 Datos originales de lentes:', lentes);
-      return [
-        { value: 'debug-1', label: '🚨 DEBUG: No hay lentes - Contacta soporte' }
-      ];
-    }
-    
-    console.log(`✅ ÉXITO: ${processed.length} lentes procesados`);
-    const options = processed.map(l => ({
+  const lenteOptions = useMemo(() =>
+    processArray(lentes).map(l => ({
       value: l._id || l.id,
-      label: l.nombre || l.modelo || l.descripcion || `Lente ${(l._id || l.id || '').slice(-8)}` || 'Lente sin nombre'
-    }));
-    
-    console.log('Opciones finales de lentes:', options);
-    return options;
-  }, [lentes]);
+      label: l.nombre || l.modelo || l.descripcion || 'Lente sin nombre'
+    })), [lentes]);
 
-  const categoriaOptions = useMemo(() => {
-    const processed = processDataArray(categorias, 'CATEGORÍAS');
-    return processed.map(cat => ({
+  const categoriaOptions = useMemo(() =>
+    processArray(categorias).map(cat => ({
       value: cat.nombre || cat._id || cat.id,
-      label: cat.nombre || cat.descripcion || `Categoría ${(cat._id || cat.id || '').slice(-8)}` || 'Categoría sin nombre'
-    }));
-  }, [categorias]);
+      label: cat.nombre || cat.descripcion || 'Categoría sin nombre'
+    })), [categorias]);
 
-  const marcaOptions = useMemo(() => {
-    const processed = processDataArray(marcas, 'MARCAS');
-    return processed.map(m => ({
+  const marcaOptions = useMemo(() =>
+    processArray(marcas).map(m => ({
       value: m._id || m.id,
-      label: m.nombre || m.descripcion || `Marca ${(m._id || m.id || '').slice(-8)}` || 'Marca sin nombre'
-    }));
-  }, [marcas]);
-
-  // Debug cuando se abra el modal
-  useEffect(() => {
-    if (visible) {
-      console.log('🔍 === MODAL ABIERTO - DEBUG COMPLETO ===');
-      console.log('Props recibidas directamente:');
-      console.log('- lentes (raw):', lentes);
-      console.log('- clientes (raw):', clientes);
-      console.log('- marcas (raw):', marcas);
-      console.log('- categorias (raw):', categorias);
-      
-      console.log('Opciones procesadas:');
-      console.log('- lenteOptions:', lenteOptions);
-      console.log('- clienteOptions:', clienteOptions);
-      console.log('- marcaOptions:', marcaOptions);
-      console.log('- categoriaOptions:', categoriaOptions);
-      
-      if (lenteOptions.length === 0) {
-        console.error('🚨 PROBLEMA CRÍTICO: Sin lentes disponibles');
-        Alert.alert(
-          'Problema de datos',
-          'No se encontraron lentes disponibles. Verifica la conexión o contacta soporte.',
-          [{ text: 'OK' }]
-        );
-      }
-      console.log('=== FIN DEBUG ===');
-    }
-  }, [visible, lentes, clientes, marcas, categorias, lenteOptions, clienteOptions, marcaOptions, categoriaOptions]);
+      label: m.nombre || m.descripcion || 'Marca sin nombre'
+    })), [marcas]);
 
   const validate = () => {
     const newErrors = {};
-    
+
     if (!form.clienteId) newErrors.clienteId = 'El cliente es requerido';
     if (!form.productoBaseId) newErrors.productoBaseId = 'El producto base es requerido';
     if (!form.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
@@ -172,21 +91,21 @@ const AddPersonalizadoModal = ({
     if (!form.material.trim()) newErrors.material = 'El material es requerido';
     if (!form.color.trim()) newErrors.color = 'El color es requerido';
     if (!form.tipoLente.trim()) newErrors.tipoLente = 'El tipo de lente es requerido';
-    
+
     const precio = Number(form.precioCalculado);
     if (!form.precioCalculado || isNaN(precio) || precio <= 0) {
       newErrors.precioCalculado = 'El precio calculado debe ser mayor a 0';
     }
-    
+
     const cotizacion = Number(form.cotizacion.total);
     if (!form.cotizacion.total || isNaN(cotizacion) || cotizacion <= 0) {
       newErrors.cotizacionTotal = 'El total de la cotización debe ser mayor a 0';
     }
-    
+
     if (!form.fechaEntregaEstimada) {
       newErrors.fechaEntregaEstimada = 'La fecha de entrega estimada es requerida';
     }
-    
+
     if (!form.cotizacion.validaHasta) {
       newErrors.cotizacionValidaHasta = 'La fecha de validez de la cotización es requerida';
     }
@@ -218,9 +137,7 @@ const AddPersonalizadoModal = ({
   };
 
   const handleSave = () => {
-    if (!validate()) {
-      return;
-    }
+    if (!validate()) return;
 
     const dataToSend = {
       clienteId: form.clienteId,
@@ -240,7 +157,6 @@ const AddPersonalizadoModal = ({
       }
     };
 
-    console.log('Enviando datos:', dataToSend);
     onSave(dataToSend);
     resetForm();
   };
@@ -254,19 +170,19 @@ const AddPersonalizadoModal = ({
     if (Platform.OS === 'android') {
       setShowDatePicker(null);
     }
-    
+
     if (selectedDate) {
       const dateString = selectedDate.toISOString().split('T')[0];
       if (type === 'entrega') {
         setForm(prev => ({ ...prev, fechaEntregaEstimada: dateString }));
       } else if (type === 'cotizacion') {
-        setForm(prev => ({ 
-          ...prev, 
-          cotizacion: { ...prev.cotizacion, validaHasta: dateString } 
+        setForm(prev => ({
+          ...prev,
+          cotizacion: { ...prev.cotizacion, validaHasta: dateString }
         }));
       }
     }
-    
+
     if (Platform.OS === 'ios') {
       setShowDatePicker(null);
     }
@@ -279,7 +195,7 @@ const AddPersonalizadoModal = ({
       </Text>
       <TextInput
         style={[
-          styles.textInput, 
+          styles.textInput,
           multiline && styles.multilineInput,
           errors[field] && styles.inputError
         ]}
@@ -322,14 +238,14 @@ const AddPersonalizadoModal = ({
 
   const renderPicker = (label, selectedValue, onValueChange, options, placeholder, required = false, field = null) => {
     const hasOptions = options.length > 0;
-    
+
     return (
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>
           {label} {required && <Text style={styles.required}>*</Text>}
         </Text>
         <View style={[
-          styles.pickerContainer, 
+          styles.pickerContainer,
           errors[field] && styles.inputError,
           !hasOptions && styles.disabledInput
         ]}>
@@ -339,26 +255,21 @@ const AddPersonalizadoModal = ({
             style={styles.picker}
             enabled={hasOptions}
           >
-            <Picker.Item 
-              label={hasOptions ? placeholder : `No hay ${label.toLowerCase()} disponibles`} 
-              value="" 
+            <Picker.Item
+              label={hasOptions ? placeholder : `No hay ${label.toLowerCase()} disponibles`}
+              value=""
             />
             {options.map((option, index) => (
-              <Picker.Item 
-                key={option.value || index} 
-                label={option.label} 
-                value={option.value} 
+              <Picker.Item
+                key={option.value || index}
+                label={option.label}
+                value={option.value}
               />
             ))}
           </Picker>
         </View>
         {errors[field] && (
           <Text style={styles.errorText}>{errors[field]}</Text>
-        )}
-        {!hasOptions && (
-          <Text style={[styles.errorText, {color: '#FF9800'}]}>
-            Sin {label.toLowerCase()} disponibles
-          </Text>
         )}
       </View>
     );
@@ -374,7 +285,7 @@ const AddPersonalizadoModal = ({
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Agregar Producto Personalizado</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.closeButton}
             onPress={handleClose}
             activeOpacity={0.7}
@@ -383,7 +294,7 @@ const AddPersonalizadoModal = ({
           </TouchableOpacity>
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={styles.content}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -404,7 +315,7 @@ const AddPersonalizadoModal = ({
                 true,
                 'clienteId'
               )}
-              
+
               {renderPicker(
                 'Producto Base (Lente)',
                 form.productoBaseId,
@@ -416,20 +327,20 @@ const AddPersonalizadoModal = ({
               )}
 
               {renderTextInput(
-                'Nombre del producto personalizado', 
-                form.nombre, 
-                (v) => setForm(prev => ({ ...prev, nombre: v })), 
+                'Nombre del producto personalizado',
+                form.nombre,
+                (v) => setForm(prev => ({ ...prev, nombre: v })),
                 'Ej: Lente Progresivo Personalizado Juan',
                 true,
                 'default',
                 false,
                 'nombre'
               )}
-              
+
               {renderTextInput(
-                'Descripción de la personalización', 
-                form.descripcion, 
-                (v) => setForm(prev => ({ ...prev, descripcion: v })), 
+                'Descripción de la personalización',
+                form.descripcion,
+                (v) => setForm(prev => ({ ...prev, descripcion: v })),
                 'Describe las características específicas...',
                 true,
                 'default',
@@ -455,7 +366,7 @@ const AddPersonalizadoModal = ({
                 true,
                 'categoria'
               )}
-              
+
               {renderPicker(
                 'Marca',
                 form.marcaId,
@@ -476,20 +387,20 @@ const AddPersonalizadoModal = ({
             </View>
             <View style={styles.sectionContent}>
               {renderTextInput(
-                'Material', 
-                form.material, 
-                (v) => setForm(prev => ({ ...prev, material: v })), 
+                'Material',
+                form.material,
+                (v) => setForm(prev => ({ ...prev, material: v })),
                 'Ej: Policarbonato especial, CR-39, Cristal...',
                 true,
                 'default',
                 false,
                 'material'
               )}
-              
+
               {renderTextInput(
-                'Color', 
-                form.color, 
-                (v) => setForm(prev => ({ ...prev, color: v })), 
+                'Color',
+                form.color,
+                (v) => setForm(prev => ({ ...prev, color: v })),
                 'Ej: Azul degradado, Transparente, Fotocromático...',
                 true,
                 'default',
@@ -498,9 +409,9 @@ const AddPersonalizadoModal = ({
               )}
 
               {renderTextInput(
-                'Tipo de Lente', 
-                form.tipoLente, 
-                (v) => setForm(prev => ({ ...prev, tipoLente: v })), 
+                'Tipo de Lente',
+                form.tipoLente,
+                (v) => setForm(prev => ({ ...prev, tipoLente: v })),
                 'Ej: Progresivo personalizado, Monofocal, Bifocal...',
                 true,
                 'default',
@@ -518,23 +429,23 @@ const AddPersonalizadoModal = ({
             </View>
             <View style={styles.sectionContent}>
               {renderTextInput(
-                'Precio Calculado ($)', 
-                form.precioCalculado, 
-                (v) => setForm(prev => ({ ...prev, precioCalculado: v })), 
+                'Precio Calculado ($)',
+                form.precioCalculado,
+                (v) => setForm(prev => ({ ...prev, precioCalculado: v })),
                 '150.00',
                 true,
                 'numeric',
                 false,
                 'precioCalculado'
               )}
-              
+
               {renderTextInput(
-                'Total de Cotización ($)', 
-                form.cotizacion.total, 
-                (v) => setForm(prev => ({ 
-                  ...prev, 
-                  cotizacion: { ...prev.cotizacion, total: v } 
-                })), 
+                'Total de Cotización ($)',
+                form.cotizacion.total,
+                (v) => setForm(prev => ({
+                  ...prev,
+                  cotizacion: { ...prev.cotizacion, total: v }
+                })),
                 '150.00',
                 true,
                 'numeric',
@@ -559,7 +470,7 @@ const AddPersonalizadoModal = ({
                 true,
                 'fechaEntregaEstimada'
               )}
-              
+
               {renderDateInput(
                 'Cotización Válida Hasta',
                 form.cotizacion.validaHasta,
@@ -575,14 +486,14 @@ const AddPersonalizadoModal = ({
         </ScrollView>
 
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.cancelButton}
             onPress={handleClose}
             activeOpacity={0.8}
           >
             <Text style={styles.cancelButtonText}>Cancelar</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.saveButton}
             onPress={handleSave}
             activeOpacity={0.8}
@@ -606,6 +517,7 @@ const AddPersonalizadoModal = ({
     </Modal>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

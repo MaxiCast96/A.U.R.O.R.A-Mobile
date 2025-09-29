@@ -98,6 +98,9 @@ const Personalizados = () => {
   // Estados de búsqueda
   const [searchText, setSearchText] = useState('');
 
+  // ✅ NUEVO: Estado combinado para saber cuándo TODO está listo
+  const allDataLoaded = !loadingData && !lentesLoading && Array.isArray(lentes) && lentes.length > 0;
+
   // --- CARGAR DATOS DEL BACKEND (sin lentes) ---
   useEffect(() => {
     const fetchBackendData = async () => {
@@ -296,7 +299,7 @@ const Personalizados = () => {
       <Text style={styles.emptySubtitle}>
         {searchText ? 'No se encontraron resultados para tu búsqueda' : 'Añade tu primer producto personalizado para comenzar'}
       </Text>
-      {!searchText && !loadingData && (
+      {!searchText && allDataLoaded && (
         <TouchableOpacity style={styles.addButton} onPress={() => setAddModalVisible(true)}>
           <Text style={styles.addButtonText}>Añadir Personalizado</Text>
         </TouchableOpacity>
@@ -335,9 +338,12 @@ const Personalizados = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Productos Personalizados</Text>
           <TouchableOpacity 
-            style={[styles.headerAddButton, (loadingData || lentesLoading) && styles.headerAddButtonDisabled]}
+            style={[
+              styles.headerAddButton, 
+              !allDataLoaded && styles.headerAddButtonDisabled
+            ]}
             onPress={() => setAddModalVisible(true)}
-            disabled={loadingData || lentesLoading}
+            disabled={!allDataLoaded}
           >
             <Ionicons name="add" size={24} color="#FFFFFF" />
           </TouchableOpacity>
@@ -348,6 +354,16 @@ const Personalizados = () => {
         {/* Estadísticas integradas en el header */}
         <PersonalizadosStatsCard stats={stats} />
       </View>
+
+      {/* ✅ Banner de carga de datos */}
+      {(loadingData || lentesLoading) && (
+        <View style={styles.loadingDataBanner}>
+          <ActivityIndicator size="small" color="#00BCD4" />
+          <Text style={styles.loadingDataText}>
+            Cargando datos necesarios...
+          </Text>
+        </View>
+      )}
 
       {/* Barra de búsqueda */}
       <View style={styles.searchContainer}>
@@ -413,7 +429,7 @@ const Personalizados = () => {
         categorias={categorias}
         marcas={marcas}
         clientes={clientes}
-        lentes={lentes || []} // ✅ AHORA USA EL HOOK
+        lentes={lentes || []}
         materiales={MATERIALES_LENTES}
         colores={COLORES_LENTES}
         tiposLente={TIPOS_LENTE}
@@ -430,7 +446,7 @@ const Personalizados = () => {
         categorias={categorias}
         marcas={marcas}
         clientes={clientes}
-        lentes={lentes || []} // ✅ AHORA USA EL HOOK
+        lentes={lentes || []}
         materiales={MATERIALES_LENTES}
         colores={COLORES_LENTES}
         tiposLente={TIPOS_LENTE}
@@ -498,6 +514,20 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     marginBottom: 20,
+  },
+  loadingDataBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF3CD',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  loadingDataText: {
+    fontSize: 14,
+    fontFamily: 'Lato-Regular',
+    color: '#856404',
   },
   searchContainer: {
     paddingHorizontal: 20,

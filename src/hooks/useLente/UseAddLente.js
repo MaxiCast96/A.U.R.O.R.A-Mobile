@@ -179,11 +179,56 @@ const AddLenteModal = ({
   };
 
   const handleSave = () => {
-    const error = validate();
-    if (error) {
-      alert(error);
-      return;
-    }
+  if (!validate()) {
+    return;
+  }
+
+  // ✅ LOGS DE DEBUG
+  console.log('=== DEBUG CREAR LENTE ===');
+  console.log('📸 Imágenes en form:', form.imagenes);
+  console.log('📸 Cantidad:', form.imagenes.length);
+  console.log('📸 Primera imagen:', form.imagenes[0]);
+
+  const medidas = form.medidas || {};
+  const dataToSend = {
+    nombre: form.nombre?.trim(),
+    descripcion: form.descripcion?.trim(),
+    categoriaId: form.categoriaId,
+    marcaId: form.marcaId,
+    material: form.material?.trim(),
+    color: form.color?.trim(),
+    tipoLente: form.tipoLente?.trim(),
+    precioBase: Number(form.precioBase),
+    precioActual: form.enPromocion ? Number(form.precioActual) : Number(form.precioBase),
+    linea: form.linea?.trim(),
+    medidas: {
+      anchoPuente: Number(medidas.anchoPuente),
+      altura: Number(medidas.altura),
+      ancho: Number(medidas.ancho),
+    },
+    imagenes: Array.isArray(form.imagenes) ? form.imagenes : [],
+    enPromocion: !!form.enPromocion,
+    promocionId: form.enPromocion ? form.promocionId : undefined,
+    fechaCreacion: form.fechaCreacion,
+    sucursales: Array.isArray(form.sucursales) ? form.sucursales
+      .map(s => ({
+        sucursalId: s.sucursalId,
+        nombreSucursal: s.nombreSucursal,
+        stock: Number(s.stock ?? 0),
+      }))
+      .filter(s => s.sucursalId)
+      : [],
+  };
+
+  console.log('📦 DATA A ENVIAR:', JSON.stringify(dataToSend, null, 2));
+  console.log('📸 Imágenes en dataToSend:', dataToSend.imagenes);
+  console.log('📸 Tipo de imagenes:', typeof dataToSend.imagenes);
+  console.log('📸 Es array:', Array.isArray(dataToSend.imagenes));
+  console.log('=== FIN DEBUG ===');
+
+  onSave(dataToSend);
+  resetForm();
+};
 
     // Preparar datos para envío
     const dataToSend = {
@@ -500,8 +545,7 @@ const AddLenteModal = ({
         </View>
       </View>
     </Modal>
-  );
-};
+  );;
 
 const styles = StyleSheet.create({
   overlay: { 

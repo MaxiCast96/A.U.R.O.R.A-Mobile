@@ -50,90 +50,42 @@ const EditPersonalizadoModal = ({
   const [errors, setErrors] = useState({});
   const [showDatePicker, setShowDatePicker] = useState(null);
 
-  // Función helper para procesar datos de manera segura
-  const processDataArray = (data, label) => {
-    console.log(`=== ${label} DEBUG (EDIT) ===`);
-    console.log('Datos recibidos:', data);
-    console.log('Tipo:', typeof data);
-    console.log('Es array:', Array.isArray(data));
-    
-    if (!data) {
-      console.log(`${label}: datos nulos o undefined`);
-      return [];
-    }
-
-    if (Array.isArray(data)) {
-      console.log(`${label}: es array con ${data.length} elementos`);
-      if (data.length > 0) {
-        console.log(`Primer elemento:`, data[0]);
-      }
-      return data;
-    }
-
-    if (typeof data === 'object' && Array.isArray(data.data)) {
-      console.log(`${label}: objeto con propiedad data`);
-      return data.data;
-    }
-
-    const arrayProps = ['items', 'results', 'list', 'records', 'lentes'];
-    for (const prop of arrayProps) {
-      if (Array.isArray(data[prop])) {
-        console.log(`${label}: encontrado en propiedad ${prop}`);
-        return data[prop];
-      }
-    }
-
-    console.warn(`${label}: estructura desconocida`, data);
+  // Función helper simple para procesar datos
+  const processArray = (data) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (typeof data === 'object' && Array.isArray(data.data)) return data.data;
     return [];
   };
 
   // Procesar opciones de manera robusta
-  const clienteOptions = useMemo(() => {
-    const processed = processDataArray(clientes, 'CLIENTES (EDIT)');
-    return processed.map(c => ({
+  const clienteOptions = useMemo(() => 
+    processArray(clientes).map(c => ({
       value: c._id || c.id,
-      label: c.nombre || c.fullName || c.razonSocial || c.email || `Cliente ${(c._id || c.id || '').slice(-8)}` || 'Cliente sin nombre'
-    }));
-  }, [clientes]);
+      label: c.nombre || c.fullName || c.razonSocial || c.email || 'Cliente sin nombre'
+    })), [clientes]);
 
-  const lenteOptions = useMemo(() => {
-    const processed = processDataArray(lentes, 'LENTES/PRODUCTOS BASE (EDIT)');
-    
-    if (processed.length === 0) {
-      console.error('🚨 CRÍTICO EN EDIT: No hay lentes disponibles');
-      return [
-        { value: 'debug-1', label: '🚨 DEBUG EDIT: No hay lentes - Contacta soporte' }
-      ];
-    }
-    
-    console.log(`✅ ÉXITO EN EDIT: ${processed.length} lentes procesados`);
-    return processed.map(l => ({
+  const lenteOptions = useMemo(() => 
+    processArray(lentes).map(l => ({
       value: l._id || l.id,
-      label: l.nombre || l.modelo || l.descripcion || `Lente ${(l._id || l.id || '').slice(-8)}` || 'Lente sin nombre'
-    }));
-  }, [lentes]);
+      label: l.nombre || l.modelo || l.descripcion || 'Lente sin nombre'
+    })), [lentes]);
 
-  const categoriaOptions = useMemo(() => {
-    const processed = processDataArray(categorias, 'CATEGORÍAS (EDIT)');
-    return processed.map(cat => ({
+  const categoriaOptions = useMemo(() => 
+    processArray(categorias).map(cat => ({
       value: cat.nombre || cat._id || cat.id,
-      label: cat.nombre || cat.descripcion || `Categoría ${(cat._id || cat.id || '').slice(-8)}` || 'Categoría sin nombre'
-    }));
-  }, [categorias]);
+      label: cat.nombre || cat.descripcion || 'Categoría sin nombre'
+    })), [categorias]);
 
-  const marcaOptions = useMemo(() => {
-    const processed = processDataArray(marcas, 'MARCAS (EDIT)');
-    return processed.map(m => ({
+  const marcaOptions = useMemo(() => 
+    processArray(marcas).map(m => ({
       value: m._id || m.id,
-      label: m.nombre || m.descripcion || `Marca ${(m._id || m.id || '').slice(-8)}` || 'Marca sin nombre'
-    }));
-  }, [marcas]);
+      label: m.nombre || m.descripcion || 'Marca sin nombre'
+    })), [marcas]);
 
   // Cargar datos del personalizado cuando se abre el modal
   useEffect(() => {
     if (personalizado && visible) {
-      console.log('Cargando datos para edición:', personalizado);
-      
       const editData = {
         clienteId: personalizado.clienteId?._id || personalizado.clienteId || '',
         productoBaseId: personalizado.productoBaseId?._id || personalizado.productoBaseId || '',
@@ -154,35 +106,10 @@ const EditPersonalizadoModal = ({
         }
       };
 
-      console.log('Datos normalizados para edición:', editData);
       setForm(editData);
       setOriginalForm(editData);
     }
   }, [personalizado, visible]);
-
-  // Debug cuando se abra el modal
-  useEffect(() => {
-    if (visible) {
-      console.log('🔍 === EDIT MODAL ABIERTO - DEBUG COMPLETO ===');
-      console.log('Props recibidas:');
-      console.log('- personalizado:', personalizado);
-      console.log('- lentes (raw):', lentes);
-      console.log('- clientes (raw):', clientes);
-      console.log('- marcas (raw):', marcas);
-      console.log('- categorias (raw):', categorias);
-      
-      console.log('Opciones procesadas:');
-      console.log('- lenteOptions:', lenteOptions);
-      console.log('- clienteOptions:', clienteOptions);
-      console.log('- marcaOptions:', marcaOptions);
-      console.log('- categoriaOptions:', categoriaOptions);
-      
-      if (lenteOptions.length === 0) {
-        console.error('🚨 PROBLEMA CRÍTICO EN EDIT: Sin lentes disponibles');
-      }
-      console.log('=== FIN DEBUG EDIT ===');
-    }
-  }, [visible, personalizado, lentes, clientes, marcas, categorias, lenteOptions, clienteOptions, marcaOptions, categoriaOptions]);
 
   const hasChanges = () => {
     return JSON.stringify(form) !== JSON.stringify(originalForm);
@@ -233,9 +160,6 @@ const EditPersonalizadoModal = ({
       return;
     }
 
-    console.log('Guardando cambios del personalizado:', personalizado._id);
-    console.log('Datos del formulario ANTES de transformar:', form);
-
     const dataToSend = {
       clienteId: form.clienteId,
       productoBaseId: form.productoBaseId,
@@ -254,7 +178,6 @@ const EditPersonalizadoModal = ({
       }
     };
 
-    console.log('Datos TRANSFORMADOS para actualizar:', JSON.stringify(dataToSend, null, 2));
     onSave(dataToSend);
   };
 
@@ -385,11 +308,6 @@ const EditPersonalizadoModal = ({
         </View>
         {errors[field] && (
           <Text style={styles.errorText}>{errors[field]}</Text>
-        )}
-        {!hasOptions && (
-          <Text style={[styles.errorText, {color: '#FF9800'}]}>
-            Sin {label.toLowerCase()} disponibles
-          </Text>
         )}
       </View>
     );
