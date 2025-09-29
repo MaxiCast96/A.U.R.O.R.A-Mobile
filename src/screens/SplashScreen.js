@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Image, Text, StyleSheet, Animated } from 'react-native';
+import { View, Image, StyleSheet, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
@@ -82,10 +82,6 @@ const SplashScreen = () => {
                     style={styles.logo}
                     resizeMode="contain"
                 />
-                <Text style={styles.title}>ÓPTICA LA INTELIGENTE</Text>
-                <Text style={styles.subtitle}>
-                    MIRA BIEN, <Text style={styles.subtitleBold}>LUCE BIEN</Text>
-                </Text>
             </Animated.View>
         </View>
     );
@@ -109,25 +105,8 @@ const styles = StyleSheet.create({
     },
     
     logo: {
-        width: 250,
-        height: 150,
-        marginBottom: 30,
-    },
-    title: {
-        color: '#009BBF',
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        textAlign: 'center',
-    },
-    subtitle: {
-        color: '#009BBF',
-        fontSize: 18,
-        textAlign: 'center',
-    },
-    subtitleBold: {
-        color: '#E91E63',
-        fontWeight: 'bold',
+        width: 280,
+        height: 180,
     },
 });
 
