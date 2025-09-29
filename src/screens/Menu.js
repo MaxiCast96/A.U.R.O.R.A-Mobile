@@ -68,7 +68,7 @@ const MenuScreen = () => {
                     title: 'Optometristas', 
                     subtitle: 'Gestión de optometristas',
                     color: '#009BBF',
-                    onPress: () => Alert.alert('Optometristas', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Optometristas') 
                 }
             ]
         },
@@ -291,7 +291,9 @@ const MenuScreen = () => {
                                 style={styles.essentialItem}
                                 onPress={() => navigation.navigate('Lentes')}
                             >
+                              
                                 <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
+
                                     <Ionicons name="glasses-outline" size={24} color="#FFFFFF" />
                                 </View>
                                 <Text style={styles.essentialText}>Lentes</Text>

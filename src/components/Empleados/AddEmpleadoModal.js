@@ -113,7 +113,8 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
      */
     const handleSaveOrContinue = async () => {
         if (isOptometrista) {
-            // Para optometristas, validar datos básicos y continuar al paso 2
+            // Para optometristas, SOLO validar datos básicos y continuar al paso 2
+            // NO crear el empleado todavía
             if (await validateBasicData()) {
                 // Preparar datos del empleado para el modal de optometrista
                 const empleadoData = {
