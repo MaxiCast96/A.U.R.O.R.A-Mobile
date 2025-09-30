@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { useAddOptometrista } from '../../hooks/useOptometristas/useAddOptometrista';
+import { useAuth } from '../../context/AuthContext';
 import HorariosInteractivo from './HorarioInteractivo';
 
 /**
@@ -27,6 +28,12 @@ import HorariosInteractivo from './HorarioInteractivo';
  * @param {Object} empleadoData - Datos del empleado del paso anterior
  */
 const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => {
+    const { getAuthHeaders } = useAuth();
+    
+    // Estado para sucursales cargadas desde el backend
+    const [sucursalesDisponibles, setSucursalesDisponibles] = useState([]);
+    const [loadingSucursales, setLoadingSucursales] = useState(true);
+
     const {
         // Estados específicos del optometrista
         especialidad,
@@ -49,6 +56,7 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
         // Estados de control
         loading,
         errors,
+        setErrors,
         uploadingImage,
 
         // Opciones
@@ -60,6 +68,38 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
         validateField,
     } = useAddOptometrista();
 
+    // Cargar sucursales del backend
+    const loadSucursales = async () => {
+        try {
+            setLoadingSucursales(true);
+            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/sucursales', {
+                method: 'GET',
+                headers: getAuthHeaders(),
+            });
+
+            if (response.ok) {
+                const sucursalesData = await response.json();
+                console.log('Sucursales cargadas para optometrista:', sucursalesData);
+                setSucursalesDisponibles(sucursalesData);
+            } else {
+                console.error('Error cargando sucursales');
+                setSucursalesDisponibles([]);
+            }
+        } catch (error) {
+            console.error('Error al cargar sucursales:', error);
+            setSucursalesDisponibles([]);
+        } finally {
+            setLoadingSucursales(false);
+        }
+    };
+
+    // Cargar sucursales al montar el componente
+    useEffect(() => {
+        if (visible) {
+            loadSucursales();
+        }
+    }, [visible]);
+
     /**
      * Manejar cambios en horarios
      */
@@ -67,15 +107,15 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
         setDisponibilidad(newDisponibilidad);
         // Limpiar error de horarios si existe
         if (errors.disponibilidad && newDisponibilidad.length > 0) {
-            // Aquí podrías limpiar el error si tienes una función para ello
+            setErrors(prev => ({ ...prev, disponibilidad: null }));
         }
     };
 
     /**
-     * Manejar toggle de sucursales
+     * Manejar toggle de sucursales - CORREGIDO para usar ObjectIds
      */
     const handleSucursalToggle = (sucursalId) => {
-        const currentSucursales = sucursalesAsignadas || [];
+        const currentSucursales = Array.isArray(sucursalesAsignadas) ? sucursalesAsignadas : [];
         
         if (currentSucursales.includes(sucursalId)) {
             // Remover sucursal si ya está seleccionada
@@ -84,8 +124,34 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
             // Agregar sucursal si no está seleccionada
             setSucursalesAsignadas([...currentSucursales, sucursalId]);
         }
+        
+        // Limpiar error si existe
+        if (errors.sucursalesAsignadas) {
+            setErrors(prev => ({ ...prev, sucursalesAsignadas: null }));
+        }
     };
+
+    /**
+     * Validar que al menos una sucursal esté seleccionada
+     */
+    const validateSucursales = () => {
+        if (!Array.isArray(sucursalesAsignadas) || sucursalesAsignadas.length === 0) {
+            setErrors(prev => ({ 
+                ...prev, 
+                sucursalesAsignadas: 'Debe seleccionar al menos una sucursal' 
+            }));
+            return false;
+        }
+        return true;
+    };
+
     const handleCreateOptometrista = async () => {
+        // Validar sucursales antes de crear
+        if (!validateSucursales()) {
+            return;
+        }
+        
+        console.log('Creando optometrista con sucursales:', sucursalesAsignadas);
         const success = await createOptometrista(empleadoData, onSuccess);
         if (success) {
             onClose();
@@ -226,17 +292,35 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
     );
 
     /**
-     * Renderizar selector de sucursales asignadas
+     * Renderizar selector de sucursales asignadas - CORREGIDO
      */
     const renderSucursalesAsignadas = () => {
-        // Sucursales mockup (debes reemplazar con datos reales)
-        const sucursalesDisponibles = [
-            { _id: '1', nombre: 'Sucursal Coatepeque' },
-            { _id: '2', nombre: 'Sucursal Escalón' },
-            { _id: '3', nombre: 'Sucursal Santa Rosa' },
-            { _id: '4', nombre: 'Sucursal Sonsonate' },
-            { _id: '5', nombre: 'Sucursal La Libertad' },
-        ];
+        if (loadingSucursales) {
+            return (
+                <View style={styles.sucursalesContainer}>
+                    <Text style={styles.sucursalesTitle}>
+                        Sucursales Asignadas <Text style={styles.required}>*</Text>
+                    </Text>
+                    <View style={styles.loadingContainer}>
+                        <Text style={styles.loadingText}>Cargando sucursales...</Text>
+                    </View>
+                </View>
+            );
+        }
+
+        if (!Array.isArray(sucursalesDisponibles) || sucursalesDisponibles.length === 0) {
+            return (
+                <View style={styles.sucursalesContainer}>
+                    <Text style={styles.sucursalesTitle}>
+                        Sucursales Asignadas <Text style={styles.required}>*</Text>
+                    </Text>
+                    <View style={styles.errorContainer}>
+                        <Ionicons name="alert-circle" size={16} color="#DC2626" />
+                        <Text style={styles.errorText}>No se pudieron cargar las sucursales</Text>
+                    </View>
+                </View>
+            );
+        }
 
         return (
             <View style={styles.sucursalesContainer}>
@@ -252,7 +336,7 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                     errors.sucursalesAsignadas && styles.sucursalesGridError
                 ]}>
                     {sucursalesDisponibles.map((sucursal) => {
-                        const isSelected = sucursalesAsignadas?.includes(sucursal._id);
+                        const isSelected = Array.isArray(sucursalesAsignadas) && sucursalesAsignadas.includes(sucursal._id);
                         
                         return (
                             <TouchableOpacity
@@ -297,6 +381,13 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                 <Text style={styles.sucursalesHint}>
                     Selecciona al menos una sucursal donde el optometrista trabajará
                 </Text>
+                
+                {/* Debug info - temporal */}
+                {sucursalesAsignadas && sucursalesAsignadas.length > 0 && (
+                    <Text style={styles.debugText}>
+                        Seleccionadas: {sucursalesAsignadas.length}
+                    </Text>
+                )}
             </View>
         );
     };
@@ -734,6 +825,22 @@ const styles = StyleSheet.create({
         marginTop: 8,
         paddingHorizontal: 4,
         gap: 4,
+    },
+    loadingContainer: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    loadingText: {
+        fontSize: 14,
+        fontFamily: 'Lato-Regular',
+        color: '#666666',
+    },
+    debugText: {
+        fontSize: 10,
+        fontFamily: 'Lato-Regular',
+        color: '#009BBF',
+        textAlign: 'center',
+        marginTop: 4,
     },
 });
 
