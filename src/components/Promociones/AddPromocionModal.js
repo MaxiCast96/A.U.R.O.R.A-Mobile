@@ -71,6 +71,10 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
         }
     }, [visible]);
 
+    const generateUniqueId = () => {
+        return 'promo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    };
+
     const seleccionarImagen = async () => {
         try {
             const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -202,6 +206,7 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
         }
 
         const promocionData = {
+            _id: generateUniqueId(), // Añadir ID único temporal
             ...formData,
             nombre: formData.nombre.trim(),
             descripcion: formData.descripcion.trim(),

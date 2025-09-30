@@ -21,6 +21,7 @@
     "expo-image-picker": "~17.0.8",
     "expo-linear-gradient": "~15.0.7",
     "expo-status-bar": "~3.0.8",
+    "ionicons": "^8.0.13",
     "lucide-react": "^0.544.0",
     "lucide-react-native": "^0.544.0",
     "react": "19.1.0",

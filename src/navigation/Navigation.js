@@ -12,6 +12,7 @@ import Empleados from '../screens/Empleados';
 import Sucursales from '../screens/Sucursales';
 import Ventas from '../screens/Ventas';
 import Categorias from '../screens/Categoria';
+import Promociones from '../screens/Promociones';
 import Reportes from '../screens/Reportes';
 import Facturas from '../screens/Facturas';
 import Configuracion from '../screens/Configuracion';
@@ -83,6 +84,7 @@ const ThemedNavigation = () => {
                 <Stack.Screen name="Facturas" component={Facturas} />
                  {/* ===== PANTALLAS DE PRODUCTOS ===== */}
                 <Stack.Screen name="Categorias" component={Categorias} />
+                <Stack.Screen name="Promociones" component={Promociones} />
                 {/* Navegación de Configuración */}
                 <Stack.Screen name="Configuracion" component={Configuracion} />
                 {/* Pantalla de menú - acceso directo */}

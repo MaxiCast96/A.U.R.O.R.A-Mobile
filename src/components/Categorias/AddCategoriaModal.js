@@ -88,11 +88,12 @@ const AddCategoriaModal = ({ visible, onClose, onSubmit }) => {
         }
 
         const categoriaData = {
-            ...formData,
             nombre: formData.nombre.trim(),
             descripcion: formData.descripcion.trim(),
             icono: formData.icono || ''
         };
+
+        console.log('Enviando datos:', categoriaData); // Para debug
 
         setLoading(true);
         
@@ -105,15 +106,20 @@ const AddCategoriaModal = ({ visible, onClose, onSubmit }) => {
                 body: JSON.stringify(categoriaData),
             });
 
+            console.log('Respuesta status:', response.status); // Para debug
+
             if (response.ok) {
                 const responseData = await response.json();
+                console.log('Datos recibidos:', responseData); // Para debug
                 onSubmit(responseData);
                 handleClose();
             } else {
                 const errorData = await response.json();
+                console.log('Error del servidor:', errorData); // Para debug
                 throw new Error(errorData.message || 'Error al crear categoría');
             }
         } catch (error) {
+            console.log('Error completo:', error); // Para debug
             Alert.alert('Error', error.message);
         } finally {
             setLoading(false);
@@ -246,6 +252,7 @@ const AddCategoriaModal = ({ visible, onClose, onSubmit }) => {
     );
 };
 
+// Los estilos se mantienen igual...
 const styles = StyleSheet.create({
     container: {
         flex: 1,

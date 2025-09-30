@@ -10,6 +10,11 @@ export const usePromocionDetail = () => {
      * Eliminar promoción
      */
     const deletePromocion = async (id) => {
+        // Validar ID antes de hacer la petición
+        if (!id || id === 'undefined') {
+            throw new Error('ID de promoción no válido');
+        }
+
         setLoading(true);
         try {
             const response = await fetch(`https://aurora-production-7e57.up.railway.app/api/promociones/${id}`, {
@@ -35,6 +40,11 @@ export const usePromocionDetail = () => {
      * Cambiar estado de la promoción
      */
     const updatePromocionEstado = async (id, activo) => {
+        // Validar ID antes de hacer la petición
+        if (!id || id === 'undefined') {
+            throw new Error('ID de promoción no válido');
+        }
+
         setLoading(true);
         try {
             const response = await fetch(`https://aurora-production-7e57.up.railway.app/api/promociones/${id}`, {

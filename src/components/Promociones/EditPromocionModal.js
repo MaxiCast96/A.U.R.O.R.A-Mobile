@@ -16,7 +16,7 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 
-const EditPromocionModal = ({ visible, promocion, onClose, onSuccess }) => {
+const EditPromocionModal = ({ visible, promocion, index, onClose, onSuccess }) => {
     const [formData, setFormData] = useState({
         nombre: '',
         descripcion: '',
@@ -52,30 +52,6 @@ const EditPromocionModal = ({ visible, promocion, onClose, onSuccess }) => {
         }
     }, [visible, promocion]);
 
-    const loadPromocionData = () => {
-        if (!promocion) return;
-        
-        setFormData({
-            nombre: promocion.nombre || '',
-            descripcion: promocion.descripcion || '',
-            tipoDescuento: promocion.tipoDescuento || 'porcentaje',
-            valorDescuento: promocion.valorDescuento?.toString() || '',
-            aplicaA: promocion.aplicaA || 'todos',
-            fechaInicio: promocion.fechaInicio ? new Date(promocion.fechaInicio) : new Date(),
-            fechaFin: promocion.fechaFin ? new Date(promocion.fechaFin) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            codigoPromo: promocion.codigoPromo || '',
-            prioridad: promocion.prioridad?.toString() || '0',
-            limiteUsos: promocion.limiteUsos?.toString() || '',
-            mostrarEnCarrusel: promocion.mostrarEnCarrusel !== undefined ? promocion.mostrarEnCarrusel : true,
-            activo: promocion.activo !== undefined ? promocion.activo : true,
-            categoriasSeleccionadas: promocion.categoriasAplicables || [],
-            productosSeleccionados: promocion.productosAplicables || []
-        });
-
-        setImagen(promocion.imagen || null);
-        setErrors({});
-    };
-
     const loadCategoriasYProductos = () => {
         // Datos de ejemplo - en tu caso vendrían de tu API
         setCategorias([
@@ -94,6 +70,47 @@ const EditPromocionModal = ({ visible, promocion, onClose, onSuccess }) => {
             { id: '4', nombre: 'Montura Deportiva', precio: 200 },
             { id: '5', nombre: 'Cristal Anti-reflejo', precio: 90 }
         ]);
+    };
+
+    const loadPromocionData = () => {
+        if (!promocion) return;
+        
+        // Asegurarnos de que las categorías y productos sean arrays de objetos completos
+        const categoriasCompletas = promocion.categoriasAplicables 
+            ? categorias.filter(cat => 
+                Array.isArray(promocion.categoriasAplicables) 
+                    ? promocion.categoriasAplicables.includes(cat.id)
+                    : false
+              )
+            : [];
+
+        const productosCompletos = promocion.productosAplicables 
+            ? productos.filter(prod => 
+                Array.isArray(promocion.productosAplicables) 
+                    ? promocion.productosAplicables.includes(prod.id)
+                    : false
+              )
+            : [];
+
+        setFormData({
+            nombre: promocion.nombre || '',
+            descripcion: promocion.descripcion || '',
+            tipoDescuento: promocion.tipoDescuento || 'porcentaje',
+            valorDescuento: promocion.valorDescuento?.toString() || '',
+            aplicaA: promocion.aplicaA || 'todos',
+            fechaInicio: promocion.fechaInicio ? new Date(promocion.fechaInicio) : new Date(),
+            fechaFin: promocion.fechaFin ? new Date(promocion.fechaFin) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            codigoPromo: promocion.codigoPromo || '',
+            prioridad: promocion.prioridad?.toString() || '0',
+            limiteUsos: promocion.limiteUsos?.toString() || '',
+            mostrarEnCarrusel: promocion.mostrarEnCarrusel !== undefined ? promocion.mostrarEnCarrusel : true,
+            activo: promocion.activo !== undefined ? promocion.activo : true,
+            categoriasSeleccionadas: categoriasCompletas,
+            productosSeleccionados: productosCompletos
+        });
+
+        setImagen(promocion.imagen || null);
+        setErrors({});
     };
 
     const seleccionarImagen = async () => {
@@ -573,7 +590,7 @@ const EditPromocionModal = ({ visible, promocion, onClose, onSuccess }) => {
                                 >
                                     <Text style={styles.selectorButtonText}>
                                         {formData.productosSeleccionados.length > 0 
-                                            ? `${formData.productosSeleccionados.length} producto(s) seleccionado(s)`
+                                            ? `${formData.productosSeleccionadas.length} producto(s) seleccionado(s)`
                                             : 'Seleccionar productos'
                                         }
                                     </Text>

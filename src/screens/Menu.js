@@ -117,7 +117,7 @@ const MenuScreen = () => {
                     title: 'Promociones', 
                     subtitle: 'Ofertas y promociones',
                     color: '#49AA4C',
-                    onPress: () => Alert.alert('Promociones', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Promociones')
                 }
             ]
         },

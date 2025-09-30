@@ -94,6 +94,12 @@ const Promociones = () => {
      * Manejar eliminación de promoción
      */
     const handleDelete = async (promocion) => {
+        // Verificar que el ID existe y es válido
+        if (!promocion || !promocion._id) {
+            Alert.alert('Error', 'ID de promoción no válido');
+            return;
+        }
+
         Alert.alert(
             'Eliminar Promoción',
             `¿Estás seguro de que deseas eliminar la promoción "${promocion.nombre}"?`,
@@ -106,15 +112,18 @@ const Promociones = () => {
                     text: 'Eliminar', 
                     style: 'destructive',
                     onPress: async () => {
-                        const success = await deletePromocionAPI(promocion._id);
-                        if (success) {
-                            removePromocionFromList(promocion._id);
-                            showSuccessMessage('Promoción eliminada exitosamente');
-                            // Cerrar modales si están abiertos
-                            handleCloseModal();
-                            handleCloseEditModal();
-                        } else {
-                            Alert.alert('Error', 'No se pudo eliminar la promoción');
+                        try {
+                            const success = await deletePromocionAPI(promocion._id);
+                            if (success) {
+                                removePromocionFromList(promocion._id);
+                                showSuccessMessage('Promoción eliminada exitosamente');
+                                // Cerrar modales si están abiertos
+                                handleCloseModal();
+                                handleCloseEditModal();
+                            }
+                        } catch (error) {
+                            console.error('Error deleting promocion:', error);
+                            Alert.alert('Error', 'No se pudo eliminar la promoción: ' + error.message);
                         }
                     }
                 }
@@ -126,6 +135,12 @@ const Promociones = () => {
      * Manejar cambio de estado
      */
     const handleToggleEstado = async (promocion) => {
+        // Verificar que el ID existe y es válido
+        if (!promocion || !promocion._id) {
+            Alert.alert('Error', 'ID de promoción no válido');
+            return;
+        }
+
         const nuevoEstado = !promocion.activo;
         Alert.alert(
             'Cambiar Estado',
@@ -139,13 +154,16 @@ const Promociones = () => {
                     text: 'Confirmar', 
                     style: 'default',
                     onPress: async () => {
-                        const success = await updatePromocionEstadoAPI(promocion._id, nuevoEstado);
-                        if (success) {
-                            // Actualizar en lista local
-                            updatePromocionInList({ ...promocion, activo: nuevoEstado });
-                            showSuccessMessage(`Promoción ${nuevoEstado ? 'activada' : 'desactivada'} exitosamente`);
-                        } else {
-                            Alert.alert('Error', 'No se pudo cambiar el estado de la promoción');
+                        try {
+                            const success = await updatePromocionEstadoAPI(promocion._id, nuevoEstado);
+                            if (success) {
+                                // Actualizar en lista local
+                                updatePromocionInList({ ...promocion, activo: nuevoEstado });
+                                showSuccessMessage(`Promoción ${nuevoEstado ? 'activada' : 'desactivada'} exitosamente`);
+                            }
+                        } catch (error) {
+                            console.error('Error updating estado:', error);
+                            Alert.alert('Error', 'No se pudo cambiar el estado de la promoción: ' + error.message);
                         }
                     }
                 }
@@ -268,7 +286,7 @@ const Promociones = () => {
                     <FlatList
                         data={filteredPromociones}
                         renderItem={renderPromocionItem}
-                        keyExtractor={(item) => item._id}
+                        keyExtractor={(item) => item._id || Math.random().toString()}
                         ListEmptyComponent={renderEmptyState}
                         refreshControl={
                             <RefreshControl

@@ -137,6 +137,16 @@ const Categoria = () => {
     };
 
     /**
+     * Función para generar keys únicas
+     */
+    const getKeyExtractor = (item) => {
+        if (item._id) return item._id;
+        if (item.id) return item.id;
+        if (item.tempId) return item.tempId;
+        return Math.random().toString();
+    };
+
+    /**
      * Renderizar item de categoría
      */
     const renderCategoriaItem = ({ item, index }) => (
@@ -234,7 +244,7 @@ const Categoria = () => {
                     <FlatList
                         data={categorias}
                         renderItem={renderCategoriaItem}
-                        keyExtractor={(item) => item._id}
+                        keyExtractor={getKeyExtractor}
                         ListEmptyComponent={renderEmptyState}
                         refreshControl={
                             <RefreshControl
@@ -245,7 +255,11 @@ const Categoria = () => {
                             />
                         }
                         showsVerticalScrollIndicator={false}
-                        contentContainerStyle={styles.listContent}
+                        contentContainerStyle={
+                            categorias.length === 0 
+                                ? styles.emptyListContent 
+                                : styles.listContent
+                        }
                     />
                 )}
             </View>
@@ -363,6 +377,9 @@ const styles = StyleSheet.create({
     listContent: {
         paddingVertical: 8,
         paddingBottom: 20,
+    },
+    emptyListContent: {
+        flexGrow: 1,
     },
     emptyContainer: {
         flex: 1,

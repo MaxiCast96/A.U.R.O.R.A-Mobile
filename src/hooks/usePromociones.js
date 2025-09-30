@@ -36,8 +36,17 @@ export const usePromociones = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                setPromociones(data);
-                setFilteredPromociones(data);
+                // Añadir método estaVigente a cada promoción
+                const promocionesConVigencia = data.map(promo => ({
+                    ...promo,
+                    estaVigente: function() {
+                        const hoy = new Date();
+                        const fin = new Date(this.fechaFin);
+                        return fin >= hoy;
+                    }
+                }));
+                setPromociones(promocionesConVigencia);
+                setFilteredPromociones(promocionesConVigencia);
             } else {
                 throw new Error('Error al cargar promociones');
             }
@@ -66,9 +75,9 @@ export const usePromociones = () => {
         // Filtrar por búsqueda
         if (searchText) {
             filtered = filtered.filter(promo => 
-                promo.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
-                promo.codigoPromo.toLowerCase().includes(searchText.toLowerCase()) ||
-                promo.descripcion.toLowerCase().includes(searchText.toLowerCase())
+                promo.nombre?.toLowerCase().includes(searchText.toLowerCase()) ||
+                promo.codigoPromo?.toLowerCase().includes(searchText.toLowerCase()) ||
+                promo.descripcion?.toLowerCase().includes(searchText.toLowerCase())
             );
         }
 
@@ -96,24 +105,18 @@ export const usePromociones = () => {
     // Cambiamos a promocionesStats para claridad
     const promocionesStats = useMemo(() => {
         const total = promociones.length;
-        const activas = promociones.filter(p => p.activo).length;
-        const inactivas = total - activas;
-        const porVencer = promociones.filter(p => {
-            if (!p.activo) return false;
-            const fechaFin = new Date(p.fechaFin);
-            const hoy = new Date();
-            const diferenciaDias = Math.ceil((fechaFin - hoy) / (1000 * 60 * 60 * 24));
-            return diferenciaDias <= 7 && diferenciaDias > 0;
-        }).length;
+        const activas = promociones.filter(p => p.activo && p.estaVigente?.()).length;
+        const inactivas = promociones.filter(p => !p.activo).length;
+        const expiradas = promociones.filter(p => p.activo && !p.estaVigente?.()).length;
 
         return {
             total,
             activas,
             inactivas,
-            porVencer,
+            expiradas,
             porcentajeActivas: total ? Math.round((activas / total) * 100) : 0,
             porcentajeInactivas: total ? Math.round((inactivas / total) * 100) : 0,
-            porcentajePorVencer: total ? Math.round((porVencer / total) * 100) : 0
+            porcentajeExpiradas: total ? Math.round((expiradas / total) * 100) : 0
         };
     }, [promociones]);
 
@@ -168,15 +171,39 @@ export const usePromociones = () => {
      * Agregar promoción a la lista local
      */
     const addPromocionToList = useCallback((newPromocion) => {
-        setPromociones(prev => [newPromocion, ...prev]);
+        // Añadir método estaVigente a la nueva promoción
+        const promocionConVigencia = {
+            ...newPromocion,
+            estaVigente: function() {
+                const hoy = new Date();
+                const fin = new Date(this.fechaFin);
+                return fin >= hoy;
+            }
+        };
+        setPromociones(prev => [promocionConVigencia, ...prev]);
     }, []);
 
     /**
      * Actualizar promoción en la lista local
      */
     const updatePromocionInList = (updatedPromocion) => {
+        if (!updatedPromocion || !updatedPromocion._id) {
+            console.error('Promoción no válida para actualizar:', updatedPromocion);
+            return;
+        }
+        
+        // Añadir método estaVigente a la promoción actualizada
+        const promocionConVigencia = {
+            ...updatedPromocion,
+            estaVigente: function() {
+                const hoy = new Date();
+                const fin = new Date(this.fechaFin);
+                return fin >= hoy;
+            }
+        };
+        
         setPromociones(prev => 
-            prev.map(p => p._id === updatedPromocion._id ? updatedPromocion : p)
+            prev.map(p => p._id === updatedPromocion._id ? promocionConVigencia : p)
         );
     };
 
@@ -184,6 +211,10 @@ export const usePromociones = () => {
      * Eliminar promoción de la lista local
      */
     const removePromocionFromList = (id) => {
+        if (!id) {
+            console.error('ID no válido para eliminar:', id);
+            return;
+        }
         setPromociones(prev => prev.filter(p => p._id !== id));
     };
 
