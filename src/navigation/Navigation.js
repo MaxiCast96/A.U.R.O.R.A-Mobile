@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme as NavDefaultTheme, DarkTheme as NavDarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TabNavigator from './TabNavigation';
 import Profile from '../screens/Profile';
@@ -9,9 +9,11 @@ import Welcome from '../screens/Welcome';
 import Menu from '../screens/Menu';
 import Clientes from '../screens/Clientes';
 import Empleados from '../screens/Empleados';
-import Lentes from '../screens/Lentes';
-import Accesorios from '../screens/Accesorios';
-import Personalizados from '../screens/Personalizados'; // Nueva importación
+import Sucursales from '../screens/Sucursales';
+import Ventas from '../screens/Ventas';
+import Reportes from '../screens/Reportes';
+import Facturas from '../screens/Facturas';
+import Configuracion from '../screens/Configuracion';
 import ForgotPassword from '../screens/ForgotPassword';
 import VerifyCode from '../screens/VerifyCode';
 import ResetPassword from '../screens/ResetPassword';
@@ -19,6 +21,7 @@ import PasswordSuccess from '../screens/PasswordSucces';
 import Optometristas from '../screens/Optometristas';
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
+import { SettingsProvider, useSettings } from '../context/SettingsContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -46,6 +49,52 @@ const LoadingScreen = () => (
  * 5. Pantallas de gestión (Clientes, Empleados, Lentes, Accesorios, Personalizados, etc.)
  * 6. Flujo de recuperación de contraseña (ForgotPassword -> VerifyCode -> ResetPassword -> PasswordSuccess)
  */
+const ThemedNavigation = () => {
+    const { resolvedTheme } = useSettings();
+    const navTheme = resolvedTheme === 'dark' ? NavDarkTheme : NavDefaultTheme;
+    return (
+        <NavigationContainer theme={navTheme}>
+            <Stack.Navigator
+                initialRouteName="Splash"
+                screenOptions={{ headerShown: false }}
+            >
+                {/* Pantalla de carga inicial */}
+                <Stack.Screen name="Splash" component={SplashScreen} />
+                {/* Pantalla de Bienvenida */}
+                <Stack.Screen name="Welcome" component={Welcome} />
+                {/* Pantalla de login */}
+                <Stack.Screen name="Login" component={Login} />
+                {/* ===== PANTALLAS DE RECUPERACIÓN DE CONTRASEÑA ===== */}
+                <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+                <Stack.Screen name="VerifyCode" component={VerifyCode} />
+                <Stack.Screen name="ResetPassword" component={ResetPassword} />
+                <Stack.Screen name="PasswordSuccess" component={PasswordSuccess} />
+                {/* Navegación principal con tabs */}
+                <Stack.Screen name="Main" component={TabNavigator} />
+                {/* ===== PANTALLAS DE PERFIL ===== */}
+                <Stack.Screen name="Profile" component={Profile} />
+                {/* ===== PANTALLAS DE GESTIÓN ===== */}
+                <Stack.Screen name="Clientes" component={Clientes} />
+                <Stack.Screen name="Empleados" component={Empleados} />
+                <Stack.Screen name="Sucursales" component={Sucursales} />
+                <Stack.Screen name="Ventas" component={Ventas} />
+                <Stack.Screen name="Reportes" component={Reportes} />
+                <Stack.Screen name="Facturas" component={Facturas} />
+                {/* Navegación de Configuración */}
+                <Stack.Screen name="Configuracion" component={Configuracion} />
+                {/* Pantalla de menú - acceso directo */}
+                <Stack.Screen name="MenuDirect" component={Menu} options={{
+                    headerShown: true,
+                    title: 'Operaciones',
+                    headerStyle: { backgroundColor: '#009BBF' },
+                    headerTintColor: '#FFFFFF',
+                    headerTitleStyle: { fontFamily: 'Lato-Bold' },
+                }} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+};
+
 export default function Navigation() {
     const { isAuthenticated, isLoading } = useAuth();
 
@@ -55,82 +104,8 @@ export default function Navigation() {
     }
 
     return (
-        <NavigationContainer>
-            <Stack.Navigator
-                initialRouteName="Splash"
-                screenOptions={{
-                    headerShown: false,
-                }}
-            >
-                {/* Pantalla de carga inicial */}
-                <Stack.Screen name="Splash" component={SplashScreen} />
-
-                {/* Pantalla de Bienvenida */}
-                <Stack.Screen name="Welcome" component={Welcome} />
-
-                {/* Pantalla de login */}
-                <Stack.Screen name="Login" component={Login} />
-
-                {/* ===== PANTALLAS DE RECUPERACIÓN DE CONTRASEÑA ===== */}
-                <Stack.Screen
-                    name="ForgotPassword"
-                    component={ForgotPassword}
-                />
-                <Stack.Screen
-                    name="VerifyCode"
-                    component={VerifyCode}
-                />
-                <Stack.Screen
-                    name="ResetPassword"
-                    component={ResetPassword}
-                />
-                <Stack.Screen
-                    name="PasswordSuccess"
-                    component={PasswordSuccess}
-                />
-
-                {/* Navegación principal con tabs */}
-                <Stack.Screen name="Main" component={TabNavigator} />
-
-                {/* ===== PANTALLAS DE PERFIL ===== */}
-                <Stack.Screen name="Profile" component={Profile} />
-
-                {/* ===== PANTALLAS DE GESTIÓN ===== */}
-                {/* Navegación de Clientes */}
-                <Stack.Screen name="Clientes" component={Clientes} />
-
-                {/* Navegación de Empleados */}
-                <Stack.Screen name="Empleados" component={Empleados} />
-                
-                {/* Navegación de Empleados */}
-                <Stack.Screen name="Optometristas" component={Optometristas} />
-
-                {/* Navegación de Lentes */}
-                <Stack.Screen name="Lentes" component={Lentes} />
-
-                {/* Navegación de Accesorios */}
-                <Stack.Screen name="Accesorios" component={Accesorios} />
-
-                {/* Navegación de Productos Personalizados - NUEVA PANTALLA */}
-                <Stack.Screen name="Personalizados" component={Personalizados} />
-
-                {/* Pantalla de menú - acceso directo para navegación desde otras pantallas */}
-                <Stack.Screen
-                    name="MenuDirect"
-                    component={Menu}
-                    options={{
-                        headerShown: true,
-                        title: 'Operaciones',
-                        headerStyle: {
-                            backgroundColor: '#009BBF',
-                        },
-                        headerTintColor: '#FFFFFF',
-                        headerTitleStyle: {
-                            fontFamily: 'Lato-Bold',
-                        },
-                    }}
-                />
-            </Stack.Navigator>
-        </NavigationContainer>
+        <SettingsProvider>
+            <ThemedNavigation />
+        </SettingsProvider>
     );
 }

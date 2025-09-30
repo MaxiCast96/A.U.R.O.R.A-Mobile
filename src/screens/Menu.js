@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../utils/i18n';
 
 /**
  * Pantalla de Menú Principal
@@ -29,6 +30,7 @@ const MenuScreen = () => {
     const navigation = useNavigation();
     const { user } = useAuth();
     const [searchText, setSearchText] = useState('');
+    const { t } = useI18n();
 
     /**
      * Secciones del menú basadas en el sitio web de escritorio
@@ -139,9 +141,6 @@ const MenuScreen = () => {
                 { 
                     icon: 'medical-outline', 
                     title: 'Recetas', 
-                    subtitle: 'Recetas médicas',
-                    color: '#D0155F',
-                    onPress: () => Alert.alert('Recetas', 'Funcionalidad próximamente')
                 }
             ]
         },
@@ -153,21 +152,35 @@ const MenuScreen = () => {
                     title: 'Sucursales', 
                     subtitle: 'Gestión de sucursales',
                     color: '#6B7280',
-                    onPress: () => Alert.alert('Sucursales', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Sucursales')
+                },
+                { 
+                    icon: 'card-outline', 
+                    title: t('sales_title'), 
+                    subtitle: t('sales_subtitle'),
+                    color: '#6B7280',
+                    onPress: () => navigation.navigate('Ventas')
                 },
                 { 
                     icon: 'analytics-outline', 
-                    title: 'Reportes', 
-                    subtitle: 'Reportes y estadísticas',
+                    title: t('reports_title'), 
+                    subtitle: t('reports_subtitle'),
                     color: '#6B7280',
-                    onPress: () => Alert.alert('Reportes', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Reportes')
+                },
+                { 
+                    icon: 'receipt-outline', 
+                    title: t('invoices_title'), 
+                    subtitle: t('invoices_subtitle'),
+                    color: '#6B7280',
+                    onPress: () => navigation.navigate('Facturas')
                 },
                 { 
                     icon: 'settings-outline', 
                     title: 'Configuración', 
                     subtitle: 'Configuración del sistema',
                     color: '#6B7280',
-                    onPress: () => Alert.alert('Configuración', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Configuracion')
                 }
             ]
         }
@@ -233,7 +246,7 @@ const MenuScreen = () => {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Operaciones</Text>
+                <Text style={styles.headerTitle}>{t('reports_title') /* Using existing key; ideally add operations_title in i18n */}</Text>
             </View>
 
             {/* Barra de búsqueda */}
@@ -242,7 +255,7 @@ const MenuScreen = () => {
                     <Ionicons name="search-outline" size={20} color="#666666" style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Buscar..."
+                        placeholder={t('search_sales_placeholder')}
                         placeholderTextColor="#999999"
                         value={searchText}
                         onChangeText={setSearchText}
@@ -301,7 +314,7 @@ const MenuScreen = () => {
 
                              <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Accesorios')}
+                                onPress={() => navigation.navigate('Reportes')}
                             >
                                 <View style={[styles.essentialIcon, { backgroundColor: '#FF9800' }]}>
                                     <Ionicons name="bag-outline" size={24} color="#FFFFFF" />
@@ -358,25 +371,25 @@ const MenuScreen = () => {
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>OTRAS OPERACIONES</Text>
                         <View style={styles.otherOperationsGrid}>
-                            <TouchableOpacity style={styles.otherOperationItem}>
+                            <TouchableOpacity style={styles.otherOperationItem} onPress={() => navigation.navigate('Ventas')}>
                                 <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
                                     <Ionicons name="card-outline" size={24} color="#FFFFFF" />
                                 </View>
-                                <Text style={styles.otherOperationText}>Pagos</Text>
+                                <Text style={styles.otherOperationText}>{t('sales_title')}</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.otherOperationItem}>
+                            <TouchableOpacity style={styles.otherOperationItem} onPress={() => navigation.navigate('Facturas')}>
                                 <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
                                     <Ionicons name="receipt-outline" size={24} color="#FFFFFF" />
                                 </View>
-                                <Text style={styles.otherOperationText}>Facturas</Text>
+                                <Text style={styles.otherOperationText}>{t('invoices_title')}</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.otherOperationItem}>
+                            <TouchableOpacity style={styles.otherOperationItem} onPress={() => navigation.navigate('Reportes')}>
                                 <View style={[styles.essentialIcon, { backgroundColor: '#D0155F' }]}>
                                     <Ionicons name="stats-chart-outline" size={24} color="#FFFFFF" />
                                 </View>
-                                <Text style={styles.otherOperationText}>Reportes</Text>
+                                <Text style={styles.otherOperationText}>{t('reports_title')}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={styles.otherOperationItem}>
