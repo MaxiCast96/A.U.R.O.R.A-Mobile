@@ -17,7 +17,7 @@ const KPICards = ({ stats: propStats }) => {
     const { getAuthHeaders } = useAuth();
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
-    
+
     // Estados para manejar los datos desde la API
     const [stats, setStats] = useState({
         totalClientes: 0,
@@ -45,7 +45,7 @@ const KPICards = ({ stats: propStats }) => {
     const loadKPIData = async () => {
         try {
             setLoading(true);
-            
+
             // Verificar que tenemos headers de autenticación
             const headers = getAuthHeaders();
             if (!headers || !headers.Authorization) {
@@ -84,7 +84,7 @@ const KPICards = ({ stats: propStats }) => {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Datos KPI recibidos:', data);
-                
+
                 // Procesar los datos recibidos
                 const processedStats = processKPIData(data);
                 setStats(processedStats);
@@ -120,7 +120,7 @@ const KPICards = ({ stats: propStats }) => {
      */
     const processKPIData = (data) => {
         console.log('Procesando datos KPI:', data);
-        
+
         // Manejar diferentes estructuras de respuesta posibles
         const processedData = {
             totalClientes: 0,
@@ -131,33 +131,33 @@ const KPICards = ({ stats: propStats }) => {
 
         // Si data es un array, buscar en el primer elemento
         const sourceData = Array.isArray(data) ? data[0] : data;
-        
+
         if (sourceData && typeof sourceData === 'object') {
             // Mapear diferentes nombres de campos posibles
-            processedData.totalClientes = 
-                sourceData.totalClientes || 
-                sourceData.total_clientes || 
-                sourceData.clientes || 
+            processedData.totalClientes =
+                sourceData.totalClientes ||
+                sourceData.total_clientes ||
+                sourceData.clientes ||
                 sourceData.clientesTotal ||
                 0;
-                
-            processedData.citasHoy = 
-                sourceData.citasHoy || 
-                sourceData.citas_hoy || 
+
+            processedData.citasHoy =
+                sourceData.citasHoy ||
+                sourceData.citas_hoy ||
                 sourceData.citasDelDia ||
                 sourceData.citas_del_dia ||
                 0;
-                
-            processedData.ventasMes = 
-                sourceData.ventasMes || 
-                sourceData.ventas_mes || 
+
+            processedData.ventasMes =
+                sourceData.ventasMes ||
+                sourceData.ventas_mes ||
                 sourceData.ventasDelMes ||
                 sourceData.ventas_del_mes ||
                 0;
-                
-            processedData.ingresosMes = 
-                sourceData.ingresosMes || 
-                sourceData.ingresos_mes || 
+
+            processedData.ingresosMes =
+                sourceData.ingresosMes ||
+                sourceData.ingresos_mes ||
                 sourceData.ingresosDelMes ||
                 sourceData.ingresos_del_mes ||
                 sourceData.totalIngresos ||
@@ -211,7 +211,7 @@ const KPICards = ({ stats: propStats }) => {
      * Renderizar tarjeta KPI individual
      */
     const renderKPICard = (title, value, icon, color, isLast = false) => (
-        <Animated.View 
+        <Animated.View
             style={[
                 styles.kpiCard,
                 isLast && styles.lastCard,
@@ -241,27 +241,27 @@ const KPICards = ({ stats: propStats }) => {
             <Text style={styles.sectionTitle}>Indicadores Clave de Rendimiento</Text>
             <View style={styles.kpiGrid}>
                 {renderKPICard(
-                    'Total Clientes', 
-                    formatNumber(stats.totalClientes || 0), 
-                    'people-outline', 
+                    'Total Clientes',
+                    formatNumber(stats.totalClientes || 0),
+                    'people-outline',
                     '#009BBF'
                 )}
                 {renderKPICard(
-                    'Citas Hoy', 
-                    formatNumber(stats.citasHoy || 0), 
-                    'calendar-outline', 
+                    'Citas Hoy',
+                    formatNumber(stats.citasHoy || 0),
+                    'calendar-outline',
                     '#009BBF'
                 )}
                 {renderKPICard(
-                    'Ventas del Mes', 
-                    formatNumber(stats.ventasMes || 0), 
-                    'bag-outline', 
+                    'Ventas del Mes',
+                    formatNumber(stats.ventasMes || 0),
+                    'bag-outline',
                     '#009BBF'
                 )}
                 {renderKPICard(
-                    'Ingresos del Mes', 
-                    formatCurrency(stats.ingresosMes || 0), 
-                    'cash-outline', 
+                    'Ingresos del Mes',
+                    formatCurrency(stats.ingresosMes || 0),
+                    'cash-outline',
                     '#009BBF',
                     true
                 )}
@@ -273,36 +273,48 @@ const KPICards = ({ stats: propStats }) => {
 const styles = StyleSheet.create({
     container: {
         padding: 20,
-        paddingTop: 0,
+        paddingTop: 32,  // ✅ Aumentado de 0 a 32 para bajar el título
     },
     sectionTitle: {
         fontSize: 18,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
         marginBottom: 16,
+        marginTop: 8,  // ✅ Agregado margen superior adicional
     },
     kpiGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
     },
+    // En KPICards.js, actualiza estos estilos:
+
     kpiCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
+        borderRadius: 18,  // ✅ Más redondeado
+        padding: 18,
         width: '48%',
+        height: 115,
         marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
-            height: 2,
+            height: 3,
         },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.12,
         shadowRadius: 8,
-        elevation: 4,
-        borderLeftWidth: 4,
-        borderLeftColor: '#009BBF',
+        elevation: 6,
+        borderLeftWidth: 0,  // ✅ Sin borde izquierdo
         position: 'relative',
+        justifyContent: 'space-between',
+    },
+    iconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 8,
     },
     lastCard: {
         marginBottom: 0,
@@ -311,14 +323,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 12,
-    },
-    iconContainer: {
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 8,
     },
     kpiTitle: {
         fontSize: 12,

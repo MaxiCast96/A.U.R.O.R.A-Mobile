@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
  * Este hook encapsula toda la lógica relacionada con:
  * - Carga de estadísticas del dashboard
  * - Carga de datos del perfil del usuario
+ * - Sincronización automática con el contexto de Auth
  * - Animaciones de entrada
  * - Manejo de refresh
  * - Acciones rápidas del dashboard
@@ -39,7 +40,12 @@ export const useHome = () => {
         try {
             const headers = getAuthHeaders();
             if (!headers || !headers.Authorization) {
-                console.log('No hay token de autenticación disponible para perfil');
+                console.log('No hay token de autenticación disponible para perfil en Home');
+                return;
+            }
+            
+            if (!user.id) {
+                console.log('No hay ID de usuario disponible en Home');
                 return;
             }
             
@@ -50,7 +56,7 @@ export const useHome = () => {
             
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
-                console.log('El servidor no devolvió JSON válido para perfil');
+                console.log('El servidor no devolvió JSON válido para perfil en Home');
                 return;
             }
             
@@ -123,13 +129,17 @@ export const useHome = () => {
 
     /**
      * Obtener la URL de la foto de perfil desde múltiples fuentes posibles
+     * Prioriza: profileData > contexto user > null
      */
     const getProfilePhotoUrl = () => {
-        return profileData.photoUrl || 
-               profileData.fotoPerfil || 
-               user?.photoUrl || 
-               user?.fotoPerfil || 
-               null;
+        // Priorizar profileData (más actualizado)
+        const photoFromProfile = profileData.fotoPerfil || profileData.photoUrl;
+        if (photoFromProfile) {
+            return photoFromProfile;
+        }
+        
+        // Fallback al contexto
+        return user?.fotoPerfil || user?.photoUrl || null;
     };
 
     /**
@@ -233,6 +243,21 @@ export const useHome = () => {
         loadProfileData();
         initializeAnimation();
     }, []);
+
+    /**
+     * Efecto para sincronizar con cambios en el contexto de Auth
+     * Actualiza automáticamente cuando cambia la foto de perfil
+     */
+    useEffect(() => {
+        if (user.fotoPerfil && user.fotoPerfil !== profileData.fotoPerfil) {
+            console.log('Foto actualizada en contexto de Auth, sincronizando Home');
+            setProfileData(prev => ({
+                ...prev,
+                fotoPerfil: user.fotoPerfil,
+                photoUrl: user.fotoPerfil
+            }));
+        }
+    }, [user.fotoPerfil]);
 
     // Retornar todos los estados y funciones necesarias
     return {
