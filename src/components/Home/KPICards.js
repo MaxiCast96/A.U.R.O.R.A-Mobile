@@ -1,197 +1,39 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 
-/**
- * Componente de Tarjetas KPI
- * 
- * Este componente muestra los indicadores clave de rendimiento
- * con animaciones sutiles y iconos representativos.
- * Conecta con la API para obtener datos reales del dashboard.
- * 
- * Props:
- * - stats: objeto con las estadísticas (opcional, se obtiene de la API si no se proporciona)
- */
 const KPICards = ({ stats: propStats }) => {
     const { getAuthHeaders } = useAuth();
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
-
-    // Estados para manejar los datos desde la API
+    
     const [stats, setStats] = useState({
         totalClientes: 0,
         citasHoy: 0,
         ventasMes: 0,
         ingresosMes: 0
     });
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // Si se proporcionan stats como props, usarlos directamente
         if (propStats) {
+            console.log('📊 KPICards recibió stats:', propStats);
             setStats(propStats);
-            setLoading(false);
             startAnimations();
-        } else {
-            // Si no hay props, cargar datos desde la API
-            loadKPIData();
         }
     }, [propStats]);
 
-    /**
-     * Función para cargar los datos KPI desde la API
-     */
-    const loadKPIData = async () => {
-        try {
-            setLoading(true);
-
-            // Verificar que tenemos headers de autenticación
-            const headers = getAuthHeaders();
-            if (!headers || !headers.Authorization) {
-                console.log('No hay token de autenticación disponible para KPIs');
-                setStats({
-                    totalClientes: 0,
-                    citasHoy: 0,
-                    ventasMes: 0,
-                    ingresosMes: 0
-                });
-                setLoading(false);
-                startAnimations();
-                return;
-            }
-
-            console.log('Cargando datos KPI...');
-
-            // Realizar la petición a la API del dashboard
-            // Intentar primero la ruta completa, si falla usar stats básicos
-            let response = await fetch('https://a-u-r-o-r-a.onrender.com/api/dashboard/all', {
-                method: 'GET',
-                headers: headers,
-            });
-
-            // Si la ruta /all no funciona, usar /stats como fallback
-            if (!response.ok && response.status !== 404) {
-                console.log('Intentando ruta /stats como fallback...');
-                response = await fetch('https://a-u-r-o-r-a.onrender.com/api/dashboard/stats', {
-                    method: 'GET',
-                    headers: headers,
-                });
-            }
-
-            console.log('KPI response status:', response.status);
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Datos KPI recibidos:', data);
-
-                // Procesar los datos recibidos
-                const processedStats = processKPIData(data);
-                setStats(processedStats);
-            } else {
-                console.log('Error al cargar KPIs, usando datos por defecto');
-                // En caso de error, usar datos por defecto
-                setStats({
-                    totalClientes: 0,
-                    citasHoy: 0,
-                    ventasMes: 0,
-                    ingresosMes: 0
-                });
-            }
-        } catch (error) {
-            console.error('Error al cargar datos KPI:', error);
-            // En caso de error, usar datos por defecto
-            setStats({
-                totalClientes: 0,
-                citasHoy: 0,
-                ventasMes: 0,
-                ingresosMes: 0
-            });
-        } finally {
-            setLoading(false);
-            startAnimations();
-        }
-    };
-
-    /**
-     * Procesar los datos recibidos de la API
-     * @param {Object} data - Datos recibidos de la API
-     * @returns {Object} - Objeto con los stats procesados
-     */
-    const processKPIData = (data) => {
-        console.log('Procesando datos KPI:', data);
-
-        // Manejar diferentes estructuras de respuesta posibles
-        const processedData = {
-            totalClientes: 0,
-            citasHoy: 0,
-            ventasMes: 0,
-            ingresosMes: 0
-        };
-
-        // Si data es un array, buscar en el primer elemento
-        const sourceData = Array.isArray(data) ? data[0] : data;
-
-        if (sourceData && typeof sourceData === 'object') {
-            // Mapear diferentes nombres de campos posibles
-            processedData.totalClientes =
-                sourceData.totalClientes ||
-                sourceData.total_clientes ||
-                sourceData.clientes ||
-                sourceData.clientesTotal ||
-                0;
-
-            processedData.citasHoy =
-                sourceData.citasHoy ||
-                sourceData.citas_hoy ||
-                sourceData.citasDelDia ||
-                sourceData.citas_del_dia ||
-                0;
-
-            processedData.ventasMes =
-                sourceData.ventasMes ||
-                sourceData.ventas_mes ||
-                sourceData.ventasDelMes ||
-                sourceData.ventas_del_mes ||
-                0;
-
-            processedData.ingresosMes =
-                sourceData.ingresosMes ||
-                sourceData.ingresos_mes ||
-                sourceData.ingresosDelMes ||
-                sourceData.ingresos_del_mes ||
-                sourceData.totalIngresos ||
-                sourceData.total_ingresos ||
-                0;
-        }
-
-        console.log('Datos KPI procesados:', processedData);
-        return processedData;
-    };
-
-    /**
-     * Iniciar las animaciones de entrada
-     */
     const startAnimations = () => {
-        // Animación de entrada
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 800,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 600,
-                useNativeDriver: true,
-            }),
-        ]).start();
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+        }).start();
     };
 
-    /**
-     * Formatear números para mostrar
-     */
     const formatNumber = (num) => {
+        if (!num) return '0';
         if (num >= 1000000) {
             return (num / 1000000).toFixed(1) + 'M';
         } else if (num >= 1000) {
@@ -200,156 +42,164 @@ const KPICards = ({ stats: propStats }) => {
         return num.toString();
     };
 
-    /**
-     * Formatear moneda
-     */
-    const formatCurrency = (amount) => {
-        return `$${formatNumber(amount)}`;
-    };
-
-    /**
-     * Renderizar tarjeta KPI individual
-     */
-    const renderKPICard = (title, value, icon, color, isLast = false) => (
-        <Animated.View
-            style={[
-                styles.kpiCard,
-                isLast && styles.lastCard,
-                {
-                    opacity: fadeAnim,
-                    transform: [{ translateY: slideAnim }]
-                }
-            ]}
-        >
-            <View style={styles.kpiHeader}>
-                <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
-                    <Ionicons name={icon} size={20} color={color} />
-                </View>
-                <Text style={styles.kpiTitle}>{title}</Text>
-            </View>
-            <Text style={[styles.kpiValue, { color }]}>{value}</Text>
-            {loading && (
-                <View style={styles.loadingOverlay}>
-                    <Text style={styles.loadingText}>Cargando...</Text>
-                </View>
-            )}
-        </Animated.View>
-    );
+    console.log('🎨 KPICards renderizando con stats:', stats);
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.sectionTitle}>Indicadores Clave de Rendimiento</Text>
-            <View style={styles.kpiGrid}>
-                {renderKPICard(
-                    'Total Clientes',
-                    formatNumber(stats.totalClientes || 0),
-                    'people-outline',
-                    '#009BBF'
-                )}
-                {renderKPICard(
-                    'Citas Hoy',
-                    formatNumber(stats.citasHoy || 0),
-                    'calendar-outline',
-                    '#009BBF'
-                )}
-                {renderKPICard(
-                    'Ventas del Mes',
-                    formatNumber(stats.ventasMes || 0),
-                    'bag-outline',
-                    '#009BBF'
-                )}
-                {renderKPICard(
-                    'Ingresos del Mes',
-                    formatCurrency(stats.ingresosMes || 0),
-                    'cash-outline',
-                    '#009BBF',
-                    true
-                )}
+        <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+            <Text style={styles.sectionTitle}>Indicadores Clave</Text>
+            
+            {/* Card Principal - Ingresos */}
+            <View style={styles.kpiMainCard}>
+                <LinearGradient
+                    colors={['#009BBF', '#007A9A']}
+                    style={styles.kpiMainGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                >
+                    <View style={styles.kpiMainContent}>
+                        <View>
+                            <Text style={styles.kpiMainLabel}>Ingresos del Mes</Text>
+                            <Text style={styles.kpiMainValue}>
+                                ${formatNumber(stats.ingresosMes || 0)}
+                            </Text>
+                        </View>
+                        <View style={styles.kpiMainIconContainer}>
+                            <Ionicons name="cash-outline" size={32} color="#FFFFFF" />
+                        </View>
+                    </View>
+                </LinearGradient>
             </View>
-        </View>
+
+            {/* Cards Secundarios - Grid 3 columnas */}
+            <View style={styles.kpiSecondaryGrid}>
+                <View style={styles.kpiSecondaryCard}>
+                    <View style={styles.kpiSecondaryIcon}>
+                        <Ionicons name="people-outline" size={24} color="#009BBF" />
+                    </View>
+                    <Text style={styles.kpiSecondaryValue}>
+                        {formatNumber(stats.totalClientes || 0)}
+                    </Text>
+                    <Text style={styles.kpiSecondaryLabel}>Clientes</Text>
+                </View>
+
+                <View style={styles.kpiSecondaryCard}>
+                    <View style={styles.kpiSecondaryIcon}>
+                        <Ionicons name="calendar-outline" size={24} color="#009BBF" />
+                    </View>
+                    <Text style={styles.kpiSecondaryValue}>
+                        {formatNumber(stats.citasHoy || 0)}
+                    </Text>
+                    <Text style={styles.kpiSecondaryLabel}>Citas Hoy</Text>
+                </View>
+
+                <View style={styles.kpiSecondaryCard}>
+                    <View style={styles.kpiSecondaryIcon}>
+                        <Ionicons name="bag-outline" size={24} color="#009BBF" />
+                    </View>
+                    <Text style={styles.kpiSecondaryValue}>
+                        {formatNumber(stats.ventasMes || 0)}
+                    </Text>
+                    <Text style={styles.kpiSecondaryLabel}>Ventas</Text>
+                </View>
+            </View>
+        </Animated.View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
-        paddingTop: 32,  // ✅ Aumentado de 0 a 32 para bajar el título
+        paddingHorizontal: 20,
+        paddingTop: 10,
+        paddingBottom: 16,
     },
     sectionTitle: {
         fontSize: 18,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
         marginBottom: 16,
-        marginTop: 8,  // ✅ Agregado margen superior adicional
     },
-    kpiGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-    },
-    // En KPICards.js, actualiza estos estilos:
-
-    kpiCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 18,  // ✅ Más redondeado
-        padding: 18,
-        width: '48%',
-        height: 115,
+    
+    // Card Principal
+    kpiMainCard: {
         marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 3,
-        },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
-        elevation: 6,
-        borderLeftWidth: 0,  // ✅ Sin borde izquierdo
-        position: 'relative',
-        justifyContent: 'space-between',
+        borderRadius: 20,
+        overflow: 'hidden',
+        shadowColor: '#009BBF',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
     },
-    iconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 10,
+    kpiMainGradient: {
+        padding: 24,
+    },
+    kpiMainContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    kpiMainLabel: {
+        fontSize: 14,
+        fontFamily: 'Lato-Regular',
+        color: '#FFFFFF',
+        opacity: 0.9,
+        marginBottom: 8,
+    },
+    kpiMainValue: {
+        fontSize: 36,
+        fontFamily: 'Lato-Bold',
+        color: '#FFFFFF',
+    },
+    kpiMainIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 8,
     },
-    lastCard: {
-        marginBottom: 0,
-    },
-    kpiHeader: {
+    
+    // Cards Secundarios
+    kpiSecondaryGrid: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginHorizontal: -4,
+    },
+    kpiSecondaryCard: {
+        flex: 1,
+        marginHorizontal: 4,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 16,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(0, 155, 191, 0.1)',
+        shadowColor: '#009BBF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    kpiSecondaryIcon: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#009BBF10',
+        alignItems: 'center',
+        justifyContent: 'center',
         marginBottom: 12,
     },
-    kpiTitle: {
-        fontSize: 12,
-        fontFamily: 'Lato-Regular',
-        color: '#666666',
-        flex: 1,
-    },
-    kpiValue: {
-        fontSize: 24,
+    kpiSecondaryValue: {
+        fontSize: 22,
         fontFamily: 'Lato-Bold',
         color: '#009BBF',
+        marginBottom: 4,
     },
-    loadingOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 12,
-    },
-    loadingText: {
-        fontSize: 10,
+    kpiSecondaryLabel: {
+        fontSize: 11,
         fontFamily: 'Lato-Regular',
-        color: '#666666',
+        color: '#5A6C7D',
+        textAlign: 'center',
     },
 });
 

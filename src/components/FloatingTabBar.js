@@ -1,25 +1,28 @@
-import React, { useEffect } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-/**
- * Tab Bar Flotante Personalizado
- * 
- * Este componente reemplaza el tab bar por defecto de React Navigation
- * con un diseño más moderno y flotante. Tiene forma de píldora y
- * se posiciona en la parte inferior de la pantalla.
- * 
- * Características:
- * - Diseño flotante con sombras
- * - Forma de píldora con bordes redondeados
- * - Solo el tab seleccionado muestra texto (al lado del icono)
- * - Color azul (#009BBF) para el tab seleccionado
- * - Tamaño compacto y circular
- * - Contorno circular para botones seleccionados
- * - Transiciones suaves entre estados
- */
+const { width } = Dimensions.get('window');
+const TAB_BAR_WIDTH = width - 100;
+const TAB_WIDTH = TAB_BAR_WIDTH / 3;
+
 const FloatingTabBar = ({ state, descriptors, navigation }) => {
-    // Verificamos que el estado de navegación existe para evitar errores
+    const slideAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.spring(slideAnim, {
+            toValue: state.index,
+            useNativeDriver: true,
+            friction: 8,
+            tension: 40,
+        }).start();
+    }, [state.index]);
+
+    const translateX = slideAnim.interpolate({
+        inputRange: [0, 1, 2],
+        outputRange: [8, TAB_WIDTH + 8, TAB_WIDTH * 2 + 8],
+    });
+
     if (!state || !state.routes) {
         return null;
     }
@@ -27,21 +30,26 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
     return (
         <View style={styles.container}>
             <View style={styles.tabBar}>
-                {/* Renderizamos cada tab dinámicamente */}
+                {/* Píldora deslizante animada */}
+                <Animated.View 
+                    style={[
+                        styles.slidingPill,
+                        { transform: [{ translateX }] }
+                    ]} 
+                />
+
+                {/* Renderizamos cada tab */}
                 {state.routes.map((route, index) => {
                     const { options } = descriptors[route.key];
                     
-                    // Obtenemos el texto del tab (label o title)
                     const label = options.tabBarLabel !== undefined
                         ? options.tabBarLabel
                         : options.title !== undefined
                         ? options.title
                         : route.name;
 
-                    // Verificamos si este tab está seleccionado
                     const isFocused = state.index === index;
 
-                    // Función que se ejecuta al presionar el tab
                     const onPress = () => {
                         const event = navigation.emit({
                             type: 'tabPress',
@@ -49,13 +57,11 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
                             canPreventDefault: true,
                         });
 
-                        // Solo navegamos si no está ya seleccionado
                         if (!isFocused && !event.defaultPrevented) {
                             navigation.navigate(route.name);
                         }
                     };
 
-                    // Función para press largo (por si queremos agregar funcionalidad)
                     const onLongPress = () => {
                         navigation.emit({
                             type: 'tabLongPress',
@@ -63,14 +69,13 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
                         });
                     };
 
-                    // Definimos qué icono mostrar según el tab
                     let iconName;
                     if (route.name === 'Home') {
                         iconName = isFocused ? 'home' : 'home-outline';
-                    } else if (route.name === 'Citas') {
-                        iconName = isFocused ? 'calendar' : 'calendar-outline';
                     } else if (route.name === 'More') {
                         iconName = isFocused ? 'grid' : 'grid-outline';
+                    } else if (route.name === 'Citas') {
+                        iconName = isFocused ? 'calendar' : 'calendar-outline';
                     }
 
                     return (
@@ -83,33 +88,21 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
                             onPress={onPress}
                             onLongPress={onLongPress}
                             style={styles.tabButton}
-                            activeOpacity={0.7} // Opacidad al presionar para feedback visual
+                            activeOpacity={0.7}
                         >
-                            <Animated.View 
-                                style={[
-                                    styles.tabContent,
-                                    isFocused && styles.tabContentFocused
-                                ]}
-                            >
-                                {/* Icono del tab - todos del mismo tamaño */}
+                            <View style={styles.tabContent}>
                                 <Ionicons 
                                     name={iconName} 
-                                    size={20} // Tamaño más pequeño y consistente
-                                    color={isFocused ? '#FFFFFF' : '#666666'} 
+                                    size={24}
+                                    color={isFocused ? '#FFFFFF' : '#999999'} 
                                 />
                                 
-                                {/* Solo mostramos texto en el tab seleccionado */}
                                 {isFocused && (
-                                    <Animated.Text 
-                                        style={[
-                                            styles.tabText,
-                                            isFocused && styles.tabTextFocused
-                                        ]}
-                                    >
+                                    <Animated.Text style={styles.tabText}>
                                         {label}
                                     </Animated.Text>
                                 )}
-                            </Animated.View>
+                            </View>
                         </TouchableOpacity>
                     );
                 })}
@@ -119,84 +112,70 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    // Contenedor principal del tab bar
     container: {
-        position: 'absolute', // Posición absoluta para que flote
-        bottom: 20, // 20px desde abajo
-        left: 50, // Más centrado - menos espacio desde la izquierda
-        right: 50, // Más centrado - menos espacio desde la derecha
-        zIndex: 1000, // Para que aparezca por encima de todo
+        position: 'absolute',
+        bottom: 30,
+        left: 50,
+        right: 50,
+        zIndex: 1000,
     },
     
-    // El tab bar en sí (la píldora)
     tabBar: {
-        flexDirection: 'row', // Tabs en fila horizontal
-        backgroundColor: '#FFFFFF', // Fondo blanco
-        borderRadius: 30, // Bordes más redondeados para forma más circular
-        paddingHorizontal: 4, // Padding horizontal más pequeño para menos espacios
-        paddingVertical: 8, // Padding vertical para dar altura y no verse aplastado
-        height: 70, // Altura fija para dar más presencia
-        
-        // Sombras para efecto flotante
-        shadowColor: '#000',
+        flexDirection: 'row',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 35,
+        paddingVertical: 8,
+        paddingHorizontal: 8,
+        height: 65,
+        shadowColor: '#009BBF',
         shadowOffset: {
             width: 0,
-            height: 2,
+            height: 8,
         },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5, // Elevación para Android
-        
-        // Borde sutil
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+        elevation: 10,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: '#E8ECF0',
     },
     
-    // Cada botón individual del tab
+    slidingPill: {
+        position: 'absolute',
+        top: 8,
+        left: 0,
+        width: TAB_WIDTH - 16,
+        height: 49,
+        backgroundColor: '#009BBF',
+        borderRadius: 28,
+        shadowColor: '#009BBF',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    
     tabButton: {
-        flex: 1, // Distribuye el espacio equitativamente
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 6, // Padding vertical para dar altura
+        zIndex: 2,
     },
     
-    // Contenido interno de cada tab
     tabContent: {
-        flexDirection: 'row', // Icono y texto en fila horizontal
-        alignItems: 'center', // Centrados verticalmente
+        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 8, // Padding horizontal para dar espacio al texto
-        paddingVertical: 8, // Padding vertical para dar altura
-        borderRadius: 30, // Bordes muy redondeados para forma circular
-        minWidth: 45, // Ancho mínimo más pequeño
-        minHeight: 45, // Altura mínima para dar presencia
-        // Transición suave para cambios de estado
-        transition: 'all 0.3s ease',
+        gap: 6,
     },
     
-    // Estilo cuando el tab está seleccionado
-    tabContentFocused: {
-        backgroundColor: '#009BBF', // Color azul de la marca
-        borderRadius: 30, // Bordes muy redondeados para forma circular
-        // Transición suave para el cambio de color
-        transition: 'all 0.3s ease',
-    },
-    
-    // Texto del tab (solo para el tab seleccionado)
     tabText: {
-        fontSize: 10, // Tamaño de fuente más pequeño
+        fontSize: 12,
         color: '#FFFFFF',
-        marginLeft: 4, // Espacio entre icono y texto
-        fontWeight: '500',
-        // Transición suave para la aparición del texto
-        transition: 'all 0.3s ease',
-    },
-    
-    // Texto cuando está seleccionado
-    tabTextFocused: {
-        color: '#FFFFFF',
-        fontWeight: '600',
+        fontFamily: 'Lato-Bold',
     },
 });
 
-export default FloatingTabBar; 
+export default FloatingTabBar;

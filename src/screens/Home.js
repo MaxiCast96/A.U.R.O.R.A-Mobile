@@ -20,7 +20,7 @@ import DashboardCharts from '../components/Home/DashboardCharts';
 
 const HomeScreen = () => {
     const navigation = useNavigation();
-    
+
     const {
         stats,
         profileData,
@@ -62,7 +62,10 @@ const HomeScreen = () => {
 
     return (
         <View style={styles.container}>
-            {/* Header fijo con gradiente y diseño curvo */}
+            {/* Capa de relleno detrás del header */}
+            <View style={styles.headerFiller} />
+
+            {/* Header */}
             <LinearGradient
                 colors={['#009BBF', '#007A9A']}
                 style={styles.headerGradient}
@@ -70,7 +73,7 @@ const HomeScreen = () => {
                 end={{ x: 1, y: 1 }}
             >
                 <View style={styles.headerContent}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.logoContainer}
                         activeOpacity={0.8}
                     >
@@ -80,12 +83,12 @@ const HomeScreen = () => {
                             resizeMode="cover"
                         />
                     </TouchableOpacity>
-                    
+
                     <View style={styles.greetingContainer}>
                         <Text style={styles.greetingLabel}>Bienvenido</Text>
                         <Text style={styles.greetingName}>{userName}</Text>
                     </View>
-                    
+
                     <TouchableOpacity
                         onPress={handleProfilePress}
                         activeOpacity={0.8}
@@ -118,64 +121,15 @@ const HomeScreen = () => {
                 }
             >
                 <Animated.View style={{ opacity: fadeAnim }}>
-                    {/* KPI Cards - Diseño mejorado */}
-                    <View style={styles.kpiSection}>
-                        <Text style={styles.sectionTitle}>Indicadores Clave</Text>
-                        
-                        {/* Card Principal - Destacado */}
-                        <View style={styles.kpiMainCard}>
-                            <LinearGradient
-                                colors={['#009BBF', '#007A9A']}
-                                style={styles.kpiMainGradient}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                            >
-                                <View style={styles.kpiMainContent}>
-                                    <View>
-                                        <Text style={styles.kpiMainLabel}>Ingresos del Mes</Text>
-                                        <Text style={styles.kpiMainValue}>${stats?.ingresosMes || 0}</Text>
-                                    </View>
-                                    <View style={styles.kpiMainIconContainer}>
-                                        <Ionicons name="cash-outline" size={32} color="#FFFFFF" />
-                                    </View>
-                                </View>
-                            </LinearGradient>
-                        </View>
+                    {/* KPI Cards */}
+                    <KPICards stats={stats} />
 
-                        {/* Cards Secundarios - Grid 3 columnas */}
-                        <View style={styles.kpiSecondaryGrid}>
-                            <View style={styles.kpiSecondaryCard}>
-                                <View style={styles.kpiSecondaryIcon}>
-                                    <Ionicons name="people-outline" size={24} color="#009BBF" />
-                                </View>
-                                <Text style={styles.kpiSecondaryValue}>{stats?.totalClientes || 0}</Text>
-                                <Text style={styles.kpiSecondaryLabel}>Clientes</Text>
-                            </View>
-
-                            <View style={styles.kpiSecondaryCard}>
-                                <View style={styles.kpiSecondaryIcon}>
-                                    <Ionicons name="calendar-outline" size={24} color="#009BBF" />
-                                </View>
-                                <Text style={styles.kpiSecondaryValue}>{stats?.citasHoy || 0}</Text>
-                                <Text style={styles.kpiSecondaryLabel}>Citas Hoy</Text>
-                            </View>
-
-                            <View style={styles.kpiSecondaryCard}>
-                                <View style={styles.kpiSecondaryIcon}>
-                                    <Ionicons name="bag-outline" size={24} color="#009BBF" />
-                                </View>
-                                <Text style={styles.kpiSecondaryValue}>{stats?.ventasMes || 0}</Text>
-                                <Text style={styles.kpiSecondaryLabel}>Ventas</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Acciones Rápidas - Botones circulares */}
+                    {/* Acciones Rápidas */}
                     <View style={styles.quickActionsContainer}>
                         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
                         <View style={styles.actionsRow}>
-                            {renderQuickActionButton('Crear Lentes', 'glasses-outline', handleCreateLentes)}
-                            {renderQuickActionButton('Crear Cita', 'calendar-outline', handleCreateCita)}
+                            {renderQuickActionButton('Crear Lentes', 'glasses-outline', () => handleCreateLentes(navigation))}
+                            {renderQuickActionButton('Crear Cita', 'calendar-outline', () => handleCreateCita(navigation))}
                             {renderQuickActionButton('Crear Receta', 'medical-outline', handleCreateReceta)}
                             {renderQuickActionButton('Crear Promoción', 'pricetag-outline', handleCreatePromocion)}
                         </View>
@@ -186,10 +140,10 @@ const HomeScreen = () => {
                         <DashboardCharts />
                     </View>
 
-                    {/* Sección de Servicios */}
+                    {/* Servicios */}
                     <View style={styles.servicesSection}>
                         <View style={styles.serviceHeader}>
-                            <Text style={styles.serviceTitle}>Nuestros Servicios 👓</Text>
+                            <Text style={styles.serviceTitle}>Nuestros Servicios</Text>
                         </View>
 
                         <View style={styles.serviceCard}>
@@ -242,18 +196,15 @@ const HomeScreen = () => {
                                     <Ionicons name="storefront-outline" size={28} color="#FFFFFF" />
                                 </LinearGradient>
                             </View>
-                            
+
                             <Text style={styles.infoTitle}>Óptica La Inteligente</Text>
                             <Text style={styles.infoText}>
-                                Somos especialistas en el cuidado de tu visión. 
-                                Ofrecemos servicios de calidad con la mejor tecnología 
+                                Somos especialistas en el cuidado de tu visión.
+                                Ofrecemos servicios de calidad con la mejor tecnología
                                 para garantizar tu salud visual.
                             </Text>
-                            
+
                             <View style={styles.sloganContainer}>
-                                <View style={styles.sloganBadge}>
-                                    <Ionicons name="heart" size={16} color="#D0155F" />
-                                </View>
                                 <Text style={styles.sloganText}>
                                     <Text style={styles.sloganGreen}>MIRA BIEN, </Text>
                                     <Text style={styles.sloganPink}>LUCE BIEN</Text>
@@ -274,14 +225,27 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F0F4F7',
     },
-    
-    // Header con curva inferior
+    headerFiller: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: Platform.OS === 'ios' ? 100 : StatusBar.currentHeight + 60,
+        backgroundColor: '#009BBF',
+        zIndex: 1,
+    },
     headerGradient: {
         paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 10,
         paddingBottom: 24,
         paddingHorizontal: 20,
-        borderBottomLeftRadius: 40,
-        borderBottomRightRadius: 40,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 8,
+        zIndex: 2,
     },
     headerContent: {
         flexDirection: 'row',
@@ -301,7 +265,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
         overflow: 'hidden',
-        borderWidth: 0,
     },
     logo: {
         width: 70,
@@ -332,7 +295,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 3,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: '#FFFFFF',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
@@ -340,115 +303,24 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     profileImage: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
+        width: 64,
+        height: 64,
+        borderRadius: 32,
     },
-
     scrollView: {
         flex: 1,
+        backgroundColor: '#F0F4F7',
+        zIndex: 0,
     },
-
-    // KPI Section - Diseño mejorado
-    kpiSection: {
+    quickActionsContainer: {
         paddingHorizontal: 20,
-        paddingTop: 30,
-        paddingBottom: 16,
+        paddingVertical: 16,
     },
     sectionTitle: {
         fontSize: 18,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
         marginBottom: 16,
-    },
-    
-    // Card Principal de KPI
-    kpiMainCard: {
-        marginBottom: 16,
-        borderRadius: 20,
-        overflow: 'hidden',
-        shadowColor: '#009BBF',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    kpiMainGradient: {
-        padding: 24,
-    },
-    kpiMainContent: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    kpiMainLabel: {
-        fontSize: 14,
-        fontFamily: 'Lato-Regular',
-        color: '#FFFFFF',
-        opacity: 0.9,
-        marginBottom: 8,
-    },
-    kpiMainValue: {
-        fontSize: 36,
-        fontFamily: 'Lato-Bold',
-        color: '#FFFFFF',
-    },
-    kpiMainIconContainer: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    
-    // Cards Secundarios de KPI
-    kpiSecondaryGrid: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginHorizontal: -4,
-    },
-    kpiSecondaryCard: {
-        flex: 1,
-        marginHorizontal: 4,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 16,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(0, 155, 191, 0.1)',
-        shadowColor: '#009BBF',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    kpiSecondaryIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#009BBF10',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
-    },
-    kpiSecondaryValue: {
-        fontSize: 22,
-        fontFamily: 'Lato-Bold',
-        color: '#009BBF',
-        marginBottom: 4,
-    },
-    kpiSecondaryLabel: {
-        fontSize: 11,
-        fontFamily: 'Lato-Regular',
-        color: '#5A6C7D',
-        textAlign: 'center',
-    },
-
-    // Acciones circulares
-    quickActionsContainer: {
-        paddingHorizontal: 20,
-        paddingVertical: 16,
     },
     actionsRow: {
         flexDirection: 'row',
@@ -476,13 +348,9 @@ const styles = StyleSheet.create({
         marginTop: 8,
         textAlign: 'center',
     },
-
-    // Charts
     chartsSection: {
         paddingBottom: 8,
     },
-
-    // Servicios
     servicesSection: {
         paddingHorizontal: 20,
         paddingVertical: 16,
@@ -534,8 +402,6 @@ const styles = StyleSheet.create({
         color: '#5A6C7D',
         lineHeight: 19,
     },
-
-    // Información de la Óptica
     infoCardWrapper: {
         paddingHorizontal: 20,
         paddingBottom: 20,
@@ -589,9 +455,6 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#E5E5E5',
     },
-    sloganBadge: {
-        marginBottom: 10,
-    },
     sloganText: {
         fontSize: 16,
         fontFamily: 'Lato-Bold',
@@ -603,7 +466,6 @@ const styles = StyleSheet.create({
     sloganPink: {
         color: '#D0155F',
     },
-
     spacer: {
         height: 100,
     },
