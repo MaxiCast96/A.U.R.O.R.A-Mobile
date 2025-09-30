@@ -103,7 +103,7 @@ const MenuScreen = () => {
                     title: 'Categorías', 
                     subtitle: 'Categorías de productos',
                     color: '#49AA4C',
-                    onPress: () => Alert.alert('Categorías', 'Funcionalidad próximamente')
+                     onPress: () => navigation.navigate('Categorias')
                 },
                 { 
                     icon: 'business-outline', 
