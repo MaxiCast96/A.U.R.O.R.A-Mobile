@@ -11,6 +11,7 @@ import Clientes from '../screens/Clientes';
 import Empleados from '../screens/Empleados';
 import Lentes from '../screens/Lentes';
 import Accesorios from '../screens/Accesorios';
+import Categorias from '../screens/Categoria';
 import Personalizados from '../screens/Personalizados'; // Nueva importación
 import ForgotPassword from '../screens/ForgotPassword';
 import VerifyCode from '../screens/VerifyCode';
@@ -106,6 +107,9 @@ export default function Navigation() {
 
                 {/* Navegación de Accesorios */}
                 <Stack.Screen name="Accesorios" component={Accesorios} />
+
+                {/* Navegación de Categorías */}
+                <Stack.Screen name="Categorias" component={Categorias} />
 
                 {/* Navegación de Productos Personalizados - NUEVA PANTALLA */}
                 <Stack.Screen name="Personalizados" component={Personalizados} />
