@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     View,
     Text,
@@ -54,7 +54,9 @@ const Marcas = () => {
         addMarcaToList,
         updateMarcaInList,
         removeMarcaFromList,
-        marcasStats
+        marcasStats,
+        isValidMongoId,
+        getAuthHeaders
     } = useMarcas();
 
     // Hook para detalles
@@ -74,6 +76,29 @@ const Marcas = () => {
     } = useAddMarca();
 
     /**
+     * Verificar conexión con el backend
+     */
+    const testBackendConnection = async () => {
+        try {
+            console.log('Probando conexión con el backend...');
+            const response = await fetch('https://aurora-production-7e57.up.railway.app/api/marcas', {
+                method: 'GET',
+                headers: getAuthHeaders(),
+            });
+            console.log('Test connection status:', response.status);
+            return response.ok;
+        } catch (error) {
+            console.error('Test connection failed:', error);
+            return false;
+        }
+    };
+
+    // Probar conexión al cargar el componente
+    useEffect(() => {
+        testBackendConnection();
+    }, []);
+
+    /**
      * Mostrar notificación de éxito
      */
     const showSuccessMessage = (message) => {
@@ -86,15 +111,9 @@ const Marcas = () => {
     const handleAddSuccess = async (marcaData) => {
         try {
             const result = await addMarcaAPI(marcaData);
-            if (result.success) {
-                // La API devuelve el mensaje pero no la marca completa, así que creamos un objeto temporal
-                const newMarca = {
-                    _id: `temp_${Date.now()}`,
-                    ...marcaData,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                addMarcaToList(newMarca);
+            if (result.success && result.data) {
+                // Usar la marca completa que devuelve el backend con el _id real
+                addMarcaToList(result.data);
                 showSuccessMessage('Marca creada exitosamente');
                 handleCloseAddModal();
             } else {
@@ -109,16 +128,29 @@ const Marcas = () => {
      * Manejar éxito al actualizar marca
      */
     const handleEditSuccess = (updatedMarca) => {
-        updateMarcaInList(updatedMarca);
-        showSuccessMessage('Marca actualizada exitosamente');
-        handleCloseEditModal();
+        console.log('handleEditSuccess llamado con:', updatedMarca);
+        
+        if (updatedMarca && updatedMarca._id) {
+            if (isValidMongoId(updatedMarca._id)) {
+                console.log('ID válido, actualizando lista...');
+                updateMarcaInList(updatedMarca);
+                showSuccessMessage('Marca actualizada exitosamente');
+                handleCloseEditModal();
+            } else {
+                console.error('ID inválido en marca actualizada:', updatedMarca._id);
+                Alert.alert('Error', 'No se pudo actualizar la marca: ID inválido');
+            }
+        } else {
+            console.error('Marca actualizada undefined o sin ID:', updatedMarca);
+            Alert.alert('Error', 'No se pudo actualizar la marca: datos incompletos');
+        }
     };
 
     /**
      * Manejar eliminación de marca
      */
     const handleDelete = async (marca) => {
-        if (!marca || !marca._id) {
+        if (!marca || !marca._id || !isValidMongoId(marca._id)) {
             Alert.alert('Error', 'ID de marca no válido');
             return;
         }
@@ -157,9 +189,13 @@ const Marcas = () => {
      * Manejar edición desde el modal de detalles
      */
     const handleEditFromDetail = (marca) => {
-        editMarcaHook.loadMarcaData(marca);
-        handleCloseModal();
-        handleOpenEditModal(marca);
+        if (marca && isValidMongoId(marca._id)) {
+            editMarcaHook.loadMarcaData(marca);
+            handleCloseModal();
+            handleOpenEditModal(marca);
+        } else {
+            Alert.alert('Error', 'No se puede editar una marca temporal');
+        }
     };
 
     /**
@@ -174,9 +210,31 @@ const Marcas = () => {
      * Manejar guardar edición
      */
     const handleSaveEdit = async () => {
-        const updatedMarca = await editMarcaHook.updateMarca();
-        if (updatedMarca) {
-            handleEditSuccess(updatedMarca);
+        console.log('Iniciando actualización de marca...');
+
+        // Primero verificar conexión
+        const isConnected = await testBackendConnection();
+        if (!isConnected) {
+            Alert.alert('Error de conexión', 'No se puede conectar al servidor. Verifica tu internet y que el backend esté funcionando.');
+            return;
+        }
+
+        try {
+            const updatedMarca = await editMarcaHook.updateMarca();
+            console.log('Resultado de updateMarca:', updatedMarca);
+            
+            if (updatedMarca && updatedMarca._id) {
+                handleEditSuccess(updatedMarca);
+            } else if (updatedMarca === null) {
+                // updateMarca ya mostró un Alert de error
+                console.log('Update fue cancelado o falló');
+            } else {
+                console.error('Marca actualizada sin ID:', updatedMarca);
+                Alert.alert('Error', 'No se pudo actualizar la marca: respuesta inválida del servidor');
+            }
+        } catch (error) {
+            console.error('Error en handleSaveEdit:', error);
+            Alert.alert('Error', 'Ocurrió un error inesperado al actualizar la marca');
         }
     };
 
@@ -188,8 +246,12 @@ const Marcas = () => {
             marca={item}
             onViewMore={() => handleViewMore(item, index)}
             onEdit={() => {
-                editMarcaHook.loadMarcaData(item);
-                handleOpenEditModal(item);
+                if (item && isValidMongoId(item._id)) {
+                    editMarcaHook.loadMarcaData(item);
+                    handleOpenEditModal(item);
+                } else {
+                    Alert.alert('Error', 'No se puede editar una marca temporal');
+                }
             }}
             onDelete={() => handleDelete(item)}
         />
@@ -281,7 +343,14 @@ const Marcas = () => {
                     <FlatList
                         data={filteredMarcas}
                         renderItem={renderMarcaItem}
-                        keyExtractor={(item) => item._id || Math.random().toString()}
+                        keyExtractor={(item) => {
+                            // Si es una marca temporal, usar un key único basado en timestamp
+                            if (item._id && item._id.toString().startsWith('temp_')) {
+                                return item._id;
+                            }
+                            // Si es una marca real, usar el _id normal
+                            return item._id || Math.random().toString();
+                        }}
                         ListEmptyComponent={renderEmptyState}
                         refreshControl={
                             <RefreshControl

@@ -1,10 +1,10 @@
 // hooks/useMarcas.js
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Alert } from 'react-native';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; // Asegúrate de que esta ruta sea correcta
 
 export const useMarcas = () => {
-    const { getAuthHeaders } = useAuth();
+    const { getAuthHeaders } = useAuth(); // Usar el hook useAuth aquí
     
     // Estados principales
     const [marcas, setMarcas] = useState([]);
@@ -23,6 +23,20 @@ export const useMarcas = () => {
     // Estados de filtros
     const [searchText, setSearchText] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('todas');
+
+    // Función auxiliar para validar IDs
+    const isValidMongoId = (id) => {
+        if (!id) return false;
+        // Verificar que no sea un ID temporal
+        if (typeof id === 'string' && id.startsWith('temp_')) {
+            return false;
+        }
+        // Verificar formato básico de ObjectId (24 caracteres hex)
+        if (typeof id === 'string' && id.length === 24 && /^[0-9a-fA-F]+$/.test(id)) {
+            return true;
+        }
+        return false;
+    };
 
     /**
      * Cargar marcas desde el servidor
@@ -173,6 +187,12 @@ export const useMarcas = () => {
             return;
         }
         
+        // Verificar que el _id no sea temporal
+        if (!isValidMongoId(updatedMarca._id)) {
+            console.error('No se puede actualizar marca con ID temporal o inválido:', updatedMarca._id);
+            return;
+        }
+        
         setMarcas(prev => 
             prev.map(m => m._id === updatedMarca._id ? updatedMarca : m)
         );
@@ -182,7 +202,7 @@ export const useMarcas = () => {
      * Eliminar marca de la lista local
      */
     const removeMarcaFromList = (id) => {
-        if (!id) {
+        if (!id || !isValidMongoId(id)) {
             console.error('ID no válido para eliminar:', id);
             return;
         }
@@ -230,5 +250,11 @@ export const useMarcas = () => {
 
         // Estadísticas de marcas
         marcasStats,
+
+        // Función de validación
+        isValidMongoId,
+
+        // Pasar getAuthHeaders para que esté disponible en el componente principal
+        getAuthHeaders,
     };
 };
