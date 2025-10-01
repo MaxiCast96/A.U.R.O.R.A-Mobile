@@ -140,7 +140,10 @@ const MenuScreen = () => {
                 },
                 { 
                     icon: 'medical-outline', 
-                    title: 'Recetas', 
+                    title: 'Recetas',
+                    subtitle: 'Recetas de pacientes',
+                    color: '#D0155F',
+                    onPress: () => Alert.alert('Recetas', 'Funcionalidad próximamente') 
                 }
             ]
         },
