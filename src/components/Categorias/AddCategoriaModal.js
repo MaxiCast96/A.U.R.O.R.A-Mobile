@@ -8,45 +8,20 @@ import {
     ScrollView,
     SafeAreaView,
     TextInput,
-    Alert,
-    Image
+    Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+import IconSelector from './IconSelector';
 
 const AddCategoriaModal = ({ visible, onClose, onSubmit }) => {
     const [formData, setFormData] = useState({
         nombre: '',
         descripcion: '',
-        icono: ''
+        icono: 'cube-outline'
     });
-    const [imagen, setImagen] = useState(null);
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
-
-    const seleccionarImagen = async () => {
-        try {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permiso requerido', 'Se necesita acceso a la galería para seleccionar una imagen.');
-                return;
-            }
-
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.8,
-            });
-
-            if (!result.canceled) {
-                setImagen(result.assets[0].uri);
-                setFormData({...formData, icono: result.assets[0].uri});
-            }
-        } catch (error) {
-            Alert.alert('Error', 'No se pudo seleccionar la imagen');
-        }
-    };
+    const [iconSelectorVisible, setIconSelectorVisible] = useState(false);
 
     const validateField = (field, value) => {
         let error = null;
@@ -90,10 +65,8 @@ const AddCategoriaModal = ({ visible, onClose, onSubmit }) => {
         const categoriaData = {
             nombre: formData.nombre.trim(),
             descripcion: formData.descripcion.trim(),
-            icono: formData.icono || ''
+            icono: formData.icono || 'cube-outline'
         };
-
-        console.log('Enviando datos:', categoriaData); // Para debug
 
         setLoading(true);
         
@@ -106,20 +79,15 @@ const AddCategoriaModal = ({ visible, onClose, onSubmit }) => {
                 body: JSON.stringify(categoriaData),
             });
 
-            console.log('Respuesta status:', response.status); // Para debug
-
             if (response.ok) {
                 const responseData = await response.json();
-                console.log('Datos recibidos:', responseData); // Para debug
                 onSubmit(responseData);
                 handleClose();
             } else {
                 const errorData = await response.json();
-                console.log('Error del servidor:', errorData); // Para debug
                 throw new Error(errorData.message || 'Error al crear categoría');
             }
         } catch (error) {
-            console.log('Error completo:', error); // Para debug
             Alert.alert('Error', error.message);
         } finally {
             setLoading(false);
@@ -130,11 +98,14 @@ const AddCategoriaModal = ({ visible, onClose, onSubmit }) => {
         setFormData({
             nombre: '',
             descripcion: '',
-            icono: ''
+            icono: 'cube-outline'
         });
-        setImagen(null);
         setErrors({});
         onClose();
+    };
+
+    const handleIconSelect = (icon) => {
+        setFormData({...formData, icono: icon});
     };
 
     const renderTextInput = (label, value, field, placeholder, required = true) => (
@@ -189,34 +160,26 @@ const AddCategoriaModal = ({ visible, onClose, onSubmit }) => {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContent}
                 >
-                    {/* Sección de Icono/Imagen */}
+                    {/* Sección de Icono */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Icono de la Categoría</Text>
-                        <View style={styles.imageSection}>
-                            {imagen ? (
-                                <View style={styles.imagePreviewContainer}>
-                                    <Image source={{ uri: imagen }} style={styles.imagePreview} />
-                                    <TouchableOpacity 
-                                        style={styles.changeImageButton}
-                                        onPress={seleccionarImagen}
-                                    >
-                                        <Ionicons name="camera" size={20} color="#FFFFFF" />
-                                        <Text style={styles.changeImageText}>Cambiar Imagen</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            ) : (
-                                <TouchableOpacity 
-                                    style={styles.uploadImageButton}
-                                    onPress={seleccionarImagen}
-                                >
-                                    <Ionicons name="cloud-upload" size={40} color="#009BBF" />
-                                    <Text style={styles.uploadImageText}>Subir Imagen</Text>
-                                    <Text style={styles.imageRecommendation}>
-                                        Recomendado: 1:1 para mejor visualización
-                                    </Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
+                        <TouchableOpacity 
+                            style={styles.iconSelector}
+                            onPress={() => setIconSelectorVisible(true)}
+                        >
+                            <View style={styles.iconPreview}>
+                                <Ionicons 
+                                    name={formData.icono} 
+                                    size={48} 
+                                    color="#009BBF" 
+                                />
+                            </View>
+                            <View style={styles.iconSelectorText}>
+                                <Text style={styles.iconSelectorLabel}>Icono seleccionado</Text>
+                                <Text style={styles.iconSelectorValue}>{formData.icono}</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={24} color="#666666" />
+                        </TouchableOpacity>
                     </View>
 
                     {/* Información Básica */}
@@ -248,11 +211,18 @@ const AddCategoriaModal = ({ visible, onClose, onSubmit }) => {
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
+
+            {/* Modal de selección de iconos */}
+            <IconSelector
+                visible={iconSelectorVisible}
+                selectedIcon={formData.icono}
+                onSelect={handleIconSelect}
+                onClose={() => setIconSelectorVisible(false)}
+            />
         </Modal>
     );
 };
 
-// Los estilos se mantienen igual...
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -312,57 +282,37 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
         marginBottom: 16,
     },
-    imageSection: {
+    iconSelector: {
+        flexDirection: 'row',
         alignItems: 'center',
-    },
-    uploadImageButton: {
-        width: '100%',
-        height: 150,
-        borderWidth: 2,
-        borderColor: '#E5E5E5',
-        borderStyle: 'dashed',
+        backgroundColor: '#F8F9FA',
+        padding: 16,
         borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E5E5E5',
+    },
+    iconPreview: {
+        width: 64,
+        height: 64,
+        borderRadius: 12,
+        backgroundColor: '#009BBF15',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#F8F9FA',
-        padding: 20,
+        marginRight: 12,
     },
-    uploadImageText: {
-        fontSize: 16,
-        fontFamily: 'Lato-Bold',
-        color: '#009BBF',
-        marginTop: 8,
+    iconSelectorText: {
+        flex: 1,
     },
-    imageRecommendation: {
+    iconSelectorLabel: {
         fontSize: 12,
         fontFamily: 'Lato-Regular',
         color: '#666666',
-        textAlign: 'center',
-        marginTop: 4,
+        marginBottom: 4,
     },
-    imagePreviewContainer: {
-        width: '100%',
-        alignItems: 'center',
-    },
-    imagePreview: {
-        width: 120,
-        height: 120,
-        borderRadius: 12,
-        marginBottom: 12,
-    },
-    changeImageButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#009BBF',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
-        gap: 6,
-    },
-    changeImageText: {
-        fontSize: 14,
+    iconSelectorValue: {
+        fontSize: 16,
         fontFamily: 'Lato-Bold',
-        color: '#FFFFFF',
+        color: '#1A1A1A',
     },
     inputGroup: {
         marginBottom: 16,

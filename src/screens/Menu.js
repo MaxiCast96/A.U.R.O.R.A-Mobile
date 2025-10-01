@@ -110,7 +110,7 @@ const MenuScreen = () => {
                     title: 'Marcas', 
                     subtitle: 'Marcas disponibles',
                     color: '#49AA4C',
-                    onPress: () => Alert.alert('Marcas', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('Marcas')
                 },
                 { 
                     icon: 'gift-outline', 

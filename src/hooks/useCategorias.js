@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Alert } from 'react-native';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Alert, AppState } from 'react-native';
 
 const API_BASE_URL = 'https://aurora-production-7e57.up.railway.app/api/categoria';
 
@@ -16,6 +16,9 @@ export const useCategorias = () => {
     
     const [addModalVisible, setAddModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
+
+    // Ref para manejar el estado de la app
+    const appState = useRef(AppState.currentState);
 
     /**
      * Cargar categorías desde el servidor
@@ -50,6 +53,26 @@ export const useCategorias = () => {
      */
     useEffect(() => {
         fetchCategorias();
+    }, []);
+
+    /**
+     * Actualizar automáticamente cuando la app vuelve al primer plano
+     */
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', nextAppState => {
+            if (
+                appState.current.match(/inactive|background/) &&
+                nextAppState === 'active'
+            ) {
+                // La app volvió al primer plano, actualizar datos
+                fetchCategorias(true);
+            }
+            appState.current = nextAppState;
+        });
+
+        return () => {
+            subscription?.remove();
+        };
     }, []);
 
     /**
@@ -107,23 +130,44 @@ export const useCategorias = () => {
     }, []);
 
     /**
-     * Agregar categoría a la lista local
+     * Agregar categoría a la lista local (actualización optimista)
      */
     const addCategoriaToList = useCallback((newCategoria) => {
-        setCategorias(prev => [newCategoria, ...prev]);
+        setCategorias(prev => {
+            // Evitar duplicados
+            const exists = prev.some(cat => cat._id === newCategoria._id);
+            if (exists) {
+                return prev.map(cat => cat._id === newCategoria._id ? newCategoria : cat);
+            }
+            return [newCategoria, ...prev];
+        });
     }, []);
 
     /**
-     * Actualizar categoría en la lista local
+     * Actualizar categoría en la lista local (actualización optimista)
      */
     const updateCategoriaInList = useCallback((updatedCategoria) => {
-        setCategorias(prev => 
-            prev.map(cat => cat._id === updatedCategoria._id ? updatedCategoria : cat)
-        );
-    }, []);
+        setCategorias(prev => {
+            const updated = prev.map(cat => 
+                cat._id === updatedCategoria._id ? updatedCategoria : cat
+            );
+            
+            // Si no existe, agregarlo
+            if (!prev.some(cat => cat._id === updatedCategoria._id)) {
+                return [updatedCategoria, ...prev];
+            }
+            
+            return updated;
+        });
+        
+        // Actualizar también la categoría seleccionada si está abierta
+        if (selectedCategoria?._id === updatedCategoria._id) {
+            setSelectedCategoria(updatedCategoria);
+        }
+    }, [selectedCategoria]);
 
     /**
-     * Eliminar categoría de la lista local
+     * Eliminar categoría de la lista local (actualización optimista)
      */
     const removeCategoriaFromList = useCallback((id) => {
         setCategorias(prev => prev.filter(cat => cat._id !== id));
@@ -132,7 +176,7 @@ export const useCategorias = () => {
     // Estadísticas de categorías
     const categoriasStats = useMemo(() => {
         const total = categorias.length;
-        const conIcono = categorias.filter(cat => cat.icono).length;
+        const conIcono = categorias.filter(cat => cat.icono && cat.icono !== '').length;
         const sinIcono = total - conIcono;
 
         return {

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -8,12 +8,11 @@ import {
     ScrollView,
     SafeAreaView,
     TextInput,
-    Alert,
-    Image
+    Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { useEditCategoria } from '../../hooks/useCategorias/useEditCategoria';
+import IconSelector from './IconSelector';
 
 const EditCategoriaModal = ({ visible, categoria, onClose, onSuccess }) => {
     const {
@@ -31,34 +30,13 @@ const EditCategoriaModal = ({ visible, categoria, onClose, onSuccess }) => {
         updateCategoria
     } = useEditCategoria();
 
+    const [iconSelectorVisible, setIconSelectorVisible] = useState(false);
+
     useEffect(() => {
         if (visible && categoria) {
             loadCategoriaData(categoria);
         }
     }, [visible, categoria]);
-
-    const seleccionarImagen = async () => {
-        try {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permiso requerido', 'Se necesita acceso a la galería para seleccionar una imagen.');
-                return;
-            }
-
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.8,
-            });
-
-            if (!result.canceled) {
-                setIcono(result.assets[0].uri);
-            }
-        } catch (error) {
-            Alert.alert('Error', 'No se pudo seleccionar la imagen');
-        }
-    };
 
     const handleSave = async () => {
         const updatedCategoria = await updateCategoria();
@@ -70,6 +48,10 @@ const EditCategoriaModal = ({ visible, categoria, onClose, onSuccess }) => {
     const handleClose = () => {
         clearForm();
         onClose();
+    };
+
+    const handleIconSelect = (icon) => {
+        setIcono(icon);
     };
 
     const renderTextInput = (label, value, field, placeholder, required = true) => (
@@ -132,34 +114,26 @@ const EditCategoriaModal = ({ visible, categoria, onClose, onSuccess }) => {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContent}
                 >
-                    {/* Sección de Icono/Imagen */}
+                    {/* Sección de Icono */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Icono de la Categoría</Text>
-                        <View style={styles.imageSection}>
-                            {icono ? (
-                                <View style={styles.imagePreviewContainer}>
-                                    <Image source={{ uri: icono }} style={styles.imagePreview} />
-                                    <TouchableOpacity 
-                                        style={styles.changeImageButton}
-                                        onPress={seleccionarImagen}
-                                    >
-                                        <Ionicons name="camera" size={20} color="#FFFFFF" />
-                                        <Text style={styles.changeImageText}>Cambiar Imagen</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            ) : (
-                                <TouchableOpacity 
-                                    style={styles.uploadImageButton}
-                                    onPress={seleccionarImagen}
-                                >
-                                    <Ionicons name="cloud-upload" size={40} color="#49AA4C" />
-                                    <Text style={styles.uploadImageText}>Subir Imagen</Text>
-                                    <Text style={styles.imageRecommendation}>
-                                        Recomendado: 1:1 para mejor visualización
-                                    </Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
+                        <TouchableOpacity 
+                            style={styles.iconSelector}
+                            onPress={() => setIconSelectorVisible(true)}
+                        >
+                            <View style={styles.iconPreview}>
+                                <Ionicons 
+                                    name={icono || 'cube-outline'} 
+                                    size={48} 
+                                    color="#49AA4C" 
+                                />
+                            </View>
+                            <View style={styles.iconSelectorText}>
+                                <Text style={styles.iconSelectorLabel}>Icono seleccionado</Text>
+                                <Text style={styles.iconSelectorValue}>{icono || 'cube-outline'}</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={24} color="#666666" />
+                        </TouchableOpacity>
                     </View>
 
                     {/* Información Básica */}
@@ -191,11 +165,18 @@ const EditCategoriaModal = ({ visible, categoria, onClose, onSuccess }) => {
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
+
+            {/* Modal de selección de iconos */}
+            <IconSelector
+                visible={iconSelectorVisible}
+                selectedIcon={icono}
+                onSelect={handleIconSelect}
+                onClose={() => setIconSelectorVisible(false)}
+            />
         </Modal>
     );
 };
 
-// Los estilos se mantienen igual...
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -261,57 +242,37 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
         marginBottom: 16,
     },
-    imageSection: {
+    iconSelector: {
+        flexDirection: 'row',
         alignItems: 'center',
-    },
-    uploadImageButton: {
-        width: '100%',
-        height: 150,
-        borderWidth: 2,
-        borderColor: '#E5E5E5',
-        borderStyle: 'dashed',
+        backgroundColor: '#F8F9FA',
+        padding: 16,
         borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E5E5E5',
+    },
+    iconPreview: {
+        width: 64,
+        height: 64,
+        borderRadius: 12,
+        backgroundColor: '#49AA4C15',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#F8F9FA',
-        padding: 20,
+        marginRight: 12,
     },
-    uploadImageText: {
-        fontSize: 16,
-        fontFamily: 'Lato-Bold',
-        color: '#49AA4C',
-        marginTop: 8,
+    iconSelectorText: {
+        flex: 1,
     },
-    imageRecommendation: {
+    iconSelectorLabel: {
         fontSize: 12,
         fontFamily: 'Lato-Regular',
         color: '#666666',
-        textAlign: 'center',
-        marginTop: 4,
+        marginBottom: 4,
     },
-    imagePreviewContainer: {
-        width: '100%',
-        alignItems: 'center',
-    },
-    imagePreview: {
-        width: 120,
-        height: 120,
-        borderRadius: 12,
-        marginBottom: 12,
-    },
-    changeImageButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#49AA4C',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
-        gap: 6,
-    },
-    changeImageText: {
-        fontSize: 14,
+    iconSelectorValue: {
+        fontSize: 16,
         fontFamily: 'Lato-Bold',
-        color: '#FFFFFF',
+        color: '#1A1A1A',
     },
     inputGroup: {
         marginBottom: 16,

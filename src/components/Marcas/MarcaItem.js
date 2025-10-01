@@ -1,53 +1,78 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const CategoriaItem = ({ 
-    categoria, 
+const MarcaItem = ({ 
+    marca, 
     onViewMore, 
     onEdit, 
-    onDelete 
+    onDelete
 }) => {
+    const getLineaColor = (linea) => {
+        switch (linea) {
+            case 'Premium': return '#009BBF';
+            case 'Económica': return '#49AA4C';
+            default: return '#666666';
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.mainInfo}>
-                <View style={styles.categoriaHeader}>
-                    <View style={styles.iconContainer}>
-                        <Ionicons 
-                            name={categoria.icono || 'cube-outline'} 
-                            size={24} 
-                            color="#009BBF" 
-                        />
-                    </View>
+                <View style={styles.marcaHeader}>
+                    {marca.logo ? (
+                        <Image source={{ uri: marca.logo }} style={styles.logo} />
+                    ) : (
+                        <View style={styles.logoPlaceholder}>
+                            <Ionicons name="business" size={24} color="#999999" />
+                        </View>
+                    )}
                     <View style={styles.nombreContainer}>
                         <Text style={styles.nombreText} numberOfLines={1}>
-                            {categoria.nombre}
+                            {marca.nombre}
                         </Text>
-                        <Text style={styles.descripcionText} numberOfLines={2}>
-                            {categoria.descripcion}
+                        <Text style={styles.paisText} numberOfLines={1}>
+                            {marca.paisOrigen}
                         </Text>
                     </View>
+                </View>
+
+                <Text style={styles.descripcionText} numberOfLines={2}>
+                    {marca.descripcion}
+                </Text>
+
+                <View style={styles.lineasContainer}>
+                    {marca.lineas?.map((linea, index) => (
+                        <View 
+                            key={index} 
+                            style={[styles.lineaBadge, { backgroundColor: `${getLineaColor(linea)}15` }]}
+                        >
+                            <Text style={[styles.lineaText, { color: getLineaColor(linea) }]}>
+                                {linea}
+                            </Text>
+                        </View>
+                    ))}
                 </View>
             </View>
 
             <View style={styles.actionButtons}>
                 <TouchableOpacity
                     style={[styles.actionButton, styles.deleteButton]}
-                    onPress={() => onDelete(categoria)}
+                    onPress={() => onDelete(marca)}
                 >
                     <Ionicons name="trash-outline" size={16} color="#D0155F" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={[styles.actionButton, styles.viewButton]}
-                    onPress={() => onViewMore(categoria)}
+                    onPress={() => onViewMore(marca)}
                 >
                     <Ionicons name="eye-outline" size={16} color="#009BBF" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={[styles.actionButton, styles.editButton]}
-                    onPress={() => onEdit(categoria)}
+                    onPress={() => onEdit(marca)}
                 >
                     <Ionicons name="create-outline" size={16} color="#49AA4C" />
                 </TouchableOpacity>
@@ -72,19 +97,27 @@ const styles = StyleSheet.create({
     mainInfo: {
         marginBottom: 12,
     },
-    categoriaHeader: {
+    marcaHeader: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         marginBottom: 12,
     },
-    iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 12,
-        backgroundColor: '#009BBF15',
+    logo: {
+        width: 50,
+        height: 50,
+        borderRadius: 8,
+        marginRight: 12,
+    },
+    logoPlaceholder: {
+        width: 50,
+        height: 50,
+        borderRadius: 8,
+        backgroundColor: '#F8F9FA',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
+        borderWidth: 1,
+        borderColor: '#E5E5E5',
     },
     nombreContainer: {
         flex: 1,
@@ -93,13 +126,33 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
-        marginBottom: 4,
+        marginBottom: 2,
+    },
+    paisText: {
+        fontSize: 14,
+        fontFamily: 'Lato-Regular',
+        color: '#666666',
     },
     descripcionText: {
         fontSize: 14,
         fontFamily: 'Lato-Regular',
         color: '#666666',
         lineHeight: 18,
+        marginBottom: 12,
+    },
+    lineasContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    lineaBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    lineaText: {
+        fontSize: 12,
+        fontFamily: 'Lato-Bold',
     },
     actionButtons: {
         flexDirection: 'row',
@@ -128,4 +181,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CategoriaItem;
+export default MarcaItem;
