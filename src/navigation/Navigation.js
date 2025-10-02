@@ -19,6 +19,10 @@ import VerifyCode from '../screens/VerifyCode';
 import ResetPassword from '../screens/ResetPassword';
 import PasswordSuccess from '../screens/PasswordSucces';
 import Optometristas from '../screens/Optometristas';
+// ===== NUEVAS IMPORTACIONES =====
+import HistorialMedico from '../screens/HistorialMedico';
+import Recetas from '../screens/Recetas';
+// ================================
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 import { SettingsProvider, useSettings } from '../context/SettingsContext';
@@ -36,18 +40,6 @@ const LoadingScreen = () => (
 
 /**
  * Navegación principal de la aplicación
- * 
- * Esta función maneja toda la estructura de navegación de la app.
- * Usamos un Stack Navigator para poder tener una splash screen que luego
- * navegue al login o directamente al main según el estado de autenticación.
- * 
- * Flujo de navegación:
- * 1. Splash Screen (pantalla de carga con logo y animación)
- * 2. Login (si no está autenticado) o Main (si está autenticado)
- * 3. Main (tab navigator con las pantallas principales)
- * 4. Menu (pantalla de operaciones - accesible desde tabs y directamente)
- * 5. Pantallas de gestión (Clientes, Empleados, Lentes, Accesorios, Personalizados, etc.)
- * 6. Flujo de recuperación de contraseña (ForgotPassword -> VerifyCode -> ResetPassword -> PasswordSuccess)
  */
 const ThemedNavigation = () => {
     const { resolvedTheme } = useSettings();
@@ -60,19 +52,25 @@ const ThemedNavigation = () => {
             >
                 {/* Pantalla de carga inicial */}
                 <Stack.Screen name="Splash" component={SplashScreen} />
+                
                 {/* Pantalla de Bienvenida */}
                 <Stack.Screen name="Welcome" component={Welcome} />
+                
                 {/* Pantalla de login */}
                 <Stack.Screen name="Login" component={Login} />
+                
                 {/* ===== PANTALLAS DE RECUPERACIÓN DE CONTRASEÑA ===== */}
                 <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
                 <Stack.Screen name="VerifyCode" component={VerifyCode} />
                 <Stack.Screen name="ResetPassword" component={ResetPassword} />
                 <Stack.Screen name="PasswordSuccess" component={PasswordSuccess} />
+                
                 {/* Navegación principal con tabs */}
                 <Stack.Screen name="Main" component={TabNavigator} />
+                
                 {/* ===== PANTALLAS DE PERFIL ===== */}
                 <Stack.Screen name="Profile" component={Profile} />
+                
                 {/* ===== PANTALLAS DE GESTIÓN ===== */}
                 <Stack.Screen name="Clientes" component={Clientes} />
                 <Stack.Screen name="Empleados" component={Empleados} />
@@ -80,8 +78,35 @@ const ThemedNavigation = () => {
                 <Stack.Screen name="Ventas" component={Ventas} />
                 <Stack.Screen name="Reportes" component={Reportes} />
                 <Stack.Screen name="Facturas" component={Facturas} />
+                <Stack.Screen name="Optometristas" component={Optometristas} />
+                
+                {/* ===== PANTALLAS MÉDICAS ===== */}
+                <Stack.Screen 
+                    name="HistorialMedico" 
+                    component={HistorialMedico}
+                    options={{
+                        headerShown: true,
+                        title: 'Historial Médico',
+                        headerStyle: { backgroundColor: '#009BBF' },
+                        headerTintColor: '#FFFFFF',
+                        headerTitleStyle: { fontFamily: 'Lato-Bold' },
+                    }}
+                />
+                <Stack.Screen 
+                    name="Recetas" 
+                    component={Recetas}
+                    options={{
+                        headerShown: true,
+                        title: 'Gestión de Recetas',
+                        headerStyle: { backgroundColor: '#009BBF' },
+                        headerTintColor: '#FFFFFF',
+                        headerTitleStyle: { fontFamily: 'Lato-Bold' },
+                    }}
+                />
+                
                 {/* Navegación de Configuración */}
                 <Stack.Screen name="Configuracion" component={Configuracion} />
+                
                 {/* Pantalla de menú - acceso directo */}
                 <Stack.Screen name="MenuDirect" component={Menu} options={{
                     headerShown: true,

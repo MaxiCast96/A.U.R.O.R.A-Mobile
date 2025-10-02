@@ -96,7 +96,7 @@ const MenuScreen = () => {
                     title: 'Personalizados', 
                     subtitle: 'Productos personalizados',
                     color: '#49AA4C',
-                    onPress: () => navigation.navigate('Personalizados') // ← ACTUALIZADO
+                    onPress: () => navigation.navigate('Personalizados')
                 },
                 { 
                     icon: 'pricetag-outline', 
@@ -136,14 +136,14 @@ const MenuScreen = () => {
                     title: 'Historial Médico', 
                     subtitle: 'Historial de pacientes',
                     color: '#D0155F',
-                    onPress: () => Alert.alert('Historial Médico', 'Funcionalidad próximamente')
+                    onPress: () => navigation.navigate('HistorialMedico')
                 },
                 { 
                     icon: 'medical-outline', 
                     title: 'Recetas',
                     subtitle: 'Recetas de pacientes',
                     color: '#D0155F',
-                    onPress: () => Alert.alert('Recetas', 'Funcionalidad próximamente') 
+                    onPress: () => navigation.navigate('Recetas')
                 }
             ]
         },
@@ -249,7 +249,7 @@ const MenuScreen = () => {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>{t('reports_title') /* Using existing key; ideally add operations_title in i18n */}</Text>
+                <Text style={styles.headerTitle}>Operaciones</Text>
             </View>
 
             {/* Barra de búsqueda */}
@@ -258,7 +258,7 @@ const MenuScreen = () => {
                     <Ionicons name="search-outline" size={20} color="#666666" style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder={t('search_sales_placeholder')}
+                        placeholder="Buscar operación..."
                         placeholderTextColor="#999999"
                         value={searchText}
                         onChangeText={setSearchText}
@@ -282,7 +282,6 @@ const MenuScreen = () => {
                     <View style={styles.essentialsSection}>
                         <Text style={styles.essentialsTitle}>Esenciales Óptica</Text>
                         <View style={styles.essentialsGrid}>
-
                             <TouchableOpacity 
                                 style={styles.essentialItem}
                                 onPress={() => navigation.navigate('Citas')}
@@ -307,30 +306,38 @@ const MenuScreen = () => {
                                 style={styles.essentialItem}
                                 onPress={() => navigation.navigate('Lentes')}
                             >
-                              
                                 <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
-
                                     <Ionicons name="glasses-outline" size={24} color="#FFFFFF" />
                                 </View>
                                 <Text style={styles.essentialText}>Lentes</Text>
                             </TouchableOpacity>
 
-                             <TouchableOpacity 
+                            <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Reportes')}
+                                onPress={() => navigation.navigate('HistorialMedico')}
                             >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#FF9800' }]}>
-                                    <Ionicons name="bag-outline" size={24} color="#FFFFFF" />
+                                <View style={[styles.essentialIcon, { backgroundColor: '#D0155F' }]}>
+                                    <Ionicons name="document-text-outline" size={24} color="#FFFFFF" />
                                 </View>
-                                <Text style={styles.essentialText}>Accesorios</Text>
+                                <Text style={styles.essentialText}>Historial</Text>
                             </TouchableOpacity>
                         </View>
                         
-                        {/* Segunda fila de esenciales con Personalizados */}
+                        {/* Segunda fila de esenciales */}
                         <View style={styles.essentialsGrid}>
                             <TouchableOpacity 
                                 style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Personalizados')} // ← NUEVO BOTÓN AGREGADO
+                                onPress={() => navigation.navigate('Recetas')}
+                            >
+                                <View style={[styles.essentialIcon, { backgroundColor: '#D0155F' }]}>
+                                    <Ionicons name="medical-outline" size={24} color="#FFFFFF" />
+                                </View>
+                                <Text style={styles.essentialText}>Recetas</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                style={styles.essentialItem}
+                                onPress={() => navigation.navigate('Personalizados')}
                             >
                                 <View style={[styles.essentialIcon, { backgroundColor: '#9C27B0' }]}>
                                     <Ionicons name="cube-outline" size={24} color="#FFFFFF" />
@@ -348,8 +355,7 @@ const MenuScreen = () => {
                                 <Text style={styles.essentialText}>Empleados</Text>
                             </TouchableOpacity>
 
-                            {/* Espacios vacíos para mantener el grid */}
-                            <View style={styles.essentialItem} />
+                            {/* Espacio vacío para mantener el grid */}
                             <View style={styles.essentialItem} />
                         </View>
                     </View>
@@ -395,7 +401,7 @@ const MenuScreen = () => {
                                 <Text style={styles.otherOperationText}>{t('reports_title')}</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.otherOperationItem}>
+                            <TouchableOpacity style={styles.otherOperationItem} onPress={() => navigation.navigate('Configuracion')}>
                                 <View style={[styles.essentialIcon, { backgroundColor: '#6B7280' }]}>
                                     <Ionicons name="cog-outline" size={24} color="#FFFFFF" />
                                 </View>
