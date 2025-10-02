@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "A.U.R.O.R.A-Mobile",
-    "slug": "A.U.R.O.R.A-Mobile",
+    "name": "aurora-mobile",
+    "slug": "aurora-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +20,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,6 +36,11 @@
           "cameraPermission": "La aplicación accede a tu cámara para permitirte tomar una foto de perfil."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e5ef48aa-b76f-4423-808b-3e6556b85789"
+      }
+    }
   }
 }
