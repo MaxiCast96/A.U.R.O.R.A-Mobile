@@ -113,8 +113,11 @@ export const useProfile = () => {
             }
             
             if (response.ok) {
-                const updatedData = await response.json();
-                console.log('Campo actualizado correctamente:', updatedData);
+                const responseData = await response.json();
+                console.log('Campo actualizado correctamente:', responseData);
+                
+                // Extraer el empleado de la respuesta (el backend devuelve { empleado: {...}, message: "..." })
+                const updatedData = responseData.empleado || responseData;
                 
                 // Actualizar el estado local
                 setProfileData(prev => ({
@@ -123,8 +126,15 @@ export const useProfile = () => {
                 }));
                 
                 // Actualizar el contexto de autenticación si es necesario
-                if (['nombre', 'apellido', 'correo'].includes(field)) {
-                    updateUser && updateUser(updatedData);
+                if (['nombre', 'apellido', 'correo', 'fotoPerfil'].includes(field)) {
+                    // Asegurarse de mantener el ID del usuario
+                    const userUpdate = {
+                        ...updatedData,
+                        id: user.id,
+                        _id: user.id
+                    };
+                    updateUser && updateUser(userUpdate);
+                    console.log('Contexto de Auth actualizado con:', userUpdate);
                 }
                 
                 setSaveStatus('saved');
@@ -145,25 +155,29 @@ export const useProfile = () => {
 
     /**
      * Función específica para actualizar la foto de perfil
-     * @param {string} photoUrl - Nueva URL de la foto de perfil
+     * @param {string} photoUrl - Nueva URL de la foto de perfil (ya subida a Cloudinary)
      */
     const updateProfilePhoto = async (photoUrl) => {
         try {
             setSaveStatus('saving');
             setSaveMessage('Actualizando foto de perfil...');
             
-            // Usar el campo correcto según lo que espera el backend
+            console.log('Actualizando fotoPerfil en BD con URL:', photoUrl);
+            
+            // Actualizar el campo 'fotoPerfil' en la base de datos
             await updateProfileField('fotoPerfil', photoUrl);
             
             setSaveStatus('saved');
             setSaveMessage('Foto actualizada correctamente');
+            
+            console.log('Foto de perfil actualizada exitosamente en la BD');
         } catch (error) {
-            console.error('Error al actualizar foto:', error);
+            console.error('Error al actualizar foto en BD:', error);
             setSaveStatus('error');
             setSaveMessage('Error al actualizar la foto');
             Alert.alert(
                 'Error',
-                'No se pudo actualizar la foto de perfil.',
+                'No se pudo actualizar la foto de perfil en el servidor.',
                 [{ text: 'Entendido', style: 'default' }]
             );
         }
@@ -192,6 +206,7 @@ export const useProfile = () => {
             dui: '',
             cargo: '',
             photoUrl: '',
+            fotoPerfil: '',
             fechaContratacion: '',
             sucursalId: '',
             direccion: { departamento: '', municipio: '', direccionDetallada: '' },
@@ -199,8 +214,8 @@ export const useProfile = () => {
             ...user,
             // Datos del perfil (tienen prioridad)
             ...profileData,
-            // Manejo especial para la foto de perfil
-            photoUrl: profileData.photoUrl || profileData.fotoPerfil || user?.photoUrl || user?.fotoPerfil || '',
+            // Manejo especial para la foto de perfil - unificar ambos campos
+            photoUrl: profileData.fotoPerfil || profileData.photoUrl || user?.fotoPerfil || user?.photoUrl || '',
             // Manejo especial para la sucursal
             sucursalId: profileData.sucursalId || user?.sucursalId || '',
             // Manejo especial para la dirección
@@ -221,10 +236,26 @@ export const useProfile = () => {
 
     /**
      * Efecto para cargar los datos del perfil al montar el componente
+     * Y recargar cuando el usuario del contexto cambie
      */
     useEffect(() => {
         loadProfileData();
-    }, []);
+    }, [user.id]);
+    
+    /**
+     * Efecto para escuchar cambios en el contexto de Auth
+     * y actualizar profileData cuando se actualice la foto
+     */
+    useEffect(() => {
+        if (user.fotoPerfil && user.fotoPerfil !== profileData.fotoPerfil) {
+            console.log('Foto actualizada en contexto, sincronizando profileData');
+            setProfileData(prev => ({
+                ...prev,
+                fotoPerfil: user.fotoPerfil,
+                photoUrl: user.fotoPerfil
+            }));
+        }
+    }, [user.fotoPerfil]);
 
     // Retornar todos los estados y funciones necesarias
     return {

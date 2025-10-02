@@ -16,15 +16,8 @@ import { useI18n } from '../utils/i18n';
 /**
  * Pantalla de Menú Principal
  * 
- * Esta pantalla muestra todas las operaciones y funcionalidades
- * disponibles en la aplicación, organizadas por secciones como
- * en el sitio web de escritorio.
- * 
- * Funcionalidades:
- * - Búsqueda de operaciones
- * - Secciones organizadas (Personal, Productos, Médico, etc.)
- * - Navegación a diferentes pantallas
- * - Diseño similar a apps móviles modernas
+ * Pantalla mejorada con navegación funcional y diseño más fluido.
+ * Incluye búsqueda, secciones organizadas y botones esenciales.
  */
 const MenuScreen = () => {
     const navigation = useNavigation();
@@ -33,14 +26,25 @@ const MenuScreen = () => {
     const { t } = useI18n();
 
     /**
-     * Secciones del menú basadas en el sitio web de escritorio
+     * Función auxiliar para mostrar alertas de funcionalidad próxima
+     */
+    const showComingSoon = (feature) => {
+        Alert.alert(
+            'Próximamente',
+            `La funcionalidad de ${feature} estará disponible pronto.`,
+            [{ text: 'Entendido', style: 'default' }]
+        );
+    };
+
+    /**
+     * Secciones del menú con navegación funcional
      */
     const menuSections = [
         {
             title: 'PRINCIPAL',
             items: [
                 { 
-                    icon: 'grid-outline', 
+                    icon: 'home-outline', 
                     title: 'Dashboard', 
                     subtitle: 'Panel de control principal',
                     color: '#009BBF',
@@ -70,7 +74,7 @@ const MenuScreen = () => {
                     title: 'Optometristas', 
                     subtitle: 'Gestión de optometristas',
                     color: '#009BBF',
-                    onPress: () => navigation.navigate('Optometristas') 
+                    onPress: () => navigation.navigate('Optometristas')
                 }
             ]
         },
@@ -96,28 +100,28 @@ const MenuScreen = () => {
                     title: 'Personalizados', 
                     subtitle: 'Productos personalizados',
                     color: '#49AA4C',
-                    onPress: () => navigation.navigate('Personalizados') // ← ACTUALIZADO
+                    onPress: () => navigation.navigate('Personalizados')
                 },
                 { 
                     icon: 'pricetag-outline', 
                     title: 'Categorías', 
                     subtitle: 'Categorías de productos',
                     color: '#49AA4C',
-                    onPress: () => navigation.navigate('Categorias')
+                    onPress: () => showComingSoon('Categorías')
                 },
                 { 
                     icon: 'business-outline', 
                     title: 'Marcas', 
                     subtitle: 'Marcas disponibles',
                     color: '#49AA4C',
-                    onPress: () => navigation.navigate('Marcas')
+                    onPress: () => showComingSoon('Marcas')
                 },
                 { 
                     icon: 'gift-outline', 
                     title: 'Promociones', 
                     subtitle: 'Ofertas y promociones',
                     color: '#49AA4C',
-                    onPress: () => navigation.navigate('Promociones')
+                    onPress: () => showComingSoon('Promociones')
                 }
             ]
         },
@@ -128,19 +132,22 @@ const MenuScreen = () => {
                     icon: 'calendar-outline', 
                     title: 'Citas', 
                     subtitle: 'Gestión de citas médicas',
-                    color: '#D0155F',
+                    color: '#D01B5F',
                     onPress: () => navigation.navigate('Citas')
                 },
                 { 
                     icon: 'document-text-outline', 
                     title: 'Historial Médico', 
                     subtitle: 'Historial de pacientes',
-                    color: '#D0155F',
-                    onPress: () => Alert.alert('Historial Médico', 'Funcionalidad próximamente')
+                    color: '#D01B5F',
+                    onPress: () => showComingSoon('Historial Médico')
                 },
                 { 
                     icon: 'medical-outline', 
                     title: 'Recetas', 
+                    subtitle: 'Prescripciones médicas',
+                    color: '#D01B5F',
+                    onPress: () => showComingSoon('Recetas')
                 }
             ]
         },
@@ -162,7 +169,7 @@ const MenuScreen = () => {
                     onPress: () => navigation.navigate('Ventas')
                 },
                 { 
-                    icon: 'analytics-outline', 
+                    icon: 'stats-chart-outline', 
                     title: t('reports_title'), 
                     subtitle: t('reports_subtitle'),
                     color: '#6B7280',
@@ -214,7 +221,7 @@ const MenuScreen = () => {
             activeOpacity={0.7}
         >
             <View style={styles.menuItemContent}>
-                <View style={[styles.iconContainer, { backgroundColor: `${item.color}15` }]}>
+                <View style={[styles.iconContainer, { backgroundColor: `${item.color}20` }]}>
                     <Ionicons name={item.icon} size={24} color={item.color} />
                 </View>
                 <View style={styles.menuItemText}>
@@ -222,7 +229,7 @@ const MenuScreen = () => {
                     <Text style={styles.menuItemSubtitle}>{item.subtitle}</Text>
                 </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
+            <Ionicons name="chevron-forward" size={20} color="#D0D5DD" />
         </TouchableOpacity>
     );
 
@@ -246,23 +253,24 @@ const MenuScreen = () => {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>{t('reports_title') /* Using existing key; ideally add operations_title in i18n */}</Text>
+                <Text style={styles.headerTitle}>Menú</Text>
+                <Text style={styles.headerSubtitle}>Explora todas las funcionalidades</Text>
             </View>
 
             {/* Barra de búsqueda */}
             <View style={styles.searchContainer}>
                 <View style={styles.searchBox}>
-                    <Ionicons name="search-outline" size={20} color="#666666" style={styles.searchIcon} />
+                    <Ionicons name="search-outline" size={20} color="#98A2B3" style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder={t('search_sales_placeholder')}
-                        placeholderTextColor="#999999"
+                        placeholder="Buscar funcionalidades..."
+                        placeholderTextColor="#98A2B3"
                         value={searchText}
                         onChangeText={setSearchText}
                     />
                     {searchText ? (
                         <TouchableOpacity onPress={() => setSearchText('')}>
-                            <Ionicons name="close-circle" size={20} color="#666666" />
+                            <Ionicons name="close-circle" size={20} color="#98A2B3" />
                         </TouchableOpacity>
                     ) : null}
                 </View>
@@ -274,18 +282,23 @@ const MenuScreen = () => {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
-                {/* Sección destacada - Esenciales */}
+                {/* Sección destacada - Esenciales (Solo 4 botones) */}
                 {!searchText && (
                     <View style={styles.essentialsSection}>
-                        <Text style={styles.essentialsTitle}>Esenciales Óptica</Text>
+                        <View style={styles.essentialsTitleContainer}>
+                            <Text style={styles.essentialsTitle}>Esenciales Óptica</Text>
+                        </View>
+                        
                         <View style={styles.essentialsGrid}>
-
                             <TouchableOpacity 
                                 style={styles.essentialItem}
                                 onPress={() => navigation.navigate('Citas')}
+                                activeOpacity={0.7}
                             >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#D0155F' }]}>
-                                    <Ionicons name="calendar-outline" size={24} color="#FFFFFF" />
+                                <View style={[styles.essentialIconWrapper, styles.shadowEffect]}>
+                                    <View style={[styles.essentialIcon, { backgroundColor: '#D01B5F' }]}>
+                                        <Ionicons name="calendar" size={28} color="#FFFFFF" />
+                                    </View>
                                 </View>
                                 <Text style={styles.essentialText}>Citas</Text>
                             </TouchableOpacity>
@@ -293,9 +306,12 @@ const MenuScreen = () => {
                             <TouchableOpacity 
                                 style={styles.essentialItem}
                                 onPress={() => navigation.navigate('Clientes')}
+                                activeOpacity={0.7}
                             >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
-                                    <Ionicons name="people-outline" size={24} color="#FFFFFF" />
+                                <View style={[styles.essentialIconWrapper, styles.shadowEffect]}>
+                                    <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
+                                        <Ionicons name="people" size={28} color="#FFFFFF" />
+                                    </View>
                                 </View>
                                 <Text style={styles.essentialText}>Clientes</Text>
                             </TouchableOpacity>
@@ -303,51 +319,28 @@ const MenuScreen = () => {
                             <TouchableOpacity 
                                 style={styles.essentialItem}
                                 onPress={() => navigation.navigate('Lentes')}
+                                activeOpacity={0.7}
                             >
-                              
-                                <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
-
-                                    <Ionicons name="glasses-outline" size={24} color="#FFFFFF" />
+                                <View style={[styles.essentialIconWrapper, styles.shadowEffect]}>
+                                    <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
+                                        <Ionicons name="glasses" size={28} color="#FFFFFF" />
+                                    </View>
                                 </View>
                                 <Text style={styles.essentialText}>Lentes</Text>
                             </TouchableOpacity>
 
-                             <TouchableOpacity 
+                            <TouchableOpacity 
                                 style={styles.essentialItem}
                                 onPress={() => navigation.navigate('Reportes')}
+                                activeOpacity={0.7}
                             >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#FF9800' }]}>
-                                    <Ionicons name="bag-outline" size={24} color="#FFFFFF" />
+                                <View style={[styles.essentialIconWrapper, styles.shadowEffect]}>
+                                    <View style={[styles.essentialIcon, { backgroundColor: '#6B7280' }]}>
+                                        <Ionicons name="stats-chart" size={28} color="#FFFFFF" />
+                                    </View>
                                 </View>
-                                <Text style={styles.essentialText}>Accesorios</Text>
+                                <Text style={styles.essentialText}>Reportes</Text>
                             </TouchableOpacity>
-                        </View>
-                        
-                        {/* Segunda fila de esenciales con Personalizados */}
-                        <View style={styles.essentialsGrid}>
-                            <TouchableOpacity 
-                                style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Personalizados')} // ← NUEVO BOTÓN AGREGADO
-                            >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#9C27B0' }]}>
-                                    <Ionicons name="cube-outline" size={24} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.essentialText}>Personalizados</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity 
-                                style={styles.essentialItem}
-                                onPress={() => navigation.navigate('Empleados')}
-                            >
-                                <View style={[styles.essentialIcon, { backgroundColor: '#6B46C1' }]}>
-                                    <Ionicons name="person-outline" size={24} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.essentialText}>Empleados</Text>
-                            </TouchableOpacity>
-
-                            {/* Espacios vacíos para mantener el grid */}
-                            <View style={styles.essentialItem} />
-                            <View style={styles.essentialItem} />
                         </View>
                     </View>
                 )}
@@ -358,47 +351,13 @@ const MenuScreen = () => {
                 {/* Mensaje si no hay resultados */}
                 {searchText && getFilteredSections().length === 0 && (
                     <View style={styles.noResultsContainer}>
-                        <Ionicons name="search-outline" size={48} color="#CCCCCC" />
+                        <View style={styles.noResultsIconContainer}>
+                            <Ionicons name="search-outline" size={56} color="#D0D5DD" />
+                        </View>
                         <Text style={styles.noResultsText}>No se encontraron resultados</Text>
                         <Text style={styles.noResultsSubtext}>
                             Intenta con otros términos de búsqueda
                         </Text>
-                    </View>
-                )}
-
-                {/* Sección de otras operaciones */}
-                {!searchText && (
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>OTRAS OPERACIONES</Text>
-                        <View style={styles.otherOperationsGrid}>
-                            <TouchableOpacity style={styles.otherOperationItem} onPress={() => navigation.navigate('Ventas')}>
-                                <View style={[styles.essentialIcon, { backgroundColor: '#009BBF' }]}>
-                                    <Ionicons name="card-outline" size={24} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.otherOperationText}>{t('sales_title')}</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.otherOperationItem} onPress={() => navigation.navigate('Facturas')}>
-                                <View style={[styles.essentialIcon, { backgroundColor: '#49AA4C' }]}>
-                                    <Ionicons name="receipt-outline" size={24} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.otherOperationText}>{t('invoices_title')}</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.otherOperationItem} onPress={() => navigation.navigate('Reportes')}>
-                                <View style={[styles.essentialIcon, { backgroundColor: '#D0155F' }]}>
-                                    <Ionicons name="stats-chart-outline" size={24} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.otherOperationText}>{t('reports_title')}</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.otherOperationItem}>
-                                <View style={[styles.essentialIcon, { backgroundColor: '#6B7280' }]}>
-                                    <Ionicons name="cog-outline" size={24} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.otherOperationText}>Ajustes</Text>
-                            </TouchableOpacity>
-                        </View>
                     </View>
                 )}
 
@@ -415,32 +374,43 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8F9FA',
     },
     header: {
-        paddingTop: 50,
+        paddingTop: 60,
         paddingBottom: 20,
-        paddingHorizontal: 20,
+        paddingHorizontal: 24,
         backgroundColor: '#FFFFFF',
-        borderBottomWidth: 1,
-        borderBottomColor: '#E5E5E5',
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 4,
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 32,
         fontFamily: 'Lato-Bold',
-        color: '#1A1A1A',
+        color: '#101828',
+        marginBottom: 4,
+    },
+    headerSubtitle: {
+        fontSize: 15,
+        fontFamily: 'Lato-Regular',
+        color: '#667085',
     },
     searchContainer: {
-        paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingHorizontal: 24,
+        paddingVertical: 20,
         backgroundColor: '#FFFFFF',
     },
     searchBox: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#F8F9FA',
-        borderRadius: 12,
+        borderRadius: 16,
         paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderWidth: 1,
-        borderColor: '#E5E5E5',
+        paddingVertical: 14,
+        borderWidth: 1.5,
+        borderColor: '#EAECF0',
     },
     searchIcon: {
         marginRight: 12,
@@ -449,7 +419,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         fontFamily: 'Lato-Regular',
-        color: '#1A1A1A',
+        color: '#101828',
     },
     content: {
         flex: 1,
@@ -459,74 +429,87 @@ const styles = StyleSheet.create({
     },
     essentialsSection: {
         backgroundColor: '#FFFFFF',
-        margin: 20,
-        borderRadius: 16,
-        padding: 20,
+        marginHorizontal: 24,
+        marginTop: 24,
+        borderRadius: 20,
+        padding: 24,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowRadius: 16,
+        elevation: 6,
+    },
+    essentialsTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 24,
     },
     essentialsTitle: {
         fontSize: 18,
         fontFamily: 'Lato-Bold',
-        color: '#1A1A1A',
-        marginBottom: 16,
+        color: '#101828',
+        flex: 1,
     },
     essentialsGrid: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 16,
     },
     essentialItem: {
         alignItems: 'center',
         flex: 1,
-        marginHorizontal: 4,
+    },
+    essentialIconWrapper: {
+        marginBottom: 10,
     },
     essentialIcon: {
-        width: 56,
-        height: 56,
-        borderRadius: 16,
+        width: 60,
+        height: 60,
+        borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 8,
+    },
+    shadowEffect: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 4,
     },
     essentialText: {
-        fontSize: 12,
+        fontSize: 13,
         fontFamily: 'Lato-Bold',
-        color: '#1A1A1A',
+        color: '#344054',
         textAlign: 'center',
     },
     section: {
-        marginHorizontal: 20,
-        marginBottom: 24,
+        marginHorizontal: 24,
+        marginTop: 32,
     },
     sectionTitle: {
-        fontSize: 14,
+        fontSize: 13,
         fontFamily: 'Lato-Bold',
-        color: '#666666',
-        marginBottom: 12,
-        letterSpacing: 0.5,
+        color: '#667085',
+        marginBottom: 16,
+        letterSpacing: 1,
     },
     sectionContent: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 12,
+        borderRadius: 16,
         overflow: 'hidden',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.06,
         shadowRadius: 8,
-        elevation: 3,
+        elevation: 2,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
+        paddingHorizontal: 20,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: '#F2F4F7',
     },
     menuItemContent: {
         flexDirection: 'row',
@@ -536,7 +519,7 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 48,
         height: 48,
-        borderRadius: 12,
+        borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
@@ -547,61 +530,46 @@ const styles = StyleSheet.create({
     menuItemTitle: {
         fontSize: 16,
         fontFamily: 'Lato-Bold',
-        color: '#1A1A1A',
-        marginBottom: 2,
+        color: '#101828',
+        marginBottom: 4,
     },
     menuItemSubtitle: {
         fontSize: 13,
         fontFamily: 'Lato-Regular',
-        color: '#666666',
-    },
-    otherOperationsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    otherOperationItem: {
-        alignItems: 'center',
-        width: '48%',
-        marginBottom: 16,
-    },
-    otherOperationText: {
-        fontSize: 13,
-        fontFamily: 'Lato-Bold',
-        color: '#1A1A1A',
-        textAlign: 'center',
-        marginTop: 8,
+        color: '#667085',
+        lineHeight: 18,
     },
     noResultsContainer: {
         alignItems: 'center',
-        paddingVertical: 60,
+        paddingVertical: 80,
         paddingHorizontal: 40,
+    },
+    noResultsIconContainer: {
+        width: 96,
+        height: 96,
+        borderRadius: 48,
+        backgroundColor: '#F2F4F7',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 24,
     },
     noResultsText: {
         fontSize: 18,
         fontFamily: 'Lato-Bold',
-        color: '#666666',
-        marginTop: 16,
+        color: '#344054',
+        marginBottom: 8,
         textAlign: 'center',
     },
     noResultsSubtext: {
         fontSize: 14,
         fontFamily: 'Lato-Regular',
-        color: '#999999',
-        marginTop: 8,
+        color: '#667085',
         textAlign: 'center',
+        lineHeight: 20,
     },
     spacer: {
         height: 40,
     },
 });
 
-export default MenuScreen;
+export default MenuScreen

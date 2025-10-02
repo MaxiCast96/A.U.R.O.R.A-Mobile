@@ -22,6 +22,10 @@ import VerifyCode from '../screens/VerifyCode';
 import ResetPassword from '../screens/ResetPassword';
 import PasswordSuccess from '../screens/PasswordSucces';
 import Optometristas from '../screens/Optometristas';
+import Citas from '../screens/Citas';
+import Lentes from '../screens/Lentes';
+import Accesorios from '../screens/Accesorios';
+import Personalizados from '../screens/Personalizados';
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 import { SettingsProvider, useSettings } from '../context/SettingsContext';
@@ -65,6 +69,7 @@ const ThemedNavigation = () => {
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 {/* Pantalla de Bienvenida */}
                 <Stack.Screen name="Welcome" component={Welcome} />
+                <Stack.Screen name="Citas" component={Citas} />
                 {/* Pantalla de login */}
                 <Stack.Screen name="Login" component={Login} />
                 {/* ===== PANTALLAS DE RECUPERACIÓN DE CONTRASEÑA ===== */}
@@ -82,11 +87,12 @@ const ThemedNavigation = () => {
                 <Stack.Screen name="Sucursales" component={Sucursales} />
                 <Stack.Screen name="Ventas" component={Ventas} />
                 <Stack.Screen name="Reportes" component={Reportes} />
+                
+                <Stack.Screen name="Lentes" component={Lentes} />
+                <Stack.Screen name="Personalizados" component={Personalizados} />
                 <Stack.Screen name="Facturas" component={Facturas} />
-                 {/* ===== PANTALLAS DE PRODUCTOS ===== */}
-                <Stack.Screen name="Categorias" component={Categorias} />
-                <Stack.Screen name="Promociones" component={Promociones} />
-                <Stack.Screen name="Marcas" component={Marcas} />
+                <Stack.Screen name="Accesorios" component={Accesorios} />
+                <Stack.Screen name="Optometristas" component={Optometristas} />
                 {/* Navegación de Configuración */}
                 <Stack.Screen name="Configuracion" component={Configuracion} />
                 {/* Pantalla de menú - acceso directo */}

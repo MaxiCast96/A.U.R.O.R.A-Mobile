@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '../../context/AuthContext';
 
 /**
  * Componente ProfilePhoto
@@ -19,7 +18,7 @@ import { useAuth } from '../../context/AuthContext';
  * - Mostrar foto actual desde Cloudinary
  * - Tomar foto con cámara
  * - Seleccionar desde galería
- * - Subida a Cloudinary a través del backend
+ * - Subida DIRECTA a Cloudinary (sin pasar por backend)
  * 
  * Props:
  * @param {string} photoUrl - URL actual de la foto de perfil
@@ -27,7 +26,6 @@ import { useAuth } from '../../context/AuthContext';
  * @param {boolean} editable - Si la foto se puede editar
  */
 const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
-    const { getAuthHeaders } = useAuth();
     const [uploading, setUploading] = useState(false);
     const [localImageUri, setLocalImageUri] = useState(null);
 
@@ -92,8 +90,8 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
             const options = {
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
-                aspect: [1, 1], // Aspecto cuadrado para foto de perfil
-                quality: 0.7, // Reducir calidad para mejor rendimiento
+                aspect: [1, 1],
+                quality: 0.7,
                 base64: false,
             };
 
@@ -107,7 +105,7 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
                 const selectedImage = result.assets[0];
                 console.log('Imagen seleccionada:', selectedImage.uri);
                 setLocalImageUri(selectedImage.uri);
-                await uploadImageToBackend(selectedImage.uri);
+                await uploadImageToCloudinary(selectedImage.uri);
             }
         } catch (error) {
             console.error('Error al seleccionar imagen:', error);
@@ -120,71 +118,65 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
     };
 
     /**
-     * Subir imagen al backend que luego la sube a Cloudinary
+     * Subir imagen DIRECTAMENTE a Cloudinary usando preset unsigned
      */
-    const uploadImageToBackend = async (imageUri) => {
+    const uploadImageToCloudinary = async (imageUri) => {
         try {
             setUploading(true);
-            console.log('Iniciando subida de imagen:', imageUri);
+            console.log('Subiendo imagen a Cloudinary:', imageUri);
 
-            const headers = getAuthHeaders();
-            if (!headers || !headers.Authorization) {
-                throw new Error('No hay token de autenticación disponible');
-            }
-
-            // Crear FormData para envío multipart
             const formData = new FormData();
-
-            // Obtener información del archivo
-            const filename = imageUri.split('/').pop() || 'profile-photo.jpg';
+            
+            const filename = imageUri.split('/').pop() || `profile_${Date.now()}.jpg`;
             const match = /\.(\w+)$/.exec(filename);
             const type = match ? `image/${match[1]}` : 'image/jpeg';
-            // Agregar el archivo al FormData
+
             formData.append('file', {
                 uri: imageUri,
                 name: filename,
                 type: type,
             });
 
-            console.log('Enviando imagen al servidor...');
+            // Usar el preset configurado en Cloudinary
+            formData.append('upload_preset', 'empleados_unsigned');
+            
+            // Opcional: agregar carpeta específica para fotos de perfil
+            formData.append('folder', 'empleados/perfiles');
 
-            // Enviar al backend
-            const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/upload/profile-photo', {
-                method: 'POST',
-                headers: {
-                    ...headers,
-                    'Content-Type': 'multipart/form-data',
-                },
-                body: formData,
-            });
+            console.log('Enviando a Cloudinary con preset: empleados_unsigned');
 
-            console.log('Response status:', response.status);
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Respuesta del servidor:', data);
-
-                // El backend debería devolver la URL de Cloudinary
-                if (data.photoUrl || data.url || data.secure_url) {
-                    const cloudinaryUrl = data.photoUrl || data.url || data.secure_url;
-                    console.log('URL de Cloudinary recibida:', cloudinaryUrl);
-
-                    // Llamar al callback con la nueva URL
-                    onPhotoChange && onPhotoChange(cloudinaryUrl);
-                    setLocalImageUri(null); // Limpiar imagen local
-
-                    Alert.alert(
-                        'Éxito',
-                        'Foto de perfil actualizada correctamente.',
-                        [{ text: 'Perfecto', style: 'default' }]
-                    );
-                } else {
-                    throw new Error('No se recibió URL de la imagen del servidor');
+            // Subir directamente a Cloudinary
+            const response = await fetch(
+                'https://api.cloudinary.com/v1_1/dv6zckgk4/image/upload',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
                 }
+            );
+
+            const responseData = await response.json();
+            console.log('Respuesta de Cloudinary:', responseData);
+
+            if (response.ok && responseData.secure_url) {
+                const cloudinaryUrl = responseData.secure_url;
+                console.log('Imagen subida exitosamente:', cloudinaryUrl);
+
+                // Llamar al callback con la nueva URL
+                // El callback (updateProfilePhoto) se encargará de actualizar el backend
+                onPhotoChange && onPhotoChange(cloudinaryUrl);
+                setLocalImageUri(null);
+
+                Alert.alert(
+                    'Éxito',
+                    'Foto de perfil actualizada correctamente.',
+                    [{ text: 'Perfecto', style: 'default' }]
+                );
             } else {
-                const errorText = await response.text();
-                console.error('Error del servidor:', errorText);
-                throw new Error(`Error del servidor: ${response.status}`);
+                console.error('Error de Cloudinary:', responseData);
+                throw new Error(responseData.error?.message || 'Error al subir imagen');
             }
         } catch (error) {
             console.error('Error al subir imagen:', error);
@@ -193,7 +185,7 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
                 `No se pudo actualizar la foto de perfil: ${error.message}`,
                 [
                     { text: 'Cancelar', style: 'cancel' },
-                    { text: 'Reintentar', onPress: () => uploadImageToBackend(imageUri) }
+                    { text: 'Reintentar', onPress: () => uploadImageToCloudinary(imageUri) }
                 ]
             );
             setLocalImageUri(null);
@@ -217,20 +209,6 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
         return null;
     };
 
-    /**
-     * Obtener las iniciales del usuario como fallback
-     */
-    const getInitials = (name = 'U') => {
-        if (typeof name !== 'string') return 'U';
-
-        return name
-            .split(' ')
-            .map(word => word.charAt(0))
-            .join('')
-            .toUpperCase()
-            .substring(0, 2) || 'U';
-    };
-
     const imageSource = getImageSource();
 
     return (
@@ -248,7 +226,7 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
                             source={imageSource}
                             style={styles.profileImage}
                             onError={(error) => {
-                                console.log('Error cargando imagen:', error);
+                                console.log('Error cargando imagen:', error.nativeEvent.error);
                             }}
                             onLoad={() => {
                                 console.log('Imagen cargada correctamente');
@@ -271,7 +249,7 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
                     )}
                 </View>
 
-                {/* Botón de editar (solo si es editable) */}
+                {/* Botón de editar */}
                 {editable && !uploading && (
                     <View style={styles.editButton}>
                         <Ionicons name="camera" size={16} color="#FFFFFF" />
@@ -297,19 +275,14 @@ const ProfilePhoto = ({ photoUrl, onPhotoChange, editable = true }) => {
 };
 
 const styles = StyleSheet.create({
-    // Contenedor principal
     container: {
         alignItems: 'center',
         marginBottom: 24,
     },
-
-    // Contenedor de la foto
     photoContainer: {
         position: 'relative',
         marginBottom: 8,
     },
-
-    // Contenedor de la imagen
     imageContainer: {
         width: 120,
         height: 120,
@@ -326,16 +299,12 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 8,
     },
-
-    // Imagen de perfil
     profileImage: {
         width: '100%',
         height: '100%',
         resizeMode: 'cover',
         backgroundColor: '#E5E7EB',
     },
-
-    // Contenedor placeholder para iniciales
     placeholderContainer: {
         width: '100%',
         height: '100%',
@@ -343,8 +312,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-
-    // Overlay de carga
     uploadingOverlay: {
         position: 'absolute',
         top: 0,
@@ -355,22 +322,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-
-    // Indicador de subida
     uploadingIndicator: {
         alignItems: 'center',
         justifyContent: 'center',
     },
-
-    // Texto de subida
     uploadingText: {
         color: '#FFFFFF',
         fontSize: 12,
         fontFamily: 'Lato-Bold',
         marginTop: 8,
     },
-
-    // Botón de editar
     editButton: {
         position: 'absolute',
         bottom: 0,
@@ -392,8 +353,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 4,
     },
-
-    // Botón de carga
     loadingButton: {
         position: 'absolute',
         bottom: 0,
@@ -407,8 +366,6 @@ const styles = StyleSheet.create({
         borderWidth: 3,
         borderColor: '#FFFFFF',
     },
-
-    // Texto de ayuda
     helpText: {
         fontSize: 14,
         fontFamily: 'Lato-Regular',
