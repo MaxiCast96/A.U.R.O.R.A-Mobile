@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "aurora-mobile",
+    "name": "Aurora",
     "slug": "aurora-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-apk3.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -17,13 +17,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icon-apk3.png",
+        "backgroundColor": "#A4D5DD"
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "package": "com.kevinal.auroramobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
