@@ -26,68 +26,114 @@ import Personalizados from '../screens/Personalizados';
 import Categorias from '../screens/Categoria';
 import Marcas from '../screens/Marcas';
 import Promociones from '../screens/Promociones';
-// ===== PANTALLAS MÉDICAS =====
 import HistorialMedico from '../screens/HistorialMedico';
 import Recetas from '../screens/Recetas';
-// ================================
 import { useAuth } from '../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 import { SettingsProvider, useSettings } from '../context/SettingsContext';
 
 const Stack = createNativeStackNavigator();
 
-/**
- * Componente de carga mientras se verifica la autenticación
- */
 const LoadingScreen = () => (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#009BBF" />
     </View>
 );
 
-/**
- * Navegación principal de la aplicación
- */
 const ThemedNavigation = () => {
     const { resolvedTheme } = useSettings();
     const navTheme = resolvedTheme === 'dark' ? NavDarkTheme : NavDefaultTheme;
+    
     return (
         <NavigationContainer theme={navTheme}>
             <Stack.Navigator
                 initialRouteName="Splash"
-                screenOptions={{ headerShown: false }}
+                screenOptions={{ 
+                    headerShown: false,
+                    // Asegura animaciones suaves
+                    animation: 'slide_from_right',
+                }}
             >
-                {/* Pantalla de carga inicial */}
                 <Stack.Screen name="Splash" component={SplashScreen} />
-                
-                {/* Pantalla de Bienvenida */}
                 <Stack.Screen name="Welcome" component={Welcome} />
-                
-                {/* Pantalla de login */}
                 <Stack.Screen name="Login" component={Login} />
                 
-                {/* ===== PANTALLAS DE RECUPERACIÓN DE CONTRASEÑA ===== */}
+                {/* Recuperación de contraseña */}
                 <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
                 <Stack.Screen name="VerifyCode" component={VerifyCode} />
                 <Stack.Screen name="ResetPassword" component={ResetPassword} />
                 <Stack.Screen name="PasswordSuccess" component={PasswordSuccess} />
                 
-                {/* Navegación principal con tabs */}
-                <Stack.Screen name="Main" component={TabNavigator} />
+                {/* Navegación principal con tabs - SIN HEADER */}
+                <Stack.Screen 
+                    name="Main" 
+                    component={TabNavigator}
+                    options={{ headerShown: false }}
+                />
                 
-                {/* ===== PANTALLAS DE PERFIL ===== */}
-                <Stack.Screen name="Profile" component={Profile} />
+                {/* Perfil */}
+                <Stack.Screen 
+                    name="Profile" 
+                    component={Profile}
+                    options={{
+                        headerShown: true,
+                        title: 'Perfil',
+                        headerStyle: { backgroundColor: '#009BBF' },
+                        headerTintColor: '#FFFFFF',
+                        headerTitleStyle: { fontFamily: 'Lato-Bold' },
+                    }}
+                />
                 
-                {/* ===== PANTALLAS DE GESTIÓN ===== */}
-                <Stack.Screen name="Clientes" component={Clientes} />
-                <Stack.Screen name="Empleados" component={Empleados} />
-                <Stack.Screen name="Sucursales" component={Sucursales} />
-                <Stack.Screen name="Ventas" component={Ventas} />
-                <Stack.Screen name="Reportes" component={Reportes} />
-                <Stack.Screen name="Facturas" component={Facturas} />
-                <Stack.Screen name="Optometristas" component={Optometristas} />
+                {/* Gestión de Personal */}
+                <Stack.Screen 
+                    name="Clientes" 
+                    component={Clientes}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Empleados" 
+                    component={Empleados}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Optometristas" 
+                    component={Optometristas}
+                    options={{ headerShown: false }}
+                />
                 
-                {/* ===== PANTALLAS MÉDICAS ===== */}
+                {/* Productos */}
+                <Stack.Screen 
+                    name="Lentes" 
+                    component={Lentes}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Accesorios" 
+                    component={Accesorios}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Personalizados" 
+                    component={Personalizados}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Categorias" 
+                    component={Categorias}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Marcas" 
+                    component={Marcas}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Promociones" 
+                    component={Promociones}
+                    options={{ headerShown: false }}
+                />
+                
+                {/* Médico */}
                 <Stack.Screen 
                     name="HistorialMedico" 
                     component={HistorialMedico}
@@ -111,17 +157,45 @@ const ThemedNavigation = () => {
                     }}
                 />
                 
-                {/* Navegación de Configuración */}
-                <Stack.Screen name="Configuracion" component={Configuracion} />
+                {/* Administración */}
+                <Stack.Screen 
+                    name="Sucursales" 
+                    component={Sucursales}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Ventas" 
+                    component={Ventas}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Reportes" 
+                    component={Reportes}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Facturas" 
+                    component={Facturas}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Configuracion" 
+                    component={Configuracion}
+                    options={{ headerShown: false }}
+                />
                 
-                {/* Pantalla de menú - acceso directo */}
-                <Stack.Screen name="MenuDirect" component={Menu} options={{
-                    headerShown: true,
-                    title: 'Operaciones',
-                    headerStyle: { backgroundColor: '#009BBF' },
-                    headerTintColor: '#FFFFFF',
-                    headerTitleStyle: { fontFamily: 'Lato-Bold' },
-                }} />
+                {/* Menú directo */}
+                <Stack.Screen 
+                    name="MenuDirect" 
+                    component={Menu} 
+                    options={{
+                        headerShown: true,
+                        title: 'Operaciones',
+                        headerStyle: { backgroundColor: '#009BBF' },
+                        headerTintColor: '#FFFFFF',
+                        headerTitleStyle: { fontFamily: 'Lato-Bold' },
+                    }} 
+                />
             </Stack.Navigator>
         </NavigationContainer>
     );
@@ -130,7 +204,6 @@ const ThemedNavigation = () => {
 export default function Navigation() {
     const { isAuthenticated, isLoading } = useAuth();
 
-    // Mostrar pantalla de carga mientras se verifica la autenticación
     if (isLoading) {
         return <LoadingScreen />;
     }

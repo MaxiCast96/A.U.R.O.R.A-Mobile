@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Animated, Alert } from 'react-native';
+import { Animated } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useDashboard } from './useDashboard';
 
@@ -86,21 +86,16 @@ export const useHome = () => {
         }
     };
 
-    // Pantallas no disponibles - mostrar mensaje
-    const handleCreateReceta = () => {
-        Alert.alert(
-            'Próximamente', 
-            'Esta funcionalidad estará disponible pronto.',
-            [{ text: 'Entendido', style: 'default' }]
-        );
+    const handleCreateReceta = (navigation) => {
+        if (navigation) {
+            navigation.navigate('Recetas');
+        }
     };
 
-    const handleCreatePromocion = () => {
-        Alert.alert(
-            'Próximamente', 
-            'Esta funcionalidad estará disponible pronto.',
-            [{ text: 'Entendido', style: 'default' }]
-        );
+    const handleCreatePromocion = (navigation) => {
+        if (navigation) {
+            navigation.navigate('Promociones');
+        }
     };
 
     useEffect(() => {

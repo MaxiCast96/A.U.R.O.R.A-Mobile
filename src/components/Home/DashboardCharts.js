@@ -83,47 +83,19 @@ const DashboardCharts = () => {
 
     /**
      * Procesar datos de estado de citas para la gráfica de pastel
-     * Usa la paleta de colores de la aplicación
+     * Usa colores azulados como la web: '#009BBF', '#00B8E6', '#33C7E6', '#66D6E6'
      */
     const processAppointmentsData = (estadoCitas) => {
-        // Paleta de colores de la aplicación
-        const colorPalette = [
-            '#49AA4C',  // Verde (del slogan)
-            '#D0155F',  // Rosa/Fucsia (del slogan)
-            '#009BBF',  // Azul principal
-            '#007A9A',  // Azul oscuro
-            '#F39C12',  // Naranja
-            '#8E44AD',  // Morado
-            '#2ECC71',  // Verde claro
-            '#E74C3C',  // Rojo
-            '#3498DB',  // Azul cielo
-            '#1ABC9C',  // Turquesa
-        ];
-
-        // Mapeo específico de estados a colores de la paleta
-        const stateColors = {
-            'completada': '#49AA4C',    // Verde
-            'completado': '#49AA4C',    
-            'pendiente': '#D0155F',     // Rosa/Fucsia
-            'confirmada': '#F39C12',    // Naranja
-            'agendada': '#009BBF',      // Azul principal
-            'cancelada': '#8E44AD',     // Morado
-            'en proceso': '#3498DB',    // Azul cielo
-            'reagendada': '#E74C3C',    // Rojo
-            'atendida': '#2ECC71',      // Verde claro
-            'no asistió': '#95A5A6'     // Gris
-        };
+        // Colores azulados iguales a la web
+        const COLORS = ['#009BBF', '#00B8E6', '#33C7E6', '#66D6E6'];
 
         const pieData = estadoCitas
             .filter(item => item.cantidad > 0)
             .map((item, index) => {
-                const estadoLower = (item.estado || '').toLowerCase().trim();
-                const color = stateColors[estadoLower] || colorPalette[index % colorPalette.length];
-                
                 return {
                     name: item.estado || 'Sin estado',
                     population: Number(item.cantidad || 0),
-                    color: color,
+                    color: COLORS[index % COLORS.length],
                     legendFontColor: '#1A1A1A',
                     legendFontSize: 12
                 };
@@ -148,21 +120,21 @@ const DashboardCharts = () => {
     };
 
     /**
-     * Datos por defecto para citas (cuando no hay datos)
+     * Datos por defecto para citas con colores azulados
      */
     const getDefaultAppointmentsData = () => {
         return [
             { 
                 name: 'Confirmada', 
                 population: 4, 
-                color: '#F39C12', 
+                color: '#009BBF', 
                 legendFontColor: '#1A1A1A', 
                 legendFontSize: 12 
             },
             { 
                 name: 'Pendiente', 
                 population: 12, 
-                color: '#D0155F', 
+                color: '#00B8E6', 
                 legendFontColor: '#1A1A1A', 
                 legendFontSize: 12 
             },

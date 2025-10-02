@@ -4,8 +4,7 @@ import {
     Text, 
     StyleSheet, 
     ScrollView, 
-    TouchableOpacity, 
-    Alert,
+    TouchableOpacity,
     TextInput 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,32 +12,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../utils/i18n';
 
-/**
- * Pantalla de Menú Principal
- * 
- * Pantalla mejorada con navegación funcional y diseño más fluido.
- * Incluye búsqueda, secciones organizadas y botones esenciales.
- */
 const MenuScreen = () => {
     const navigation = useNavigation();
     const { user } = useAuth();
     const [searchText, setSearchText] = useState('');
     const { t } = useI18n();
 
-    /**
-     * Función auxiliar para mostrar alertas de funcionalidad próxima
-     */
-    const showComingSoon = (feature) => {
-        Alert.alert(
-            'Próximamente',
-            `La funcionalidad de ${feature} estará disponible pronto.`,
-            [{ text: 'Entendido', style: 'default' }]
-        );
-    };
-
-    /**
-     * Secciones del menú con navegación funcional
-     */
     const menuSections = [
         {
             title: 'PRINCIPAL',
@@ -107,21 +86,21 @@ const MenuScreen = () => {
                     title: 'Categorías', 
                     subtitle: 'Categorías de productos',
                     color: '#49AA4C',
-                    onPress: () => showComingSoon('Categorías')
+                    onPress: () => navigation.navigate('Categorias')
                 },
                 { 
                     icon: 'business-outline', 
                     title: 'Marcas', 
                     subtitle: 'Marcas disponibles',
                     color: '#49AA4C',
-                    onPress: () => showComingSoon('Marcas')
+                    onPress: () => navigation.navigate('Marcas')
                 },
                 { 
                     icon: 'gift-outline', 
                     title: 'Promociones', 
                     subtitle: 'Ofertas y promociones',
                     color: '#49AA4C',
-                    onPress: () => showComingSoon('Promociones')
+                    onPress: () => navigation.navigate('Promociones')
                 }
             ]
         },
@@ -140,14 +119,14 @@ const MenuScreen = () => {
                     title: 'Historial Médico', 
                     subtitle: 'Historial de pacientes',
                     color: '#D01B5F',
-                    onPress: () => showComingSoon('Historial Médico')
+                    onPress: () => navigation.navigate('HistorialMedico')
                 },
                 { 
                     icon: 'medical-outline', 
                     title: 'Recetas', 
                     subtitle: 'Prescripciones médicas',
                     color: '#D01B5F',
-                    onPress: () => showComingSoon('Recetas')
+                    onPress: () => navigation.navigate('Recetas')
                 }
             ]
         },
@@ -193,9 +172,6 @@ const MenuScreen = () => {
         }
     ];
 
-    /**
-     * Filtrar elementos basado en la búsqueda
-     */
     const getFilteredSections = () => {
         if (!searchText.trim()) {
             return menuSections;
@@ -210,9 +186,6 @@ const MenuScreen = () => {
         })).filter(section => section.items.length > 0);
     };
 
-    /**
-     * Renderizar item del menú
-     */
     const renderMenuItem = (item, index) => (
         <TouchableOpacity
             key={index}
@@ -233,9 +206,6 @@ const MenuScreen = () => {
         </TouchableOpacity>
     );
 
-    /**
-     * Renderizar sección del menú
-     */
     const renderMenuSection = (section, sectionIndex) => {
         if (section.items.length === 0) return null;
 
@@ -282,7 +252,7 @@ const MenuScreen = () => {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
-                {/* Sección destacada - Esenciales (Solo 4 botones) */}
+                {/* Sección destacada - Esenciales */}
                 {!searchText && (
                     <View style={styles.essentialsSection}>
                         <View style={styles.essentialsTitleContainer}>
@@ -361,7 +331,6 @@ const MenuScreen = () => {
                     </View>
                 )}
 
-                {/* Espaciador para el tab bar */}
                 <View style={styles.spacer} />
             </ScrollView>
         </View>
@@ -572,4 +541,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default MenuScreen
+export default MenuScreen;

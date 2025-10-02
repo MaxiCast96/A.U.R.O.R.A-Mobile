@@ -23,6 +23,7 @@ const HomeScreen = () => {
 
     const {
         stats,
+        estadoCitas,
         profileData,
         refreshing,
         fadeAnim,
@@ -130,14 +131,14 @@ const HomeScreen = () => {
                         <View style={styles.actionsRow}>
                             {renderQuickActionButton('Crear Lentes', 'glasses-outline', () => handleCreateLentes(navigation))}
                             {renderQuickActionButton('Crear Cita', 'calendar-outline', () => handleCreateCita(navigation))}
-                            {renderQuickActionButton('Crear Receta', 'medical-outline', handleCreateReceta)}
-                            {renderQuickActionButton('Crear Promoción', 'pricetag-outline', handleCreatePromocion)}
+                            {renderQuickActionButton('Crear Receta', 'medical-outline', () => handleCreateReceta(navigation))}
+                            {renderQuickActionButton('Crear Promoción', 'pricetag-outline', () => handleCreatePromocion(navigation))}
                         </View>
                     </View>
 
-                    {/* Gráficas */}
+                    {/* Gráfica Circular - Estado de Citas */}
                     <View style={styles.chartsSection}>
-                        <DashboardCharts />
+                        <DashboardCharts estadoCitas={estadoCitas} />
                     </View>
 
                     {/* Servicios */}
