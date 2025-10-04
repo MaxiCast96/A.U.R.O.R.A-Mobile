@@ -4,7 +4,7 @@
     "slug": "aurora-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon-apk3.png",
+    "icon": "./assets/icon-apkn.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon-apk3.png",
+        "foregroundImage": "./assets/icon-apkn.png",
         "backgroundColor": "#A4D5DD"
       },
       "edgeToEdgeEnabled": true,
