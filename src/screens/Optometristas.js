@@ -39,45 +39,45 @@ import EditOptometristaModal from '../components/Optometristas/EditOptometristaM
  */
 const Optometristas = () => {
     const navigation = useNavigation();
-    
+
     // Estado para el modal de editar
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [selectedOptometristaForEdit, setSelectedOptometristaForEdit] = useState(null);
-    
+
     const {
         // Estados de datos
         filteredOptometristas,
         loading,
         refreshing,
-        
+
         // Estados de modal de detalle
         modalVisible,
         selectedOptometrista,
         selectedIndex,
-        
+
         // Estados de filtros
         searchText,
         selectedDisponibilidadFilter,
         selectedSucursalFilter,
-        
+
         // Funciones de datos
         onRefresh,
         getOptometristasStats,
-        
+
         // Funciones CRUD
         deleteOptometrista,
         updateOptometristaDisponibilidad,
         updateOptometrista,
-        
+
         // Funciones de modal de detalle
         handleViewMore,
         handleCloseModal,
-        
+
         // Funciones de filtros
         setSearchText,
         setSelectedDisponibilidadFilter,
         setSelectedSucursalFilter,
-        
+
         // Función para actualizar lista de optometristas
         addOptometristaToList,
     } = useOptometristas();
@@ -101,7 +101,7 @@ const Optometristas = () => {
         if (modalVisible) {
             handleCloseModal();
         }
-        
+
         // Abrir modal de editar con los datos del optometrista
         setSelectedOptometristaForEdit(optometrista);
         setEditModalVisible(true);
@@ -121,7 +121,7 @@ const Optometristas = () => {
     const handleEditSuccess = (updatedOptometrista) => {
         // Actualizar la lista local usando la función del hook
         updateOptometrista(updatedOptometrista._id, updatedOptometrista);
-        
+
         // Mostrar mensaje de éxito
         showSuccessMessage('Optometrista actualizado exitosamente');
     };
@@ -135,8 +135,8 @@ const Optometristas = () => {
             `¿Estás seguro de que deseas eliminar al Dr. ${optometrista.empleadoId?.nombre || 'N/A'} ${optometrista.empleadoId?.apellido || 'N/A'}?`,
             [
                 { text: 'Cancelar', style: 'cancel' },
-                { 
-                    text: 'Eliminar', 
+                {
+                    text: 'Eliminar',
                     style: 'destructive',
                     onPress: async () => {
                         handleCloseModal(); // Cerrar modal primero
@@ -210,7 +210,7 @@ const Optometristas = () => {
             {/* Header con título, botón atrás */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.backButton}
                         onPress={() => navigation.goBack()}
                     >
@@ -219,9 +219,9 @@ const Optometristas = () => {
                     <Text style={styles.headerTitle}>Optometristas</Text>
                     <View style={styles.headerPlaceholder} />
                 </View>
-                
+
                 <Text style={styles.headerSubtitle}>Gestiona todos los optometristas de la óptica</Text>
-                
+
                 {/* Estadísticas integradas en el header */}
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
@@ -266,12 +266,14 @@ const Optometristas = () => {
             </View>
 
             {/* Filtros */}
-            <OptometristasFilter
-                selectedDisponibilidadFilter={selectedDisponibilidadFilter}
-                selectedSucursalFilter={selectedSucursalFilter}
-                onDisponibilidadFilterChange={setSelectedDisponibilidadFilter}
-                onSucursalFilterChange={setSelectedSucursalFilter}
-            />
+            <View style={styles.filtersContainer}>
+                <OptometristasFilter
+                    selectedDisponibilidadFilter={selectedDisponibilidadFilter}
+                    selectedSucursalFilter={selectedSucursalFilter}
+                    onDisponibilidadFilterChange={setSelectedDisponibilidadFilter}
+                    onSucursalFilterChange={setSelectedSucursalFilter}
+                />
+            </View>
 
             {/* Lista de optometristas */}
             <View style={styles.listContainer}>
@@ -298,7 +300,7 @@ const Optometristas = () => {
                 )}
             </View>
 
-           {/* Modal de editar optometrista */}
+            {/* Modal de editar optometrista */}
             <EditOptometristaModal
                 visible={editModalVisible}
                 optometrista={selectedOptometristaForEdit}
@@ -306,7 +308,7 @@ const Optometristas = () => {
                 onSuccess={handleEditSuccess}
             />
 
-              
+
 
             {/* Modal de detalle optometrista */}
             <OptometristaDetailModal
@@ -316,7 +318,7 @@ const Optometristas = () => {
                 onClose={handleCloseModal}
                 onEdit={handleEdit}
             />
-            
+
         </View>
     );
 };
@@ -462,6 +464,10 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Regular',
         color: '#666666',
         marginTop: 12,
+    },
+    filtersContainer: {
+        backgroundColor: '#F8F9FA',
+        paddingBottom: 8,
     },
 });
 

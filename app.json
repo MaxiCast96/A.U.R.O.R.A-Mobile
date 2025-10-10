@@ -4,7 +4,7 @@
     "slug": "aurora-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon-apkn.png",
+    "icon": "./assets/icon-apk.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -17,13 +17,16 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon-apkn.png",
+        "foregroundImage": "./assets/icon-apk.png",
         "backgroundColor": "#A4D5DD"
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
       ],
+      "usesCleartextTraffic": true,
       "package": "com.kevinal.auroramobile"
     },
     "web": {

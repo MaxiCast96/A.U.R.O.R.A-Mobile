@@ -1,35 +1,84 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
+/**
+ * Componente PromocionesFilter
+ * 
+ * Filtros horizontales en forma de chips scrollables
+ * Permite filtrar promociones por estado
+ * 
+ * Props:
+ * @param {string} selectedFilter - Filtro seleccionado actualmente
+ * @param {Function} onFilterChange - Callback para cambio de filtro
+ */
 const PromocionesFilter = ({ selectedFilter, onFilterChange }) => {
-    const filters = [
-        { key: 'todas', label: 'Todas', color: '#009BBF' },
-        { key: 'activas', label: 'Activas', color: '#49AA4C' },
-        { key: 'inactivas', label: 'Inactivas', color: '#D0155F' },
-        { key: 'expiradas', label: 'Expiradas', color: '#FF8C00' }
+    // Opciones de filtro para promociones
+    const filtroOptions = [
+        { 
+            id: 'todas', 
+            label: 'Todas', 
+            icon: 'pricetags',
+            color: '#009BBF'
+        },
+        { 
+            id: 'activas', 
+            label: 'Activas', 
+            icon: 'checkmark-circle',
+            color: '#49AA4C'
+        },
+        { 
+            id: 'inactivas', 
+            label: 'Inactivas', 
+            icon: 'close-circle',
+            color: '#D0155F'
+        },
+        { 
+            id: 'expiradas', 
+            label: 'Expiradas', 
+            icon: 'time',
+            color: '#FF8C00'
+        }
     ];
 
-    const renderFilterButton = (filter) => {
-        const isSelected = selectedFilter === filter.key;
+    /**
+     * Renderizar chip de filtro
+     */
+    const renderChip = (option) => {
+        const isSelected = selectedFilter === option.id;
         
         return (
             <TouchableOpacity
-                key={filter.key}
+                key={option.id}
                 style={[
-                    styles.filterButton,
+                    styles.chip,
+                    { borderColor: option.color },
                     isSelected && { 
-                        backgroundColor: filter.color,
-                        borderColor: filter.color 
+                        backgroundColor: option.color,
+                        borderColor: option.color 
                     }
                 ]}
-                onPress={() => onFilterChange(filter.key)}
+                onPress={() => onFilterChange(option.id)}
                 activeOpacity={0.7}
             >
+                <Ionicons 
+                    name={option.icon} 
+                    size={16} 
+                    color={isSelected ? '#FFFFFF' : option.color} 
+                    style={styles.chipIcon}
+                />
                 <Text style={[
-                    styles.filterText,
-                    isSelected && { color: '#FFFFFF' }
+                    styles.chipText,
+                    { color: option.color },
+                    isSelected && styles.chipTextSelected
                 ]}>
-                    {filter.label}
+                    {option.label}
                 </Text>
             </TouchableOpacity>
         );
@@ -37,30 +86,50 @@ const PromocionesFilter = ({ selectedFilter, onFilterChange }) => {
 
     return (
         <View style={styles.container}>
-            {filters.map(filter => renderFilterButton(filter))}
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+            >
+                {filtroOptions.map(option => renderChip(option))}
+            </ScrollView>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flexDirection: 'row',
+        backgroundColor: '#F8F9FA',
+    },
+    scrollContent: {
         paddingHorizontal: 20,
-        paddingVertical: 12,
+        paddingVertical: 8,
         gap: 8,
     },
-    filterButton: {
-        paddingHorizontal: 16,
+    chip: {
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingVertical: 8,
+        paddingHorizontal: 16,
         borderRadius: 20,
-        backgroundColor: '#F8F9FA',
-        borderWidth: 1,
-        borderColor: '#E5E5E5',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1.5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
-    filterText: {
+    chipIcon: {
+        marginRight: 6,
+    },
+    chipText: {
         fontSize: 14,
+        fontFamily: 'Lato-Regular',
+    },
+    chipTextSelected: {
+        color: '#FFFFFF',
         fontFamily: 'Lato-Bold',
-        color: '#666666',
     },
 });
 

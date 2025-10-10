@@ -42,52 +42,52 @@ import EmpleadoDetailModal from '../components/Empleados/EmpleadoDetailModal';
  */
 const Empleados = () => {
     const navigation = useNavigation();
-    
+
     // Estado para el modal de editar
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [selectedEmpleadoForEdit, setSelectedEmpleadoForEdit] = useState(null);
-    
+
     const {
         // Estados de datos
         filteredEmpleados,
         loading,
         refreshing,
-        
+
         // Estados de modal de detalle
         modalVisible,
         selectedEmpleado,
         selectedIndex,
-        
+
         // Estados de modal de agregar
         addModalVisible,
-        
+
         // Estados de filtros
         searchText,
         selectedEstadoFilter,
         selectedSucursalFilter,
-        
+
         // Funciones de datos
         onRefresh,
         getEmpleadosStats,
-        
+
         // Funciones CRUD
         deleteEmpleado,
         updateEmpleadoEstado,
         updateEmpleado,
-        
+
         // Funciones de modal de detalle
         handleViewMore,
         handleCloseModal,
-        
+
         // Funciones de modal de agregar
         handleOpenAddModal,
         handleCloseAddModal,
-        
+
         // Funciones de filtros
         setSearchText,
         setSelectedEstadoFilter,
         setSelectedSucursalFilter,
-        
+
         // Función para actualizar lista de empleados
         addEmpleadoToList,
     } = useEmpleados();
@@ -111,7 +111,7 @@ const Empleados = () => {
         if (modalVisible) {
             handleCloseModal();
         }
-        
+
         // Abrir modal de editar con los datos del empleado
         setSelectedEmpleadoForEdit(empleado);
         setEditModalVisible(true);
@@ -131,7 +131,7 @@ const Empleados = () => {
     const handleEditSuccess = (updatedEmpleado) => {
         // Actualizar la lista local usando la función del hook
         updateEmpleado(updatedEmpleado._id, updatedEmpleado);
-        
+
         // Mostrar mensaje de éxito
         showSuccessMessage('Empleado actualizado exitosamente');
     };
@@ -142,7 +142,7 @@ const Empleados = () => {
     const handleAddSuccess = (newEmpleado) => {
         // Actualizar la lista local cuando se crea un empleado
         addEmpleadoToList(newEmpleado);
-        
+
         // Mostrar mensaje de éxito
         showSuccessMessage('Empleado creado exitosamente');
     };
@@ -156,8 +156,8 @@ const Empleados = () => {
             `¿Estás seguro de que deseas eliminar a ${empleado.nombre} ${empleado.apellido}?`,
             [
                 { text: 'Cancelar', style: 'cancel' },
-                { 
-                    text: 'Eliminar', 
+                {
+                    text: 'Eliminar',
                     style: 'destructive',
                     onPress: async () => {
                         handleCloseModal(); // Cerrar modal primero
@@ -236,23 +236,23 @@ const Empleados = () => {
             {/* Header con título, botón atrás y botón añadir */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.backButton}
                         onPress={() => navigation.goBack()}
                     >
                         <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Empleados</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.headerAddButton}
                         onPress={handleOpenAddModal}
                     >
                         <Ionicons name="person-add" size={24} color="#FFFFFF" />
                     </TouchableOpacity>
                 </View>
-                
+
                 <Text style={styles.headerSubtitle}>Gestiona todos los empleados de la óptica</Text>
-                
+
                 {/* Estadísticas integradas en el header */}
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
@@ -289,7 +289,7 @@ const Empleados = () => {
                         </TouchableOpacity>
                     ) : null}
                 </View>
-                
+
                 {/* Nómina total discreta */}
                 <View style={styles.nominaDiscreta}>
                     <Text style={styles.nominaDiscreteLabel}>Nómina Total: </Text>
@@ -298,12 +298,14 @@ const Empleados = () => {
             </View>
 
             {/* Filtros */}
-            <EmpleadosFilter
-                selectedEstadoFilter={selectedEstadoFilter}
-                selectedSucursalFilter={selectedSucursalFilter}
-                onEstadoFilterChange={setSelectedEstadoFilter}
-                onSucursalFilterChange={setSelectedSucursalFilter}
-            />
+            <View style={styles.filtersContainer}>
+                <EmpleadosFilter
+                    selectedEstadoFilter={selectedEstadoFilter}
+                    selectedSucursalFilter={selectedSucursalFilter}
+                    onEstadoFilterChange={setSelectedEstadoFilter}
+                    onSucursalFilterChange={setSelectedSucursalFilter}
+                />
+            </View>
 
             {/* Lista de empleados */}
             <View style={styles.listContainer}>
@@ -353,7 +355,7 @@ const Empleados = () => {
                 onClose={handleCloseModal}
                 onEdit={handleEdit}
             />
-            
+
         </View>
     );
 };
@@ -550,6 +552,10 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Regular',
         color: '#666666',
         marginTop: 12,
+    },
+    filtersContainer: {
+        backgroundColor: '#F8F9FA',
+        paddingBottom: 8,
     },
 });
 

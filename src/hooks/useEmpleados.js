@@ -43,7 +43,7 @@ export const useEmpleados = () => {
     // ===========================================
     const [searchText, setSearchText] = useState('');
     const [selectedEstadoFilter, setSelectedEstadoFilter] = useState('todos'); // 'todos', 'activos', 'inactivos'
-    const [selectedSucursalFilter, setSelectedSucursalFilter] = useState('todas'); // 'todas', 'centro', 'escalon', etc.
+    const [selectedSucursalFilter, setSelectedSucursalFilter] = useState('todas'); // 'todas', 'quezaltepeque', 'colonia médica', 'santa rosa'
 
     // ===========================================
     // FUNCIONES CRUD - CREATE, READ, UPDATE, DELETE
@@ -392,21 +392,22 @@ export const useEmpleados = () => {
                 break;
         }
 
-        // Aplicar filtro por sucursal
+        // Aplicar filtro por sucursal - CORREGIDO
         if (selectedSucursalFilter !== 'todas') {
             filtered = filtered.filter(empleado => {
                 const sucursalEmpleado = empleado.sucursalId?.nombre || empleado.sucursal || '';
+                const sucursalLower = sucursalEmpleado.toLowerCase();
                 
-                // Comparaciones exactas considerando acentos y espacios
+                // Comparaciones exactas considerando las sucursales correctas
                 switch (selectedSucursalFilter) {
-                    case 'centro':
-                        return sucursalEmpleado.toLowerCase().includes('centro');
-                    case 'escalón':
-                        return sucursalEmpleado.toLowerCase().includes('escalón') || 
-                               sucursalEmpleado.toLowerCase().includes('escalon');
+                    case 'quezaltepeque':
+                        return sucursalLower.includes('quezaltepeque');
+                    case 'colonia médica':
+                        return sucursalLower.includes('colonia médica') || 
+                               sucursalLower.includes('colonia medica');
                     case 'santa rosa':
-                        return sucursalEmpleado.toLowerCase().includes('santa rosa') ||
-                               sucursalEmpleado.toLowerCase().includes('santa-rosa');
+                        return sucursalLower.includes('santa rosa') ||
+                               sucursalLower.includes('santa-rosa');
                     default:
                         return false;
                 }

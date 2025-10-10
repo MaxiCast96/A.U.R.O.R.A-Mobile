@@ -41,50 +41,50 @@ import ClienteDetailModal from '../components/Clientes/ClienteDetailModal';
  */
 const Clientes = () => {
     const navigation = useNavigation();
-    
+
     // Estado para el modal de editar
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [selectedClienteForEdit, setSelectedClienteForEdit] = useState(null);
-    
+
     const {
         // Estados de datos
         filteredClientes,
         loading,
         refreshing,
-        
+
         // Estados de modal de detalle
         modalVisible,
         selectedCliente,
         selectedIndex,
-        
+
         // Estados de modal de agregar
         addModalVisible,
-        
+
         // Estados de filtros
         searchText,
         selectedFilter,
-        
+
         // Funciones de datos
         onRefresh,
         getClientesStats,
-        
+
         // Funciones CRUD
         deleteCliente,
         updateClienteEstado,
         updateCliente,
-        
+
         // Funciones de modal de detalle
         handleViewMore,
         handleCloseModal,
-        
+
         // Funciones de modal de agregar
         handleOpenAddModal,
         handleCloseAddModal,
-        
+
         // Funciones de filtros
         setSearchText,
         setSelectedFilter,
-        
+
         // Función para actualizar lista de clientes
         addClienteToList,
     } = useClientes();
@@ -108,7 +108,7 @@ const Clientes = () => {
         if (modalVisible) {
             handleCloseModal();
         }
-        
+
         // Abrir modal de editar con los datos del cliente
         setSelectedClienteForEdit(cliente);
         setEditModalVisible(true);
@@ -128,7 +128,7 @@ const Clientes = () => {
     const handleEditSuccess = (updatedCliente) => {
         // Actualizar la lista local usando la función del hook
         updateCliente(updatedCliente._id, updatedCliente);
-        
+
         // Mostrar mensaje de éxito
         showSuccessMessage('Cliente actualizado exitosamente');
     };
@@ -139,7 +139,7 @@ const Clientes = () => {
     const handleAddSuccess = (newCliente) => {
         // Actualizar la lista local cuando se crea un cliente
         addClienteToList(newCliente);
-        
+
         // Mostrar mensaje de éxito
         showSuccessMessage('Cliente creado exitosamente');
     };
@@ -153,8 +153,8 @@ const Clientes = () => {
             `¿Estás seguro de que deseas eliminar a ${cliente.nombre} ${cliente.apellido}?`,
             [
                 { text: 'Cancelar', style: 'cancel' },
-                { 
-                    text: 'Eliminar', 
+                {
+                    text: 'Eliminar',
                     style: 'destructive',
                     onPress: async () => {
                         handleCloseModal(); // Cerrar modal primero
@@ -233,23 +233,23 @@ const Clientes = () => {
             {/* Header con título, botón atrás y botón añadir */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.backButton}
                         onPress={() => navigation.goBack()}
                     >
                         <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Clientes</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.headerAddButton}
                         onPress={handleOpenAddModal}
                     >
                         <Ionicons name="person-add" size={24} color="#FFFFFF" />
                     </TouchableOpacity>
                 </View>
-                
+
                 <Text style={styles.headerSubtitle}>Gestiona todos los clientes de la óptica</Text>
-                
+
                 {/* Estadísticas integradas en el header */}
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
@@ -289,10 +289,12 @@ const Clientes = () => {
             </View>
 
             {/* Filtros */}
-            <ClientesFilter
-                selectedFilter={selectedFilter}
-                onFilterChange={setSelectedFilter}
-            />
+            <View style={styles.filtersContainer}>
+                <ClientesFilter
+                    selectedFilter={selectedFilter}
+                    onFilterChange={setSelectedFilter}
+                />
+            </View>
 
             {/* Lista de clientes */}
             <View style={styles.listContainer}>
@@ -503,6 +505,10 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Regular',
         color: '#666666',
         marginTop: 12,
+    },
+    filtersContainer: {
+        backgroundColor: '#F8F9FA',
+        paddingBottom: 8,
     },
 });
 

@@ -44,9 +44,9 @@ export const useEditEmpleado = () => {
     const [empleadoId, setEmpleadoId] = useState(null);
     const [originalData, setOriginalData] = useState(null);
 
-    // Opciones de sucursales - cargadas dinámicamente
+    // Opciones de sucursales - cargadas dinámicamente con valor único inicial
     const [sucursales, setSucursales] = useState([
-        { label: 'Cargando sucursales...', value: '' }
+        { label: 'Cargando sucursales...', value: 'loading' }
     ]);
 
     const puestos = [
@@ -81,7 +81,7 @@ export const useEditEmpleado = () => {
             } else {
                 console.error('Error cargando sucursales para edición');
                 setSucursales([
-                    { label: 'Error cargando sucursales', value: '' }
+                    { label: 'Error cargando sucursales', value: 'error' }
                 ]);
             }
         } catch (error) {
@@ -374,7 +374,7 @@ export const useEditEmpleado = () => {
         }
 
         // Validar sucursal
-        if (!sucursal || sucursal === '') {
+        if (!sucursal || sucursal === '' || sucursal === 'loading' || sucursal === 'error') {
             newErrors.sucursal = 'La sucursal es requerida';
             isValid = false;
         }

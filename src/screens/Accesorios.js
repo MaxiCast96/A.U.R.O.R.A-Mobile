@@ -99,7 +99,7 @@ const Accesorios = () => {
     const fetchBackendData = async () => {
       try {
         setLoadingData(true);
-        
+
         const [catRes, marRes, promRes, sucRes] = await Promise.all([
           axios.get(`${BASE_URL}/categoria`).catch(err => {
             console.warn('Error cargando categorías:', err.message);
@@ -127,7 +127,7 @@ const Accesorios = () => {
       } catch (error) {
         console.error('Error cargando datos del backend:', error);
         Alert.alert(
-          'Error de carga', 
+          'Error de carga',
           'Algunos datos no se pudieron cargar del servidor.'
         );
       } finally {
@@ -175,7 +175,7 @@ const Accesorios = () => {
     if (detailModalVisible) {
       setDetailModalVisible(false);
     }
-    
+
     setSelectedAccesorio(accesorio);
     setEditModalVisible(true);
   };
@@ -245,13 +245,13 @@ const Accesorios = () => {
   // --- FILTRADO ---
   const filtered = Array.isArray(filteredAccesorios)
     ? filteredAccesorios.filter(accesorio => {
-        const matchesSearch = !searchText || 
-          accesorio.nombre?.toLowerCase().includes(searchText.toLowerCase()) ||
-          accesorio.descripcion?.toLowerCase().includes(searchText.toLowerCase()) ||
-          accesorio.marcaId?.nombre?.toLowerCase().includes(searchText.toLowerCase());
-        
-        return matchesSearch;
-      })
+      const matchesSearch = !searchText ||
+        accesorio.nombre?.toLowerCase().includes(searchText.toLowerCase()) ||
+        accesorio.descripcion?.toLowerCase().includes(searchText.toLowerCase()) ||
+        accesorio.marcaId?.nombre?.toLowerCase().includes(searchText.toLowerCase());
+
+      return matchesSearch;
+    })
     : [];
 
   /**
@@ -307,14 +307,14 @@ const Accesorios = () => {
       {/* Header con título, botón atrás y botón añadir */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Gestión de Accesorios</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.headerAddButton, loadingData && styles.headerAddButtonDisabled]}
             onPress={() => setAddModalVisible(true)}
             disabled={loadingData}
@@ -322,9 +322,9 @@ const Accesorios = () => {
             <Ionicons name="add" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-        
+
         <Text style={styles.headerSubtitle}>Administra el inventario de accesorios de la óptica</Text>
-        
+
         {/* Estadísticas integradas en el header */}
         <AccesoriosStatsCard stats={stats} />
       </View>
@@ -363,9 +363,9 @@ const Accesorios = () => {
         ) : (
           <FlatList
             data={filtered}
-            keyExtractor={(item, index) => 
-              item._id?.toString() || 
-              item.id?.toString() || 
+            keyExtractor={(item, index) =>
+              item._id?.toString() ||
+              item.id?.toString() ||
               `accesorio-${index}`
             }
             renderItem={renderAccesorioItem}
@@ -429,8 +429,8 @@ const Accesorios = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     backgroundColor: '#F8F9FA',
   },
   header: {
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 4,
   },
-  headerTitle: { 
+  headerTitle: {
     fontSize: 24,
     fontFamily: 'Lato-Bold',
     color: '#FFFFFF',
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: 16,
   },
-  headerAddButton: { 
+  headerAddButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -508,8 +508,7 @@ const styles = StyleSheet.create({
   },
   filtersContainer: {
     backgroundColor: '#F8F9FA',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 8,  // Reducido
   },
   listContainer: {
     flex: 1,
@@ -520,13 +519,13 @@ const styles = StyleSheet.create({
   separator: {
     height: 6,
   },
-  emptyContainer: { 
+  emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
     paddingHorizontal: 40,
   },
-  emptyTitle: { 
+  emptyTitle: {
     fontSize: 20,
     fontFamily: 'Lato-Bold',
     color: '#666666',

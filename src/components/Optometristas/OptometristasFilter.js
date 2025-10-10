@@ -1,20 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     View,
     Text,
     StyleSheet,
     TouchableOpacity,
-    Modal,
-    FlatList
+    ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 /**
  * Componente OptometristasFilter
  * 
- * Proporciona filtros dropdown para la lista de optometristas:
- * - Filtro por disponibilidad: Todos, Disponibles, No disponibles
- * - Filtro por sucursal: Todas, Coatepeque, Escalón, etc.
+ * Filtros horizontales en forma de chips scrollables
+ * Permite filtrar optometristas por disponibilidad y sucursal
  * 
  * Props:
  * @param {string} selectedDisponibilidadFilter - Filtro de disponibilidad seleccionado
@@ -28,130 +26,139 @@ const OptometristasFilter = ({
     onDisponibilidadFilterChange,
     onSucursalFilterChange
 }) => {
-    const [disponibilidadModalVisible, setDisponibilidadModalVisible] = useState(false);
-    const [sucursalModalVisible, setSucursalModalVisible] = useState(false);
-
     // Opciones de filtro por disponibilidad
     const disponibilidadOptions = [
-        { id: 'todos', label: 'Todos los estados' },
-        { id: 'disponibles', label: 'Disponibles' },
-        { id: 'no_disponibles', label: 'No Disponibles' }
+        { 
+            id: 'todos', 
+            label: 'Todos', 
+            icon: 'eye',
+            color: '#009BBF'
+        },
+        { 
+            id: 'disponibles', 
+            label: 'Disponibles', 
+            icon: 'checkmark-circle',
+            color: '#49AA4C'
+        },
+        { 
+            id: 'no_disponibles', 
+            label: 'No Disponibles', 
+            icon: 'close-circle',
+            color: '#D0155F'
+        }
     ];
 
     // Opciones de filtro por sucursal
     const sucursalOptions = [
-        { id: 'todas', label: 'Todas las sucursales' },
-        { id: 'coatepeque', label: 'Sucursal Coatepeque' },
-        { id: 'escalon', label: 'Sucursal Escalón' },
-        { id: 'santa rosa', label: 'Sucursal Santa Rosa' },
-        { id: 'sonsonate', label: 'Sucursal Sonsonate' },
-        { id: 'la libertad', label: 'Sucursal La Libertad' }
+        { 
+            id: 'todas', 
+            label: 'Todas', 
+            icon: 'business',
+            color: '#009BBF'
+        },
+        { 
+            id: 'coatepeque', 
+            label: 'Coatepeque', 
+            icon: 'location',
+            color: '#FF6B6B'
+        },
+        { 
+            id: 'escalon', 
+            label: 'Escalón', 
+            icon: 'location',
+            color: '#4ECDC4'
+        },
+        { 
+            id: 'santa rosa', 
+            label: 'Santa Rosa', 
+            icon: 'location',
+            color: '#FFD93D'
+        },
+        { 
+            id: 'sonsonate', 
+            label: 'Sonsonate', 
+            icon: 'location',
+            color: '#95E1D3'
+        },
+        { 
+            id: 'la libertad', 
+            label: 'La Libertad', 
+            icon: 'location',
+            color: '#F38181'
+        }
     ];
 
     /**
-     * Obtener label del filtro seleccionado
+     * Renderizar chip de filtro
      */
-    const getSelectedDisponibilidadLabel = () => {
-        const selected = disponibilidadOptions.find(option => option.id === selectedDisponibilidadFilter);
-        return selected ? selected.label : 'Todos los estados';
-    };
-
-    const getSelectedSucursalLabel = () => {
-        const selected = sucursalOptions.find(option => option.id === selectedSucursalFilter);
-        return selected ? selected.label : 'Todas las sucursales';
-    };
-
-    /**
-     * Renderizar dropdown
-     */
-    const renderDropdown = (
-        title,
-        selectedLabel,
-        isVisible,
-        setVisible,
-        options,
-        onSelect,
-        selectedValue
-    ) => (
-        <View style={styles.dropdownContainer}>
+    const renderChip = (option, isSelected, onPress) => {
+        return (
             <TouchableOpacity
-                style={styles.dropdownButton}
-                onPress={() => setVisible(true)}
+                key={option.id}
+                style={[
+                    styles.chip,
+                    { borderColor: option.color },
+                    isSelected && { 
+                        backgroundColor: option.color,
+                        borderColor: option.color 
+                    }
+                ]}
+                onPress={() => onPress(option.id)}
                 activeOpacity={0.7}
             >
-                <Text style={styles.dropdownButtonText}>{selectedLabel}</Text>
-                <Ionicons name="chevron-down" size={16} color="#009BBF" />
+                <Ionicons 
+                    name={option.icon} 
+                    size={16} 
+                    color={isSelected ? '#FFFFFF' : option.color} 
+                    style={styles.chipIcon}
+                />
+                <Text style={[
+                    styles.chipText,
+                    { color: option.color },
+                    isSelected && styles.chipTextSelected
+                ]}>
+                    {option.label}
+                </Text>
             </TouchableOpacity>
-
-            <Modal
-                animationType="fade"
-                transparent={true}
-                visible={isVisible}
-                onRequestClose={() => setVisible(false)}
-            >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={() => setVisible(false)}
-                >
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>{title}</Text>
-                        <FlatList
-                            data={options}
-                            keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.optionItem,
-                                        selectedValue === item.id && styles.selectedOption
-                                    ]}
-                                    onPress={() => {
-                                        onSelect(item.id);
-                                        setVisible(false);
-                                    }}
-                                >
-                                    <Text style={[
-                                        styles.optionText,
-                                        selectedValue === item.id && styles.selectedOptionText
-                                    ]}>
-                                        {item.label}
-                                    </Text>
-                                    {selectedValue === item.id && (
-                                        <Ionicons name="checkmark" size={20} color="#009BBF" />
-                                    )}
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </View>
-                </TouchableOpacity>
-            </Modal>
-        </View>
-    );
+        );
+    };
 
     return (
         <View style={styles.container}>
-            <View style={styles.filtersRow}>
-                {/* Dropdown Disponibilidad */}
-                {renderDropdown(
-                    'Filtrar por Disponibilidad',
-                    getSelectedDisponibilidadLabel(),
-                    disponibilidadModalVisible,
-                    setDisponibilidadModalVisible,
-                    disponibilidadOptions,
-                    onDisponibilidadFilterChange,
-                    selectedDisponibilidadFilter
-                )}
+            {/* Sección de filtros por disponibilidad */}
+            <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Disponibilidad</Text>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContent}
+                >
+                    {disponibilidadOptions.map(option => 
+                        renderChip(
+                            option, 
+                            selectedDisponibilidadFilter === option.id,
+                            onDisponibilidadFilterChange
+                        )
+                    )}
+                </ScrollView>
+            </View>
 
-                {/* Dropdown Sucursal */}
-                {renderDropdown(
-                    'Filtrar por Sucursal',
-                    getSelectedSucursalLabel(),
-                    sucursalModalVisible,
-                    setSucursalModalVisible,
-                    sucursalOptions,
-                    onSucursalFilterChange,
-                    selectedSucursalFilter
-                )}
+            {/* Sección de filtros por sucursal */}
+            <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Sucursal</Text>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContent}
+                >
+                    {sucursalOptions.map(option => 
+                        renderChip(
+                            option, 
+                            selectedSucursalFilter === option.id,
+                            onSucursalFilterChange
+                        )
+                    )}
+                </ScrollView>
             </View>
         </View>
     );
@@ -160,84 +167,48 @@ const OptometristasFilter = ({
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#F8F9FA',
-        paddingVertical: 12,
+        paddingVertical: 4,
+    },
+    filterSection: {
+        marginBottom: 8,
+    },
+    filterSectionTitle: {
+        fontSize: 12,
+        fontFamily: 'Lato-Bold',
+        color: '#666666',
         paddingHorizontal: 20,
+        marginBottom: 6,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
-    filtersRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 12,
+    scrollContent: {
+        paddingHorizontal: 20,
+        paddingVertical: 4,
+        gap: 8,
     },
-    dropdownContainer: {
-        flex: 1,
-    },
-    dropdownButton: {
+    chip: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        paddingVertical: 12,
+        paddingVertical: 8,
         paddingHorizontal: 16,
-        borderWidth: 1,
-        borderColor: '#E5E5E5',
+        borderRadius: 20,
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1.5,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowRadius: 2,
+        elevation: 1,
     },
-    dropdownButtonText: {
+    chipIcon: {
+        marginRight: 6,
+    },
+    chipText: {
         fontSize: 14,
         fontFamily: 'Lato-Regular',
-        color: '#009BBF',
-        flex: 1,
     },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContent: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 20,
-        width: '80%',
-        maxWidth: 320,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.25,
-        shadowRadius: 16,
-        elevation: 10,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontFamily: 'Lato-Bold',
-        color: '#1A1A1A',
-        marginBottom: 16,
-        textAlign: 'center',
-    },
-    optionItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        marginBottom: 4,
-    },
-    selectedOption: {
-        backgroundColor: '#009BBF15',
-    },
-    optionText: {
-        fontSize: 16,
-        fontFamily: 'Lato-Regular',
-        color: '#1A1A1A',
-        flex: 1,
-    },
-    selectedOptionText: {
-        color: '#009BBF',
+    chipTextSelected: {
+        color: '#FFFFFF',
         fontFamily: 'Lato-Bold',
     },
 });

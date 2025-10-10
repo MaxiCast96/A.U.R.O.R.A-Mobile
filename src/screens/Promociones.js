@@ -201,6 +201,11 @@ const Promociones = () => {
     );
 
     /**
+     * Renderizar separador entre items
+     */
+    const renderSeparator = () => <View style={styles.separator} />;
+
+    /**
      * Renderizar estado vacío
      */
     const renderEmptyState = () => (
@@ -254,7 +259,7 @@ const Promociones = () => {
                 <PromocionesStatsCard stats={promocionesStats} />
             </View>
 
-            {/* Barra de búsqueda y filtros */}
+            {/* Barra de búsqueda */}
             <View style={styles.searchContainer}>
                 <View style={styles.searchBox}>
                     <Ionicons name="search-outline" size={20} color="#666666" style={styles.searchIcon} />
@@ -273,10 +278,13 @@ const Promociones = () => {
                 </View>
             </View>
 
-            <PromocionesFilter
-                selectedFilter={selectedFilter}
-                onFilterChange={setSelectedFilter}
-            />
+            {/* Filtros */}
+            <View style={styles.filtersContainer}>
+                <PromocionesFilter
+                    selectedFilter={selectedFilter}
+                    onFilterChange={setSelectedFilter}
+                />
+            </View>
 
             {/* Lista de promociones */}
             <View style={styles.listContainer}>
@@ -287,6 +295,7 @@ const Promociones = () => {
                         data={filteredPromociones}
                         renderItem={renderPromocionItem}
                         keyExtractor={(item) => item._id || Math.random().toString()}
+                        ItemSeparatorComponent={renderSeparator}
                         ListEmptyComponent={renderEmptyState}
                         refreshControl={
                             <RefreshControl
@@ -335,10 +344,11 @@ const styles = StyleSheet.create({
     },
     header: {
         backgroundColor: '#009BBF',
-        paddingVertical: 16,
+        paddingTop: 50,
+        paddingBottom: 20,
         paddingHorizontal: 20,
-        borderBottomLeftRadius: 24,
-        borderBottomRightRadius: 24,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
     },
     headerTop: {
         flexDirection: 'row',
@@ -350,40 +360,50 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     headerTitle: {
-        fontSize: 20,
+        fontSize: 24,
         fontFamily: 'Lato-Bold',
         color: '#FFFFFF',
         flex: 1,
         textAlign: 'center',
+        marginHorizontal: 16,
     },
     headerAddButton: {
-        padding: 4,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     headerSubtitle: {
-        fontSize: 14,
+        fontSize: 16,
         fontFamily: 'Lato-Regular',
         color: 'rgba(255, 255, 255, 0.8)',
         textAlign: 'center',
-        marginBottom: 8,
+        marginBottom: 20,
     },
     searchContainer: {
-        padding: 16,
-        backgroundColor: '#FFFFFF',
-        borderBottomWidth: 1,
-        borderBottomColor: '#E5E5E5',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        backgroundColor: '#F8F9FA',
     },
     searchBox: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F8F9FA',
+        backgroundColor: '#FFFFFF',
         borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         borderWidth: 1,
         borderColor: '#E5E5E5',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
     },
     searchIcon: {
-        marginRight: 8,
+        marginRight: 12,
     },
     searchInput: {
         flex: 1,
@@ -391,41 +411,46 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Regular',
         color: '#1A1A1A',
     },
+    filtersContainer: {
+        backgroundColor: '#F8F9FA',
+        paddingBottom: 8,
+    },
     listContainer: {
         flex: 1,
     },
     listContent: {
-        paddingVertical: 8,
         paddingBottom: 20,
     },
+    separator: {
+        height: 6,
+    },
     emptyContainer: {
-        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 60,
         paddingHorizontal: 40,
     },
     emptyTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontFamily: 'Lato-Bold',
         color: '#666666',
         marginTop: 16,
         textAlign: 'center',
     },
     emptySubtitle: {
-        fontSize: 14,
+        fontSize: 16,
         fontFamily: 'Lato-Regular',
         color: '#999999',
         textAlign: 'center',
         marginTop: 8,
-        lineHeight: 20,
+        lineHeight: 22,
     },
     addButton: {
         marginTop: 20,
         backgroundColor: '#009BBF',
         paddingHorizontal: 24,
         paddingVertical: 12,
-        borderRadius: 10,
+        borderRadius: 8,
     },
     addButtonText: {
         fontSize: 16,
@@ -433,10 +458,9 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     loadingContainer: {
-        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 40,
+        paddingVertical: 60,
     },
     loadingText: {
         fontSize: 16,

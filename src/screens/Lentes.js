@@ -28,7 +28,7 @@ const BASE_URL = 'https://a-u-r-o-r-a.onrender.com/api';
 // Constantes hardcodeadas (igual que en la aplicación web)
 const MATERIALES_LENTES = [
   'Orgánico',
-  'Policarbonato', 
+  'Policarbonato',
   'Trivex',
   'Alto índice',
   'Cristal mineral',
@@ -98,7 +98,7 @@ const Lentes = () => {
     const fetchBackendData = async () => {
       try {
         setLoadingData(true);
-        
+
         const [catRes, marRes, promRes, sucRes] = await Promise.all([
           axios.get(`${BASE_URL}/categoria`).catch(err => {
             console.warn('Error cargando categorías:', err.message);
@@ -126,7 +126,7 @@ const Lentes = () => {
       } catch (error) {
         console.error('Error cargando datos del backend:', error);
         Alert.alert(
-          'Error de carga', 
+          'Error de carga',
           'Algunos datos no se pudieron cargar del servidor.'
         );
       } finally {
@@ -174,7 +174,7 @@ const Lentes = () => {
     if (detailModalVisible) {
       setDetailModalVisible(false);
     }
-    
+
     setSelectedLente(lente);
     setEditModalVisible(true);
   };
@@ -244,13 +244,13 @@ const Lentes = () => {
   // --- FILTRADO ---
   const filtered = Array.isArray(filteredLentes)
     ? filteredLentes.filter(lente => {
-        const matchesSearch = !searchText || 
-          lente.nombre?.toLowerCase().includes(searchText.toLowerCase()) ||
-          lente.descripcion?.toLowerCase().includes(searchText.toLowerCase()) ||
-          lente.marcaId?.nombre?.toLowerCase().includes(searchText.toLowerCase());
-        
-        return matchesSearch;
-      })
+      const matchesSearch = !searchText ||
+        lente.nombre?.toLowerCase().includes(searchText.toLowerCase()) ||
+        lente.descripcion?.toLowerCase().includes(searchText.toLowerCase()) ||
+        lente.marcaId?.nombre?.toLowerCase().includes(searchText.toLowerCase());
+
+      return matchesSearch;
+    })
     : [];
 
   /**
@@ -306,14 +306,14 @@ const Lentes = () => {
       {/* Header con título, botón atrás y botón añadir */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Gestión de Lentes</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.headerAddButton, loadingData && styles.headerAddButtonDisabled]}
             onPress={() => setAddModalVisible(true)}
             disabled={loadingData}
@@ -321,9 +321,9 @@ const Lentes = () => {
             <Ionicons name="add" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-        
+
         <Text style={styles.headerSubtitle}>Administra el inventario de lentes de la óptica</Text>
-        
+
         {/* Estadísticas integradas en el header */}
         <LentesStatsCard stats={stats} />
       </View>
@@ -362,9 +362,9 @@ const Lentes = () => {
         ) : (
           <FlatList
             data={filtered}
-            keyExtractor={(item, index) => 
-              item._id?.toString() || 
-              item.id?.toString() || 
+            keyExtractor={(item, index) =>
+              item._id?.toString() ||
+              item.id?.toString() ||
               `lente-${index}`
             }
             renderItem={renderLenteItem}
@@ -430,8 +430,8 @@ const Lentes = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     backgroundColor: '#F8F9FA',
   },
   header: {
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 4,
   },
-  headerTitle: { 
+  headerTitle: {
     fontSize: 24,
     fontFamily: 'Lato-Bold',
     color: '#FFFFFF',
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: 16,
   },
-  headerAddButton: { 
+  headerAddButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -509,8 +509,7 @@ const styles = StyleSheet.create({
   },
   filtersContainer: {
     backgroundColor: '#F8F9FA',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 8,  // Reducido
   },
   listContainer: {
     flex: 1,
@@ -521,13 +520,13 @@ const styles = StyleSheet.create({
   separator: {
     height: 6,
   },
-  emptyContainer: { 
+  emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
     paddingHorizontal: 40,
   },
-  emptyTitle: { 
+  emptyTitle: {
     fontSize: 20,
     fontFamily: 'Lato-Bold',
     color: '#666666',
