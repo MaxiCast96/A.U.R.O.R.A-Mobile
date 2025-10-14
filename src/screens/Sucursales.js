@@ -7,11 +7,14 @@ import SucursalItem from '../components/Sucursales/SucursalItem';
 import AddSucursalModal from '../components/Sucursales/AddSucursalModal';
 import EditSucursalModal from '../components/Sucursales/EditSucursalModal';
 import SucursalDetailModal from '../components/Sucursales/SucursalDetailModal';
+import MapaSucursalModal from '../components/Sucursales/MapaSucursalModal';
 
 const Sucursales = () => {
   const navigation = useNavigation();
   const [editVisible, setEditVisible] = useState(false);
   const [sucursalForEdit, setSucursalForEdit] = useState(null);
+  const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [sucursalForMap, setSucursalForMap] = useState(null);
 
   const {
     filteredSucursales,
@@ -81,6 +84,16 @@ const Sucursales = () => {
     if (ok) showSuccess(`Sucursal ${nuevoActivo ? 'activada' : 'desactivada'}`);
   };
 
+  const handleViewMap = (sucursal) => {
+    setSucursalForMap(sucursal);
+    setMapModalVisible(true);
+  };
+
+  const handleCloseMapModal = () => {
+    setMapModalVisible(false);
+    setSucursalForMap(null);
+  };
+
   const renderItem = ({ item }) => (
     <SucursalItem
       sucursal={item}
@@ -88,6 +101,7 @@ const Sucursales = () => {
       onEdit={handleEdit}
       onDelete={handleDelete}
       onToggleEstado={handleToggleEstado}
+      onViewMap={() => handleViewMap(item)}
     />
   );
 
@@ -189,6 +203,7 @@ const Sucursales = () => {
       <AddSucursalModal visible={addModalVisible} onClose={handleCloseAddModal} onSave={handleAddSave} />
       <EditSucursalModal visible={editVisible} sucursal={sucursalForEdit} onClose={() => setEditVisible(false)} onSave={handleEditSave} />
       <SucursalDetailModal visible={modalVisible} onClose={handleCloseModal} sucursal={selectedSucursal} />
+      <MapaSucursalModal visible={mapModalVisible} onClose={handleCloseMapModal} sucursal={sucursalForMap} />
     </View>
   );
 };

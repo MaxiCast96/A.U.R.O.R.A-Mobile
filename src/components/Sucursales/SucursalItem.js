@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const SucursalItem = ({ sucursal, onViewMore, onEdit, onDelete, onToggleEstado }) => {
+const SucursalItem = ({ sucursal, onViewMore, onEdit, onDelete, onToggleEstado, onViewMap }) => {
   const estadoActivo = !!sucursal.activo;
 
   // Convertir direccion a texto legible si viene como objeto
@@ -23,8 +23,8 @@ const SucursalItem = ({ sucursal, onViewMore, onEdit, onDelete, onToggleEstado }
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>{sucursal.nombre}</Text>
-        <View style={[styles.badge, { backgroundColor: estadoActivo ? '#D1FAE5' : '#FEE2E2' }] }>
-          <Text style={[styles.badgeText, { color: estadoActivo ? '#065F46' : '#991B1B' }] }>
+        <View style={[styles.badge, { backgroundColor: estadoActivo ? '#D1FAE5' : '#FEE2E2' }]}>
+          <Text style={[styles.badgeText, { color: estadoActivo ? '#065F46' : '#991B1B' }]}>
             {estadoActivo ? 'Activa' : 'Inactiva'}
           </Text>
         </View>
@@ -44,12 +44,19 @@ const SucursalItem = ({ sucursal, onViewMore, onEdit, onDelete, onToggleEstado }
           <Ionicons name="eye-outline" size={18} color="#009BBF" />
           <Text style={styles.actionText}>Ver</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.actionBtn} onPress={onViewMap}>
+          <Ionicons name="map-outline" size={18} color="#10B981" />
+          <Text style={[styles.actionText, { color: '#10B981' }]}>Mapa</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn} onPress={() => onToggleEstado(sucursal)}>
           <Ionicons name={estadoActivo ? 'close-circle-outline' : 'checkmark-circle-outline'} size={18} color={estadoActivo ? '#991B1B' : '#065F46'} />
           <Text style={[styles.actionText, { color: estadoActivo ? '#991B1B' : '#065F46' }]}>
             {estadoActivo ? 'Desactivar' : 'Activar'}
           </Text>
         </TouchableOpacity>
+      </View>
+      
+      <View style={styles.actionsRowSecondary}>
         <TouchableOpacity style={styles.actionBtn} onPress={() => onEdit(sucursal)}>
           <Ionicons name="create-outline" size={18} color="#6B46C1" />
           <Text style={[styles.actionText, { color: '#6B46C1' }]}>Editar</Text>
@@ -110,6 +117,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  actionsRowSecondary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    marginTop: 8,
   },
   actionBtn: {
     flexDirection: 'row',

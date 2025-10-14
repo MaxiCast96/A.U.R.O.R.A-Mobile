@@ -13,7 +13,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyD_2RUYz1Zigc6G2hD2KcG7muiPrfm8aHU"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,10 +27,17 @@
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE"
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ],
       "usesCleartextTraffic": true,
-      "package": "com.kevinal.auroramobile"
+      "package": "com.kevinal.auroramobile",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyD_2RUYz1Zigc6G2hD2KcG7muiPrfm8aHU"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
