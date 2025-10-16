@@ -47,9 +47,8 @@ const Profile = () => {
         getSucursalDisplay
     } = useProfile();
 
-    const handleGoHome = () => {
-        console.log('Navegando al Home...');
-        navigation.navigate('Home');
+    const handleGoBack = () => {
+        navigation.goBack();
     };
 
     const handleChangePassword = () => {
@@ -110,19 +109,20 @@ const Profile = () => {
             
             {/* Header */}
             <View style={styles.header}>
+                <TouchableOpacity 
+                    style={styles.backButton}
+                    onPress={handleGoBack}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+                </TouchableOpacity>
+                
                 <View style={styles.headerContent}>
                     <Text style={styles.headerTitle}>Mi Perfil</Text>
                     <Text style={styles.headerSubtitle}>
                         Gestiona tu información personal
                     </Text>
                 </View>
-                <TouchableOpacity 
-                    style={styles.homeButton}
-                    onPress={handleGoHome}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="home-outline" size={24} color="#FFFFFF" />
-                </TouchableOpacity>
             </View>
             
             {/* Content */}
@@ -269,25 +269,6 @@ const Profile = () => {
                     </TouchableOpacity>
                     
                     <TouchableOpacity 
-                        style={styles.actionButton}
-                        onPress={handleGoHome}
-                        activeOpacity={0.7}
-                    >
-                        <View style={[styles.actionButtonContent, styles.homeActionIcon]}>
-                            <View style={[styles.actionIcon, styles.homeActionIcon]}>
-                                <Ionicons name="home-outline" size={20} color="#009BBF" />
-                            </View>
-                            <View style={styles.actionText}>
-                                <Text style={[styles.actionTitle, styles.homeActionTitle]}>
-                                    Ir al Inicio
-                                </Text>
-                                <Text style={styles.actionSubtitle}>Volver al panel principal</Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
-                        </View>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity 
                         style={[styles.actionButton, styles.logoutActionButton]}
                         onPress={handleLogout}
                         activeOpacity={0.7}
@@ -323,7 +304,6 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         paddingHorizontal: 20,
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
         borderBottomLeftRadius: 24,
         borderBottomRightRadius: 24,
@@ -335,6 +315,15 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.15,
         shadowRadius: 8,
         elevation: 8,
+    },
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
     },
     headerContent: {
         flex: 1,
@@ -350,15 +339,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Regular',
         color: '#E0F7FF',
         opacity: 0.9,
-    },
-    homeButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: 16,
     },
     content: {
         flex: 1,
@@ -410,9 +390,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    homeActionIcon: {
-        backgroundColor: '#F0F9FF',
-    },
     logoutActionIcon: {
         backgroundColor: '#FFEBEE',
     },
@@ -424,9 +401,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Bold',
         color: '#1A1A1A',
         marginBottom: 2,
-    },
-    homeActionTitle: {
-        color: '#009BBF',
     },
     logoutActionTitle: {
         color: '#E74C3C',

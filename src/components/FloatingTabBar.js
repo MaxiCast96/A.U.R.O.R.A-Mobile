@@ -3,8 +3,8 @@ import { View, TouchableOpacity, Text, StyleSheet, Dimensions, Animated } from '
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
-const TAB_BAR_WIDTH = width - 100;
-const TAB_WIDTH = TAB_BAR_WIDTH / 3;
+const TAB_BAR_WIDTH = width - 80;
+const TAB_WIDTH = TAB_BAR_WIDTH / 4;
 
 const FloatingTabBar = ({ state, descriptors, navigation }) => {
     const slideAnim = useRef(new Animated.Value(0)).current;
@@ -19,8 +19,8 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
     }, [state.index]);
 
     const translateX = slideAnim.interpolate({
-        inputRange: [0, 1, 2],
-        outputRange: [8, TAB_WIDTH + 8, TAB_WIDTH * 2 + 8],
+        inputRange: [0, 1, 2, 3],
+        outputRange: [6, TAB_WIDTH + 6, TAB_WIDTH * 2 + 6, TAB_WIDTH * 3 + 6],
     });
 
     if (!state || !state.routes) {
@@ -69,13 +69,16 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
                         });
                     };
 
+                    // Definir íconos para cada ruta
                     let iconName;
                     if (route.name === 'Home') {
                         iconName = isFocused ? 'home' : 'home-outline';
-                    } else if (route.name === 'More') {
-                        iconName = isFocused ? 'grid' : 'grid-outline';
+                    } else if (route.name === 'Asistencia') {
+                        iconName = isFocused ? 'clipboard' : 'clipboard-outline';
                     } else if (route.name === 'Citas') {
                         iconName = isFocused ? 'calendar' : 'calendar-outline';
+                    } else if (route.name === 'More') {
+                        iconName = isFocused ? 'grid' : 'grid-outline';
                     }
 
                     return (
@@ -96,12 +99,12 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
                                     size={24}
                                     color={isFocused ? '#FFFFFF' : '#999999'} 
                                 />
-                                
-                                {isFocused && (
-                                    <Animated.Text style={styles.tabText}>
-                                        {label}
-                                    </Animated.Text>
-                                )}
+                                <Text style={[
+                                    styles.tabText,
+                                    isFocused ? styles.tabTextFocused : styles.tabTextUnfocused
+                                ]}>
+                                    {label}
+                                </Text>
                             </View>
                         </TouchableOpacity>
                     );
@@ -114,25 +117,25 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: 30,
-        left: 50,
-        right: 50,
+        bottom: 20,
+        left: 40,
+        right: 40,
         zIndex: 1000,
     },
     
     tabBar: {
         flexDirection: 'row',
         backgroundColor: '#FFFFFF',
-        borderRadius: 35,
+        borderRadius: 28,
         paddingVertical: 8,
-        paddingHorizontal: 8,
-        height: 65,
+        paddingHorizontal: 6,
+        height: 70,
         shadowColor: '#009BBF',
         shadowOffset: {
             width: 0,
             height: 8,
         },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.15,
         shadowRadius: 12,
         elevation: 10,
         borderWidth: 1,
@@ -143,16 +146,16 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 8,
         left: 0,
-        width: TAB_WIDTH - 16,
-        height: 49,
+        width: TAB_WIDTH - 12,
+        height: 54,
         backgroundColor: '#009BBF',
-        borderRadius: 28,
+        borderRadius: 22,
         shadowColor: '#009BBF',
         shadowOffset: {
             width: 0,
             height: 4,
         },
-        shadowOpacity: 0.4,
+        shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 6,
     },
@@ -162,19 +165,28 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 2,
+        height: 52,
     },
     
     tabContent: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 6,
+        gap: 3,
     },
     
     tabText: {
-        fontSize: 12,
-        color: '#FFFFFF',
+        fontSize: 10,
         fontFamily: 'Lato-Bold',
+        textAlign: 'center',
+    },
+    
+    tabTextFocused: {
+        color: '#FFFFFF',
+    },
+    
+    tabTextUnfocused: {
+        color: '#999999',
     },
 });
 

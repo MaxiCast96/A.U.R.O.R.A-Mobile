@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 
 const API_URL = 'https://aurora-production-7e57.up.railway.app/api';
@@ -542,6 +543,7 @@ const EmptyState = () => (
 );
 
 const HistorialMedico = () => {
+    const navigation = useNavigation();
     const [historiales, setHistoriales] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -670,6 +672,10 @@ const HistorialMedico = () => {
     const handleRefresh = () => {
         setRefreshing(true);
         fetchHistoriales();
+    };
+
+    const handleGoBack = () => {
+        navigation.goBack();
     };
 
     const handleOpenAddModal = () => {
@@ -955,15 +961,21 @@ const HistorialMedico = () => {
             <StatusBar barStyle="light-content" backgroundColor="#009BBF" />
 
             <View style={styles.header}>
-                <View style={styles.headerContent}>
-                    <View>
+                <View style={styles.headerTop}>
+                    <TouchableOpacity 
+                        style={styles.backButton}
+                        onPress={handleGoBack}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
+                    
+                    <View style={styles.headerContent}>
                         <Text style={styles.headerTitle}>Historial Médico</Text>
                         <Text style={styles.headerSubtitle}>Gestiona los expedientes médicos</Text>
                     </View>
+                    
                     <View style={styles.headerButtons}>
-                        <TouchableOpacity onPress={handleRefresh} disabled={refreshing} style={styles.refreshButton}>
-                            <Ionicons name="refresh" size={20} color="#FFFFFF" />
-                        </TouchableOpacity>
                         <TouchableOpacity onPress={handleOpenAddModal} style={styles.addButton}>
                             <Ionicons name="add" size={24} color="#FFFFFF" />
                         </TouchableOpacity>
@@ -1032,8 +1044,10 @@ const styles = StyleSheet.create({
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8F9FA' },
     loadingText: { marginTop: 12, fontSize: 16, fontFamily: 'Lato-Regular', color: '#666666' },
     header: { backgroundColor: '#009BBF', paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
-    headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-    headerTitle: { fontSize: 24, fontFamily: 'Lato-Bold', color: '#FFFFFF', marginBottom: 4 },
+    headerTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+    backButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255, 255, 255, 0.15)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+    headerContent: { flex: 1 },
+    headerTitle: { fontSize: 24, fontFamily: 'Lato-Bold', color: '#FFFFFF', marginBottom: 4, marginLeft: 20 },
     headerSubtitle: { fontSize: 14, fontFamily: 'Lato-Regular', color: '#E0F7FF' },
     headerButtons: { flexDirection: 'row', gap: 8 },
     refreshButton: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255, 255, 255, 0.15)', alignItems: 'center', justifyContent: 'center' },

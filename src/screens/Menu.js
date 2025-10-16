@@ -160,13 +160,6 @@ const MenuScreen = () => {
                     subtitle: t('invoices_subtitle'),
                     color: '#6B7280',
                     onPress: () => navigation.navigate('Facturas')
-                },
-                { 
-                    icon: 'settings-outline', 
-                    title: 'Configuración', 
-                    subtitle: 'Configuración del sistema',
-                    color: '#6B7280',
-                    onPress: () => navigation.navigate('Configuracion')
                 }
             ]
         }

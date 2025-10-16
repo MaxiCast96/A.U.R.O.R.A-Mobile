@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 
 const API_URL = 'https://aurora-production-7e57.up.railway.app/api';
@@ -144,9 +145,9 @@ const DetailModal = ({ visible, onClose, receta }) => {
                             <Text style={styles.modalSectionTitle}>Información de la Receta</Text>
                         </View>
                         <View style={styles.modalSectionContent}>
-                            <InfoRow 
-                                label="Fecha" 
-                                value={receta.fecha ? new Date(receta.fecha).toLocaleDateString('es-ES') : '-'} 
+                            <InfoRow
+                                label="Fecha"
+                                value={receta.fecha ? new Date(receta.fecha).toLocaleDateString('es-ES') : '-'}
                             />
                             <InfoRow label="Vigencia" value={`${receta.vigencia} meses`} />
                         </View>
@@ -228,7 +229,7 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                     {/* Información del Paciente */}
                     <View style={styles.formSection}>
                         <Text style={styles.formSectionTitle}>Información del Paciente</Text>
-                        
+
                         <View style={styles.formGroup}>
                             <Text style={styles.formLabel}>Cliente (del Historial) *</Text>
                             <View style={styles.pickerContainer}>
@@ -241,14 +242,14 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                                     <Picker.Item label="Seleccione un cliente" value="" />
                                     {historialesMedicos.map(historial => {
                                         const cliente = historial.clienteId;
-                                        const label = cliente 
+                                        const label = cliente
                                             ? `${cliente.nombre} ${cliente.apellido}`
                                             : `Historial ${historial._id}`;
                                         return (
-                                            <Picker.Item 
-                                                key={historial._id} 
-                                                label={label} 
-                                                value={historial._id} 
+                                            <Picker.Item
+                                                key={historial._id}
+                                                label={label}
+                                                value={historial._id}
                                             />
                                         );
                                     })}
@@ -268,10 +269,10 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                                 >
                                     <Picker.Item label="Seleccione un optometrista" value="" />
                                     {optometristas.map(opto => (
-                                        <Picker.Item 
-                                            key={opto._id} 
-                                            label={opto.empleadoId ? `Dr(a). ${opto.empleadoId.nombre} ${opto.empleadoId.apellido}` : 'Optometrista'} 
-                                            value={opto._id} 
+                                        <Picker.Item
+                                            key={opto._id}
+                                            label={opto.empleadoId ? `Dr(a). ${opto.empleadoId.nombre} ${opto.empleadoId.apellido}` : 'Optometrista'}
+                                            value={opto._id}
                                         />
                                     ))}
                                 </Picker>
@@ -283,12 +284,12 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                             <Text style={styles.formLabel}>Diagnóstico Principal *</Text>
                             <View style={styles.inputContainer}>
                                 <Ionicons name="medical" size={20} color="#666666" style={styles.inputIcon} />
-                                <TextInput 
-                                    style={styles.input} 
-                                    value={formData.diagnostico} 
-                                    onChangeText={(text) => handleInputChange('diagnostico', text)} 
-                                    placeholder="Ej. Miopía y Astigmatismo" 
-                                    placeholderTextColor="#999999" 
+                                <TextInput
+                                    style={styles.input}
+                                    value={formData.diagnostico}
+                                    onChangeText={(text) => handleInputChange('diagnostico', text)}
+                                    placeholder="Ej. Miopía y Astigmatismo"
+                                    placeholderTextColor="#999999"
                                 />
                             </View>
                             {errors.diagnostico && <Text style={styles.errorText}>{errors.diagnostico}</Text>}
@@ -301,25 +302,25 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                         <View style={styles.formRow}>
                             <View style={styles.formGroupHalf}>
                                 <Text style={styles.formLabel}>Esfera *</Text>
-                                <TextInput 
-                                    style={styles.inputSmall} 
-                                    value={formData.ojoDerecho.esfera} 
+                                <TextInput
+                                    style={styles.inputSmall}
+                                    value={formData.ojoDerecho.esfera}
                                     onChangeText={(text) => handleInputChange('esfera', text, true, 'ojoDerecho')}
-                                    placeholder="-1.25" 
+                                    placeholder="-1.25"
                                     keyboardType="numeric"
-                                    placeholderTextColor="#999999" 
+                                    placeholderTextColor="#999999"
                                 />
                                 {errors['ojoDerecho.esfera'] && <Text style={styles.errorTextSmall}>{errors['ojoDerecho.esfera']}</Text>}
                             </View>
                             <View style={styles.formGroupHalf}>
                                 <Text style={styles.formLabel}>Cilindro *</Text>
-                                <TextInput 
-                                    style={styles.inputSmall} 
-                                    value={formData.ojoDerecho.cilindro} 
+                                <TextInput
+                                    style={styles.inputSmall}
+                                    value={formData.ojoDerecho.cilindro}
                                     onChangeText={(text) => handleInputChange('cilindro', text, true, 'ojoDerecho')}
-                                    placeholder="-0.75" 
+                                    placeholder="-0.75"
                                     keyboardType="numeric"
-                                    placeholderTextColor="#999999" 
+                                    placeholderTextColor="#999999"
                                 />
                                 {errors['ojoDerecho.cilindro'] && <Text style={styles.errorTextSmall}>{errors['ojoDerecho.cilindro']}</Text>}
                             </View>
@@ -327,25 +328,25 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                         <View style={styles.formRow}>
                             <View style={styles.formGroupHalf}>
                                 <Text style={styles.formLabel}>Eje *</Text>
-                                <TextInput 
-                                    style={styles.inputSmall} 
-                                    value={formData.ojoDerecho.eje} 
+                                <TextInput
+                                    style={styles.inputSmall}
+                                    value={formData.ojoDerecho.eje}
                                     onChangeText={(text) => handleInputChange('eje', text, true, 'ojoDerecho')}
-                                    placeholder="180" 
+                                    placeholder="180"
                                     keyboardType="numeric"
-                                    placeholderTextColor="#999999" 
+                                    placeholderTextColor="#999999"
                                 />
                                 {errors['ojoDerecho.eje'] && <Text style={styles.errorTextSmall}>{errors['ojoDerecho.eje']}</Text>}
                             </View>
                             <View style={styles.formGroupHalf}>
                                 <Text style={styles.formLabel}>Adición</Text>
-                                <TextInput 
-                                    style={styles.inputSmall} 
-                                    value={formData.ojoDerecho.adicion} 
+                                <TextInput
+                                    style={styles.inputSmall}
+                                    value={formData.ojoDerecho.adicion}
                                     onChangeText={(text) => handleInputChange('adicion', text, true, 'ojoDerecho')}
-                                    placeholder="+2.00" 
+                                    placeholder="+2.00"
                                     keyboardType="numeric"
-                                    placeholderTextColor="#999999" 
+                                    placeholderTextColor="#999999"
                                 />
                             </View>
                         </View>
@@ -357,25 +358,25 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                         <View style={styles.formRow}>
                             <View style={styles.formGroupHalf}>
                                 <Text style={styles.formLabel}>Esfera *</Text>
-                                <TextInput 
-                                    style={styles.inputSmall} 
-                                    value={formData.ojoIzquierdo.esfera} 
+                                <TextInput
+                                    style={styles.inputSmall}
+                                    value={formData.ojoIzquierdo.esfera}
                                     onChangeText={(text) => handleInputChange('esfera', text, true, 'ojoIzquierdo')}
-                                    placeholder="-1.50" 
+                                    placeholder="-1.50"
                                     keyboardType="numeric"
-                                    placeholderTextColor="#999999" 
+                                    placeholderTextColor="#999999"
                                 />
                                 {errors['ojoIzquierdo.esfera'] && <Text style={styles.errorTextSmall}>{errors['ojoIzquierdo.esfera']}</Text>}
                             </View>
                             <View style={styles.formGroupHalf}>
                                 <Text style={styles.formLabel}>Cilindro *</Text>
-                                <TextInput 
-                                    style={styles.inputSmall} 
-                                    value={formData.ojoIzquierdo.cilindro} 
+                                <TextInput
+                                    style={styles.inputSmall}
+                                    value={formData.ojoIzquierdo.cilindro}
                                     onChangeText={(text) => handleInputChange('cilindro', text, true, 'ojoIzquierdo')}
-                                    placeholder="-0.50" 
+                                    placeholder="-0.50"
                                     keyboardType="numeric"
-                                    placeholderTextColor="#999999" 
+                                    placeholderTextColor="#999999"
                                 />
                                 {errors['ojoIzquierdo.cilindro'] && <Text style={styles.errorTextSmall}>{errors['ojoIzquierdo.cilindro']}</Text>}
                             </View>
@@ -383,25 +384,25 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                         <View style={styles.formRow}>
                             <View style={styles.formGroupHalf}>
                                 <Text style={styles.formLabel}>Eje *</Text>
-                                <TextInput 
-                                    style={styles.inputSmall} 
-                                    value={formData.ojoIzquierdo.eje} 
+                                <TextInput
+                                    style={styles.inputSmall}
+                                    value={formData.ojoIzquierdo.eje}
                                     onChangeText={(text) => handleInputChange('eje', text, true, 'ojoIzquierdo')}
-                                    placeholder="175" 
+                                    placeholder="175"
                                     keyboardType="numeric"
-                                    placeholderTextColor="#999999" 
+                                    placeholderTextColor="#999999"
                                 />
                                 {errors['ojoIzquierdo.eje'] && <Text style={styles.errorTextSmall}>{errors['ojoIzquierdo.eje']}</Text>}
                             </View>
                             <View style={styles.formGroupHalf}>
                                 <Text style={styles.formLabel}>Adición</Text>
-                                <TextInput 
-                                    style={styles.inputSmall} 
-                                    value={formData.ojoIzquierdo.adicion} 
+                                <TextInput
+                                    style={styles.inputSmall}
+                                    value={formData.ojoIzquierdo.adicion}
                                     onChangeText={(text) => handleInputChange('adicion', text, true, 'ojoIzquierdo')}
-                                    placeholder="+2.00" 
+                                    placeholder="+2.00"
                                     keyboardType="numeric"
-                                    placeholderTextColor="#999999" 
+                                    placeholderTextColor="#999999"
                                 />
                             </View>
                         </View>
@@ -410,19 +411,19 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                     {/* Detalles Adicionales */}
                     <View style={styles.formSection}>
                         <Text style={styles.formSectionTitle}>Detalles Adicionales</Text>
-                        
+
                         <View style={styles.formGroup}>
                             <Text style={styles.formLabel}>Observaciones Adicionales</Text>
                             <View style={styles.inputContainer}>
                                 <Ionicons name="document-text" size={20} color="#666666" style={styles.inputIcon} />
-                                <TextInput 
-                                    style={[styles.input, styles.textArea]} 
-                                    value={formData.observaciones} 
-                                    onChangeText={(text) => handleInputChange('observaciones', text)} 
-                                    placeholder="Ej. Tratamiento antireflejante recomendado..." 
-                                    placeholderTextColor="#999999" 
-                                    multiline 
-                                    numberOfLines={3} 
+                                <TextInput
+                                    style={[styles.input, styles.textArea]}
+                                    value={formData.observaciones}
+                                    onChangeText={(text) => handleInputChange('observaciones', text)}
+                                    placeholder="Ej. Tratamiento antireflejante recomendado..."
+                                    placeholderTextColor="#999999"
+                                    multiline
+                                    numberOfLines={3}
                                 />
                             </View>
                         </View>
@@ -431,13 +432,13 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                             <Text style={styles.formLabel}>Vigencia (meses) *</Text>
                             <View style={styles.inputContainer}>
                                 <Ionicons name="time" size={20} color="#666666" style={styles.inputIcon} />
-                                <TextInput 
-                                    style={styles.input} 
-                                    value={formData.vigencia.toString()} 
-                                    onChangeText={(text) => handleInputChange('vigencia', text)} 
-                                    placeholder="12" 
+                                <TextInput
+                                    style={styles.input}
+                                    value={formData.vigencia.toString()}
+                                    onChangeText={(text) => handleInputChange('vigencia', text)}
+                                    placeholder="12"
                                     keyboardType="numeric"
-                                    placeholderTextColor="#999999" 
+                                    placeholderTextColor="#999999"
                                 />
                             </View>
                             <Text style={styles.hintText}>Vigencia recomendada: 12-24 meses</Text>
@@ -509,7 +510,10 @@ const EmptyState = () => (
     </View>
 );
 
+
+
 const Recetas = () => {
+    const navigation = useNavigation();
     const [recetas, setRecetas] = useState([]);
     const [historialesMedicos, setHistorialesMedicos] = useState([]);
     const [optometristas, setOptometristas] = useState([]);
@@ -531,6 +535,10 @@ const Recetas = () => {
         fechaHasta: ''
     });
 
+    const handleGoBack = () => {
+        navigation.goBack();
+    };
+
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
@@ -539,7 +547,7 @@ const Recetas = () => {
                 axios.get(`${API_URL}/historialMedico`),
                 axios.get(`${API_URL}/optometrista`)
             ]);
-            
+
             const formattedRecetas = (Array.isArray(recetasRes.data) ? recetasRes.data : []).map(r => ({
                 ...r,
                 fechaRaw: new Date(r.fecha),
@@ -662,7 +670,7 @@ const Recetas = () => {
         if (!formData.optometristaId) newErrors.optometristaId = 'Debe seleccionar un optometrista';
         if (!formData.diagnostico.trim()) newErrors.diagnostico = 'El diagnóstico es requerido';
         if (!formData.vigencia || parseInt(formData.vigencia) <= 0) newErrors.vigencia = 'La vigencia debe ser mayor a 0';
-        
+
         const requiredEyeFields = ['esfera', 'cilindro', 'eje'];
         requiredEyeFields.forEach(field => {
             if (!formData.ojoDerecho[field] || formData.ojoDerecho[field] === '') {
@@ -700,7 +708,7 @@ const Recetas = () => {
                     adicion: formData.ojoIzquierdo.adicion ? parseFloat(formData.ojoIzquierdo.adicion) : null
                 }
             };
-            
+
             if (selectedReceta) {
                 await axios.put(`${API_URL}/recetas/${selectedReceta._id}`, dataToSend);
                 Alert.alert('Éxito', 'Receta actualizada correctamente');
@@ -749,11 +757,11 @@ const Recetas = () => {
     };
 
     const hasActiveFilters = () => {
-        return searchTerm || 
-               filters.estadoReceta !== 'todos' || 
-               filters.optometristaId !== 'todos' || 
-               filters.fechaDesde || 
-               filters.fechaHasta;
+        return searchTerm ||
+            filters.estadoReceta !== 'todos' ||
+            filters.optometristaId !== 'todos' ||
+            filters.fechaDesde ||
+            filters.fechaHasta;
     };
 
     const ListHeaderComponent = () => (
@@ -761,12 +769,12 @@ const Recetas = () => {
             <View style={styles.searchContainer}>
                 <View style={styles.searchInputContainer}>
                     <Ionicons name="search" size={20} color="#666666" style={styles.searchIcon} />
-                    <TextInput 
-                        style={styles.searchInput} 
-                        placeholder="Buscar por diagnóstico, cliente..." 
-                        placeholderTextColor="#999999" 
-                        value={searchTerm} 
-                        onChangeText={setSearchTerm} 
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Buscar por diagnóstico, cliente..."
+                        placeholderTextColor="#999999"
+                        value={searchTerm}
+                        onChangeText={setSearchTerm}
                     />
                     {searchTerm ? (
                         <TouchableOpacity onPress={() => setSearchTerm('')} style={styles.clearButton}>
@@ -776,8 +784,8 @@ const Recetas = () => {
                 </View>
 
                 <View style={styles.filtersRow}>
-                    <TouchableOpacity 
-                        onPress={() => setShowFilters(!showFilters)} 
+                    <TouchableOpacity
+                        onPress={() => setShowFilters(!showFilters)}
                         style={[styles.filterButton, hasActiveFilters() && styles.filterButtonActive]}
                     >
                         <Ionicons name="funnel" size={20} color={hasActiveFilters() ? "#FFFFFF" : "#009BBF"} />
@@ -821,10 +829,10 @@ const Recetas = () => {
                                 >
                                     <Picker.Item label="Todos" value="todos" />
                                     {optometristas.map(op => (
-                                        <Picker.Item 
-                                            key={op._id} 
-                                            label={op.empleadoId ? `${op.empleadoId.nombre} ${op.empleadoId.apellido}` : 'Optometrista'} 
-                                            value={op._id} 
+                                        <Picker.Item
+                                            key={op._id}
+                                            label={op.empleadoId ? `${op.empleadoId.nombre} ${op.empleadoId.apellido}` : 'Optometrista'}
+                                            value={op._id}
                                         />
                                     ))}
                                 </Picker>
@@ -835,12 +843,12 @@ const Recetas = () => {
                             <Text style={styles.filterLabel}>Fecha Desde</Text>
                             <View style={styles.inputContainer}>
                                 <Ionicons name="calendar" size={20} color="#666666" style={styles.inputIcon} />
-                                <TextInput 
-                                    style={styles.input} 
-                                    value={filters.fechaDesde} 
-                                    onChangeText={(text) => setFilters({ ...filters, fechaDesde: text })} 
-                                    placeholder="YYYY-MM-DD" 
-                                    placeholderTextColor="#999999" 
+                                <TextInput
+                                    style={styles.input}
+                                    value={filters.fechaDesde}
+                                    onChangeText={(text) => setFilters({ ...filters, fechaDesde: text })}
+                                    placeholder="YYYY-MM-DD"
+                                    placeholderTextColor="#999999"
                                 />
                             </View>
                         </View>
@@ -849,12 +857,12 @@ const Recetas = () => {
                             <Text style={styles.filterLabel}>Fecha Hasta</Text>
                             <View style={styles.inputContainer}>
                                 <Ionicons name="calendar" size={20} color="#666666" style={styles.inputIcon} />
-                                <TextInput 
-                                    style={styles.input} 
-                                    value={filters.fechaHasta} 
-                                    onChangeText={(text) => setFilters({ ...filters, fechaHasta: text })} 
-                                    placeholder="YYYY-MM-DD" 
-                                    placeholderTextColor="#999999" 
+                                <TextInput
+                                    style={styles.input}
+                                    value={filters.fechaHasta}
+                                    onChangeText={(text) => setFilters({ ...filters, fechaHasta: text })}
+                                    placeholder="YYYY-MM-DD"
+                                    placeholderTextColor="#999999"
                                 />
                             </View>
                         </View>
@@ -899,15 +907,21 @@ const Recetas = () => {
             <StatusBar barStyle="light-content" backgroundColor="#009BBF" />
 
             <View style={styles.header}>
-                <View style={styles.headerContent}>
-                    <View>
+                <View style={styles.headerTop}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={handleGoBack}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
+
+                    <View style={styles.headerContent}>
                         <Text style={styles.headerTitle}>Gestión de Recetas</Text>
-                        <Text style={styles.headerSubtitle}>Administra las recetas médicas</Text>
+                        <Text style={styles.headerSubtitle}>Administra las recetas</Text>
                     </View>
+
                     <View style={styles.headerButtons}>
-                        <TouchableOpacity onPress={handleRefresh} disabled={refreshing} style={styles.refreshButton}>
-                            <Ionicons name="refresh" size={20} color="#FFFFFF" />
-                        </TouchableOpacity>
                         <TouchableOpacity onPress={handleOpenAddModal} style={styles.addButton}>
                             <Ionicons name="add" size={24} color="#FFFFFF" />
                         </TouchableOpacity>
@@ -925,59 +939,61 @@ const Recetas = () => {
                 data={filteredRecetas}
                 keyExtractor={(item) => item._id}
                 renderItem={({ item }) => (
-                    <RecetaCard 
-                        receta={item} 
-                        onView={(r) => { setSelectedReceta(r); setShowDetail(true); }} 
-                        onEdit={(r) => handleOpenEditModal(r)} 
-                        onDelete={(r) => handleOpenDeleteModal(r)} 
+                    <RecetaCard
+                        receta={item}
+                        onView={(r) => { setSelectedReceta(r); setShowDetail(true); }}
+                        onEdit={(r) => handleOpenEditModal(r)}
+                        onDelete={(r) => handleOpenDeleteModal(r)}
                     />
                 )}
                 ListHeaderComponent={ListHeaderComponent}
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={<EmptyState />}
                 refreshControl={
-                    <RefreshControl 
-                        refreshing={refreshing} 
-                        onRefresh={handleRefresh} 
-                        colors={['#009BBF']} 
-                        tintColor="#009BBF" 
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={['#009BBF']}
+                        tintColor="#009BBF"
                     />
                 }
             />
 
-            <DetailModal 
-                visible={showDetail} 
-                onClose={() => { setShowDetail(false); setSelectedReceta(null); }} 
-                receta={selectedReceta} 
+            <DetailModal
+                visible={showDetail}
+                onClose={() => { setShowDetail(false); setSelectedReceta(null); }}
+                receta={selectedReceta}
             />
-            <FormModal 
-                visible={showAddModal || showEditModal} 
-                onClose={() => { setShowAddModal(false); setShowEditModal(false); setSelectedReceta(null); setFormData(initialFormState); }} 
-                title={selectedReceta ? 'Editar Receta' : 'Nueva Receta'} 
-                onSubmit={handleSubmit} 
-                formData={formData} 
-                setFormData={setFormData} 
-                errors={errors} 
-                historialesMedicos={historialesMedicos} 
-                optometristas={optometristas} 
+            <FormModal
+                visible={showAddModal || showEditModal}
+                onClose={() => { setShowAddModal(false); setShowEditModal(false); setSelectedReceta(null); setFormData(initialFormState); }}
+                title={selectedReceta ? 'Editar Receta' : 'Nueva Receta'}
+                onSubmit={handleSubmit}
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+                historialesMedicos={historialesMedicos}
+                optometristas={optometristas}
             />
-            <DeleteModal 
-                visible={showDeleteModal} 
-                onClose={() => { setShowDeleteModal(false); setSelectedReceta(null); }} 
-                onConfirm={handleDelete} 
-                receta={selectedReceta} 
+            <DeleteModal
+                visible={showDeleteModal}
+                onClose={() => { setShowDeleteModal(false); setSelectedReceta(null); }}
+                onConfirm={handleDelete}
+                receta={selectedReceta}
             />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
+    headerTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+    backButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255, 255, 255, 0.15)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
     container: { flex: 1, backgroundColor: '#F8F9FA' },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8F9FA' },
     loadingText: { marginTop: 12, fontSize: 16, fontFamily: 'Lato-Regular', color: '#666666' },
     header: { backgroundColor: '#009BBF', paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
-    headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-    headerTitle: { fontSize: 24, fontFamily: 'Lato-Bold', color: '#FFFFFF', marginBottom: 4 },
+    headerContent: { flexDirection: 4, justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
+    headerTitle: { fontSize: 24, fontFamily: 'Lato-Bold', color: '#FFFFFF', marginBottom: 4, marginRight: 18, marginLeft: 5 },
     headerSubtitle: { fontSize: 14, fontFamily: 'Lato-Regular', color: '#E0F7FF' },
     headerButtons: { flexDirection: 'row', gap: 8 },
     refreshButton: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255, 255, 255, 0.15)', alignItems: 'center', justifyContent: 'center' },

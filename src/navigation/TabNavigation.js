@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Easing } from 'react-native';
 import Home from '../screens/Home';
 import Citas from '../screens/Citas';
+import Asistencia from '../screens/Asistencia';
 import Menu from '../screens/Menu'; 
 import FloatingTabBar from '../components/FloatingTabBar';
 
@@ -48,11 +49,11 @@ const TabNavigator = () => (
         />
 
         <Tab.Screen 
-            name="More" 
-            component={Menu} 
+            name="Asistencia" 
+            component={Asistencia} 
             options={{ 
-                title: 'Operaciones',
-                tabBarLabel: 'Menú',
+                title: 'Asistencia',
+                tabBarLabel: 'Asistencia',
             }} 
         />
         
@@ -62,6 +63,15 @@ const TabNavigator = () => (
             options={{ 
                 title: 'Citas',
                 tabBarLabel: 'Citas',
+            }} 
+        />
+
+        <Tab.Screen 
+            name="More" 
+            component={Menu} 
+            options={{ 
+                title: 'Operaciones',
+                tabBarLabel: 'Menú',
             }} 
         />
     </Tab.Navigator>

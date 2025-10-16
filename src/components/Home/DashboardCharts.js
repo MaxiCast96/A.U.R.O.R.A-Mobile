@@ -77,7 +77,7 @@ const DashboardCharts = () => {
                 color: (opacity = 1) => `rgba(0, 155, 191, ${opacity})`,
                 strokeWidth: 3,
             }],
-            legend: ['Ventas']
+            
         };
     };
 

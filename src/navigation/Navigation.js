@@ -50,7 +50,6 @@ const ThemedNavigation = () => {
                 initialRouteName="Splash"
                 screenOptions={{ 
                     headerShown: false,
-                    // Asegura animaciones suaves
                     animation: 'slide_from_right',
                 }}
             >
@@ -64,24 +63,18 @@ const ThemedNavigation = () => {
                 <Stack.Screen name="ResetPassword" component={ResetPassword} />
                 <Stack.Screen name="PasswordSuccess" component={PasswordSuccess} />
                 
-                {/* Navegación principal con tabs - SIN HEADER */}
+                {/* Navegación principal con tabs */}
                 <Stack.Screen 
                     name="Main" 
                     component={TabNavigator}
                     options={{ headerShown: false }}
                 />
                 
-                {/* Perfil */}
+                {/* Perfil - SIN HEADER */}
                 <Stack.Screen 
                     name="Profile" 
                     component={Profile}
-                    options={{
-                        headerShown: true,
-                        title: 'Perfil',
-                        headerStyle: { backgroundColor: '#009BBF' },
-                        headerTintColor: '#FFFFFF',
-                        headerTitleStyle: { fontFamily: 'Lato-Bold' },
-                    }}
+                    options={{ headerShown: false }}
                 />
                 
                 {/* Gestión de Personal */}
@@ -133,28 +126,16 @@ const ThemedNavigation = () => {
                     options={{ headerShown: false }}
                 />
                 
-                {/* Médico */}
+                {/* Médico - SIN HEADER */}
                 <Stack.Screen 
                     name="HistorialMedico" 
                     component={HistorialMedico}
-                    options={{
-                        headerShown: true,
-                        title: 'Historial Médico',
-                        headerStyle: { backgroundColor: '#009BBF' },
-                        headerTintColor: '#FFFFFF',
-                        headerTitleStyle: { fontFamily: 'Lato-Bold' },
-                    }}
+                    options={{ headerShown: false }}
                 />
                 <Stack.Screen 
                     name="Recetas" 
                     component={Recetas}
-                    options={{
-                        headerShown: true,
-                        title: 'Gestión de Recetas',
-                        headerStyle: { backgroundColor: '#009BBF' },
-                        headerTintColor: '#FFFFFF',
-                        headerTitleStyle: { fontFamily: 'Lato-Bold' },
-                    }}
+                    options={{ headerShown: false }}
                 />
                 
                 {/* Administración */}
