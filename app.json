@@ -2,6 +2,7 @@
   "expo": {
     "name": "Aurora",
     "slug": "aurora-mobile",
+    "owner": "kevinalva",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon-apk.png",
@@ -31,8 +32,7 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION"
       ],
-      "usesCleartextTraffic": true,
-      "package": "com.kevinal.auroramobile",
+      "package": "com.kevinalva.auroramobile",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyD_2RUYz1Zigc6G2hD2KcG7muiPrfm8aHU"
@@ -49,11 +49,12 @@
           "photosPermission": "La aplicación accede a tus fotos para permitirte elegir una imagen de perfil.",
           "cameraPermission": "La aplicación accede a tu cámara para permitirte tomar una foto de perfil."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "eas": {
-        "projectId": "e5ef48aa-b76f-4423-808b-3e6556b85789"
+        "projectId": "234437cc-1764-441d-ae21-d29c019c2e09"
       }
     }
   }
