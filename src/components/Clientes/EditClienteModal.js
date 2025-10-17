@@ -21,57 +21,31 @@ import {
     getFieldError
 } from '../../utils/validator';
 
-/**
- * Componente EditClienteModal
- * 
- * Modal para editar clientes existentes con formulario organizado por secciones
- * siguiendo el diseño del sitio web de escritorio pero diferenciándose visualmente
- * del modal de agregar cliente.
- * 
- * Props:
- * @param {boolean} visible - Controla la visibilidad del modal
- * @param {Object} cliente - Datos del cliente a editar
- * @param {Function} onClose - Función que se ejecuta al cerrar el modal
- * @param {Function} onSuccess - Función que se ejecuta al actualizar exitosamente el cliente
- */
 const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
     const { getAuthHeaders } = useAuth();
     
-    // Estados del formulario - Información Personal
     const [nombre, setNombre] = useState('');
     const [apellido, setApellido] = useState('');
     const [edad, setEdad] = useState('');
     const [dui, setDui] = useState('');
     const [telefono, setTelefono] = useState('');
     const [correo, setCorreo] = useState('');
-
-    // Estados del formulario - Información de Residencia
     const [departamento, setDepartamento] = useState('');
     const [ciudad, setCiudad] = useState('');
     const [direccionCompleta, setDireccionCompleta] = useState('');
-
-    // Estados del formulario - Estado y Seguridad
     const [estado, setEstado] = useState('Activo');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-
-    // Estados de control
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [initialData, setInitialData] = useState(null);
 
-    /**
-     * Cargar datos del cliente cuando se abre el modal
-     */
     useEffect(() => {
         if (visible && cliente) {
             loadClienteData(cliente);
         }
     }, [visible, cliente]);
 
-    /**
-     * Cargar datos del cliente existente en el formulario
-     */
     const loadClienteData = (clienteData) => {
         if (!clienteData) return;
         
@@ -80,7 +54,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         setEdad(clienteData.edad?.toString() || '');
         setDui(clienteData.dui || '');
         
-        // Formatear teléfono con +503 si no lo tiene
         const telefonoFormatted = clienteData.telefono 
             ? (clienteData.telefono.startsWith('+503') 
                 ? clienteData.telefono 
@@ -90,7 +63,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         
         setCorreo(clienteData.correo || '');
         
-        // Cargar dirección
         if (clienteData.direccion) {
             setDepartamento(clienteData.direccion.departamento || '');
             setCiudad(clienteData.direccion.ciudad || '');
@@ -102,17 +74,12 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         }
         
         setEstado(clienteData.estado || 'Activo');
-        setPassword(''); // No cargar contraseña por seguridad
+        setPassword('');
         setShowPassword(false);
         setErrors({});
-        
-        // Guardar datos iniciales para comparación
         setInitialData(clienteData);
     };
 
-    /**
-     * Limpiar todos los campos del formulario
-     */
     const clearForm = () => {
         setNombre('');
         setApellido('');
@@ -130,13 +97,9 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         setInitialData(null);
     };
 
-    /**
-     * Validar un campo específico
-     */
     const validateField = (field, value) => {
         let error = null;
         
-        // Para contraseña en edición, solo validar si no está vacía
         if (field === 'password') {
             if (value && value.length < 6) {
                 error = 'La contraseña debe tener al menos 6 caracteres';
@@ -152,9 +115,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         return !error;
     };
 
-    /**
-     * Verificar si hay cambios en los datos
-     */
     const hasChanges = () => {
         if (!initialData) return false;
         
@@ -173,7 +133,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
             }
         };
         
-        // Comparar datos básicos
         if (currentData.nombre !== (initialData.nombre || '') ||
             currentData.apellido !== (initialData.apellido || '') ||
             currentData.edad !== (initialData.edad || 0) ||
@@ -184,7 +143,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
             return true;
         }
         
-        // Comparar dirección
         const initialDir = initialData.direccion || {};
         if (currentData.direccion.departamento !== (initialDir.departamento || '') ||
             currentData.direccion.ciudad !== (initialDir.ciudad || '') ||
@@ -192,7 +150,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
             return true;
         }
         
-        // Verificar si hay nueva contraseña
         if (password && password.trim() !== '') {
             return true;
         }
@@ -200,13 +157,9 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         return false;
     };
 
-    /**
-     * Validar formulario completo antes de enviar
-     */
     const validateForm = () => {
         const newErrors = {};
         
-        // Validar campos requeridos (excluyendo contraseña que es opcional en edición)
         const requiredFields = {
             nombre,
             apellido,
@@ -226,7 +179,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
             }
         });
 
-        // Validar contraseña solo si se está cambiando
         if (password && password.trim() !== '' && password.length < 6) {
             newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
             isValid = false;
@@ -236,14 +188,10 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         return isValid;
     };
 
-    /**
-     * Manejar cambio en el DUI con formateo automático
-     */
     const handleDUIChange = (value) => {
         const formattedDUI = formatDUI(value);
         setDui(formattedDUI);
         
-        // Validar en tiempo real si ya tiene la longitud completa
         if (formattedDUI.length === 10) {
             validateField('dui', formattedDUI);
         } else if (errors.dui) {
@@ -251,14 +199,10 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         }
     };
 
-    /**
-     * Manejar cambio en el teléfono con formateo automático
-     */
     const handleTelefonoChange = (value) => {
         const formattedTelefono = formatTelefono(value);
         setTelefono(formattedTelefono);
         
-        // Validar en tiempo real
         const numbers = getTelefonoNumbers(formattedTelefono);
         if (numbers.length === 8) {
             validateField('telefono', formattedTelefono);
@@ -267,21 +211,15 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         }
     };
 
-    /**
-     * Manejar cambio de departamento
-     */
     const handleDepartamentoChange = (value) => {
         setDepartamento(value);
-        setCiudad(''); // Limpiar ciudad cuando cambia departamento
+        setCiudad('');
         
         if (value) {
             setErrors(prev => ({ ...prev, departamento: null }));
         }
     };
 
-    /**
-     * Actualizar cliente en el servidor
-     */
     const updateCliente = async () => {
         if (!cliente?._id) {
             Alert.alert('Error', 'No se puede actualizar el cliente');
@@ -290,7 +228,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
 
         if (!validateForm()) return false;
 
-        // Verificar si hay cambios
         if (!hasChanges()) {
             Alert.alert('Sin cambios', 'No se han detectado cambios en los datos del cliente');
             return false;
@@ -298,13 +235,12 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
 
         setLoading(true);
         
-        // Preparar datos según la estructura de tu MongoDB
         const clienteData = {
             nombre: nombre.trim(),
             apellido: apellido.trim(),
             edad: Number(edad),
             dui: dui.trim(),
-            telefono: getTelefonoNumbers(telefono), // Solo los números
+            telefono: getTelefonoNumbers(telefono),
             correo: correo.trim().toLowerCase(),
             direccion: {
                 calle: direccionCompleta.trim(),
@@ -314,7 +250,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
             estado: estado
         };
 
-        // Solo agregar contraseña si se está cambiando
         if (password && password.trim() !== '') {
             clienteData.password = password.trim();
         }
@@ -332,13 +267,13 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
             const responseData = await response.json();
 
             if (response.ok) {
-                // Limpiar formulario
                 clearForm();
                 
-                // Ejecutar callback de éxito
                 if (onSuccess) {
                     onSuccess(responseData);
                 }
+                
+                onClose();
                 
                 return true;
             } else {
@@ -362,16 +297,10 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         }
     };
 
-    /**
-     * Manejar el guardado del cliente
-     */
     const handleSave = async () => {
         await updateCliente();
     };
 
-    /**
-     * Cerrar modal con confirmación si hay cambios
-     */
     const handleClose = () => {
         if (hasChanges()) {
             Alert.alert(
@@ -395,9 +324,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         }
     };
 
-    /**
-     * Renderizar campo de entrada de texto con validación
-     */
     const renderTextInput = (label, value, onChangeText, placeholder, required = false, keyboardType = 'default', multiline = false, editable = true, field = null) => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -426,9 +352,6 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         </View>
     );
 
-    /**
-     * Renderizar campo de contraseña
-     */
     const renderPasswordInput = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -462,106 +385,114 @@ const EditClienteModal = ({ visible, cliente, onClose, onSuccess }) => {
         </View>
     );
 
-    /**
- * Renderizar selector de departamento con validación defensiva
- */
-const renderDepartamentoSelector = () => {
-    // Validación defensiva para evitar errores si EL_SALVADOR_DATA está undefined
-    if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
-        console.warn('EL_SALVADOR_DATA no está disponible');
+    const renderDepartamentoSelector = () => {
+        if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
+            console.warn('EL_SALVADOR_DATA no está disponible');
+            return (
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>
+                        Departamento <Text style={styles.required}>*</Text>
+                    </Text>
+                    <View style={[styles.pickerContainer, styles.disabledInput]}>
+                        <Text style={styles.errorText}>Error: Datos de departamentos no disponibles</Text>
+                    </View>
+                </View>
+            );
+        }
+
         return (
             <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
                     Departamento <Text style={styles.required}>*</Text>
                 </Text>
-                <View style={[styles.pickerContainer, styles.disabledInput]}>
-                    <Text style={styles.errorText}>Error: Datos de departamentos no disponibles</Text>
+                <View style={[styles.pickerContainer, errors.departamento && styles.inputError]}>
+                    <Picker
+                        selectedValue={departamento}
+                        onValueChange={handleDepartamentoChange}
+                        style={styles.picker}
+                        dropdownIconColor="#49AA4C"
+                        mode="dropdown"
+                    >
+                        <Picker.Item 
+                            label="Selecciona un departamento" 
+                            value="" 
+                            color="#999999"
+                        />
+                        {Object.keys(EL_SALVADOR_DATA).map((dept) => (
+                            <Picker.Item 
+                                key={dept} 
+                                label={dept} 
+                                value={dept}
+                                color="#1A1A1A"
+                            />
+                        ))}
+                    </Picker>
                 </View>
+                {errors.departamento && (
+                    <Text style={styles.errorText}>{errors.departamento}</Text>
+                )}
             </View>
         );
-    }
+    };
 
-    return (
-        <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-                Departamento <Text style={styles.required}>*</Text>
-            </Text>
-            <View style={[styles.pickerContainer, errors.departamento && styles.inputError]}>
-                <Picker
-                    selectedValue={departamento}
-                    onValueChange={handleDepartamentoChange}
-                    style={styles.picker}
-                >
-                    <Picker.Item label="Selecciona un departamento" value="" />
-                    {Object.keys(EL_SALVADOR_DATA).map((dept) => (
-                        <Picker.Item key={dept} label={dept} value={dept} />
-                    ))}
-                </Picker>
-            </View>
-            {errors.departamento && (
-                <Text style={styles.errorText}>{errors.departamento}</Text>
-            )}
-        </View>
-    );
-};
+    const renderCiudadSelector = () => {
+        if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
+            return (
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>
+                        Ciudad/Municipio <Text style={styles.required}>*</Text>
+                    </Text>
+                    <View style={[styles.pickerContainer, styles.disabledInput]}>
+                        <Text style={styles.errorText}>Error: Datos de ciudades no disponibles</Text>
+                    </View>
+                </View>
+            );
+        }
 
-/**
- * Renderizar selector de ciudad con validación defensiva
- */
-const renderCiudadSelector = () => {
-    // Validación defensiva
-    if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
         return (
             <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
                     Ciudad/Municipio <Text style={styles.required}>*</Text>
                 </Text>
-                <View style={[styles.pickerContainer, styles.disabledInput]}>
-                    <Text style={styles.errorText}>Error: Datos de ciudades no disponibles</Text>
+                <View style={[styles.pickerContainer, errors.ciudad && styles.inputError]}>
+                    <Picker
+                        selectedValue={ciudad}
+                        onValueChange={(value) => {
+                            setCiudad(value);
+                            if (value) {
+                                setErrors(prev => ({ ...prev, ciudad: null }));
+                            }
+                        }}
+                        style={styles.picker}
+                        enabled={!!departamento && !!EL_SALVADOR_DATA[departamento]}
+                        dropdownIconColor={departamento ? "#49AA4C" : "#CCCCCC"}
+                        mode="dropdown"
+                    >
+                        <Picker.Item 
+                            label={departamento ? "Selecciona una ciudad" : "Primero selecciona un departamento"} 
+                            value="" 
+                            color="#999999"
+                        />
+                        {departamento && EL_SALVADOR_DATA[departamento]?.map((municipio) => (
+                            <Picker.Item 
+                                key={municipio} 
+                                label={municipio} 
+                                value={municipio}
+                                color="#1A1A1A"
+                            />
+                        ))}
+                    </Picker>
                 </View>
+                {errors.ciudad && (
+                    <Text style={styles.errorText}>{errors.ciudad}</Text>
+                )}
+                {!departamento && (
+                    <Text style={styles.inputHint}>Selecciona primero un departamento</Text>
+                )}
             </View>
         );
-    }
+    };
 
-    return (
-        <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-                Ciudad/Municipio <Text style={styles.required}>*</Text>
-            </Text>
-            <View style={[styles.pickerContainer, errors.ciudad && styles.inputError]}>
-                <Picker
-                    selectedValue={ciudad}
-                    onValueChange={(value) => {
-                        setCiudad(value);
-                        if (value) {
-                            setErrors(prev => ({ ...prev, ciudad: null }));
-                        }
-                    }}
-                    style={styles.picker}
-                    enabled={!!departamento && !!EL_SALVADOR_DATA[departamento]}
-                >
-                    <Picker.Item 
-                        label={departamento ? "Selecciona una ciudad" : "Primero selecciona un departamento"} 
-                        value="" 
-                    />
-                    {departamento && EL_SALVADOR_DATA[departamento]?.map((municipio) => (
-                        <Picker.Item key={municipio} label={municipio} value={municipio} />
-                    ))}
-                </Picker>
-            </View>
-            {errors.ciudad && (
-                <Text style={styles.errorText}>{errors.ciudad}</Text>
-            )}
-            {!departamento && (
-                <Text style={styles.inputHint}>Selecciona primero un departamento</Text>
-            )}
-        </View>
-    );
-};
-
-    /**
-     * Renderizar selector de estado
-     */
     const renderEstadoSelector = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -608,7 +539,6 @@ const renderCiudadSelector = () => {
             onRequestClose={handleClose}
         >
             <SafeAreaView style={styles.container}>
-                {/* Header del modal */}
                 <View style={styles.header}>
                     <View style={styles.headerContent}>
                         <Ionicons name="pencil" size={24} color="#FFFFFF" />
@@ -630,13 +560,11 @@ const renderCiudadSelector = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Contenido del formulario */}
                 <ScrollView 
                     style={styles.content}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContent}
                 >
-                    {/* Sección: Información Personal */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Ionicons name="person" size={20} color="#49AA4C" />
@@ -674,7 +602,6 @@ const renderCiudadSelector = () => {
                         </View>
                     </View>
 
-                    {/* Sección: Información de Residencia */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Ionicons name="location" size={20} color="#FF8C00" />
@@ -701,7 +628,6 @@ const renderCiudadSelector = () => {
                         </View>
                     </View>
 
-                    {/* Sección: Estado del Cliente */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Ionicons name="analytics" size={20} color="#6366F1" />
@@ -712,7 +638,6 @@ const renderCiudadSelector = () => {
                         </View>
                     </View>
 
-                    {/* Sección: Seguridad */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Ionicons name="key" size={20} color="#10B981" />
@@ -723,11 +648,9 @@ const renderCiudadSelector = () => {
                         </View>
                     </View>
 
-                    {/* Espaciador */}
                     <View style={styles.spacer} />
                 </ScrollView>
 
-                {/* Botones de acción */}
                 <View style={styles.actionButtons}>
                     <TouchableOpacity 
                         style={styles.cancelButton}
@@ -760,7 +683,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8F9FA',
     },
     header: {
-        backgroundColor: '#49AA4C', // Color diferente al de agregar
+        backgroundColor: '#49AA4C',
         paddingHorizontal: 20,
         paddingVertical: 16,
         flexDirection: 'row',
@@ -826,7 +749,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
         borderLeftWidth: 3,
-        borderLeftColor: '#49AA4C', // Borde de color para diferenciarlo
+        borderLeftColor: '#49AA4C',
     },
     row: {
         flexDirection: 'row',
@@ -908,10 +831,12 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: '#FFFFFF',
         overflow: 'hidden',
+        minHeight: 50,
     },
     picker: {
         height: 50,
         fontSize: 14,
+        color: '#1A1A1A',
     },
     estadoContainer: {
         flexDirection: 'row',

@@ -15,27 +15,13 @@ import { useAddOptometrista } from '../../hooks/useOptometristas/useAddOptometri
 import { useAuth } from '../../context/AuthContext';
 import HorariosInteractivo from './HorarioInteractivo';
 
-/**
- * Componente AddOptometristaModal
- * 
- * Modal paso 2 para agregar información específica del optometrista
- * Se ejecuta después del modal de empleado cuando se selecciona puesto "Optometrista"
- * 
- * Props:
- * @param {boolean} visible - Controla la visibilidad del modal
- * @param {Function} onClose - Función que se ejecuta al cerrar/cancelar el modal
- * @param {Function} onSuccess - Función que se ejecuta al crear exitosamente el optometrista
- * @param {Object} empleadoData - Datos del empleado del paso anterior
- */
 const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => {
     const { getAuthHeaders } = useAuth();
     
-    // Estado para sucursales cargadas desde el backend
     const [sucursalesDisponibles, setSucursalesDisponibles] = useState([]);
     const [loadingSucursales, setLoadingSucursales] = useState(true);
 
     const {
-        // Estados específicos del optometrista
         especialidad,
         setEspecialidad,
         numeroLicencia,
@@ -44,31 +30,19 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
         setExperiencia,
         estadoDisponibilidad,
         setEstadoDisponibilidad,
-        
-        // Horarios - nuevo estado
         disponibilidad,
         setDisponibilidad,
-        
-        // Sucursales - nuevo estado
         sucursalesAsignadas,
         setSucursalesAsignadas,
-
-        // Estados de control
         loading,
         errors,
         setErrors,
-        uploadingImage,
-
-        // Opciones
         especialidades,
-
-        // Funciones principales
         createOptometrista,
         clearOptometristaForm,
         validateField,
     } = useAddOptometrista();
 
-    // Cargar sucursales del backend
     const loadSucursales = async () => {
         try {
             setLoadingSucursales(true);
@@ -79,61 +53,44 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
 
             if (response.ok) {
                 const sucursalesData = await response.json();
-                console.log('Sucursales cargadas para optometrista:', sucursalesData);
                 setSucursalesDisponibles(sucursalesData);
             } else {
-                console.error('Error cargando sucursales');
                 setSucursalesDisponibles([]);
             }
         } catch (error) {
-            console.error('Error al cargar sucursales:', error);
             setSucursalesDisponibles([]);
         } finally {
             setLoadingSucursales(false);
         }
     };
 
-    // Cargar sucursales al montar el componente
     useEffect(() => {
         if (visible) {
             loadSucursales();
         }
     }, [visible]);
 
-    /**
-     * Manejar cambios en horarios
-     */
     const handleHorariosChange = (newDisponibilidad) => {
         setDisponibilidad(newDisponibilidad);
-        // Limpiar error de horarios si existe
         if (errors.disponibilidad && newDisponibilidad.length > 0) {
             setErrors(prev => ({ ...prev, disponibilidad: null }));
         }
     };
 
-    /**
-     * Manejar toggle de sucursales - CORREGIDO para usar ObjectIds
-     */
     const handleSucursalToggle = (sucursalId) => {
         const currentSucursales = Array.isArray(sucursalesAsignadas) ? sucursalesAsignadas : [];
         
         if (currentSucursales.includes(sucursalId)) {
-            // Remover sucursal si ya está seleccionada
             setSucursalesAsignadas(currentSucursales.filter(id => id !== sucursalId));
         } else {
-            // Agregar sucursal si no está seleccionada
             setSucursalesAsignadas([...currentSucursales, sucursalId]);
         }
         
-        // Limpiar error si existe
         if (errors.sucursalesAsignadas) {
             setErrors(prev => ({ ...prev, sucursalesAsignadas: null }));
         }
     };
 
-    /**
-     * Validar que al menos una sucursal esté seleccionada
-     */
     const validateSucursales = () => {
         if (!Array.isArray(sucursalesAsignadas) || sucursalesAsignadas.length === 0) {
             setErrors(prev => ({ 
@@ -146,29 +103,21 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
     };
 
     const handleCreateOptometrista = async () => {
-        // Validar sucursales antes de crear
         if (!validateSucursales()) {
             return;
         }
         
-        console.log('Creando optometrista con sucursales:', sucursalesAsignadas);
         const success = await createOptometrista(empleadoData, onSuccess);
         if (success) {
             onClose();
         }
     };
 
-    /**
-     * Cerrar modal y limpiar formulario
-     */
     const handleClose = () => {
         clearOptometristaForm();
         onClose();
     };
 
-    /**
-     * Renderizar campo de entrada de texto
-     */
     const renderTextInput = (label, value, onChangeText, placeholder, required = false, keyboardType = 'default', field = null) => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -192,9 +141,6 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
         </View>
     );
 
-    /**
-     * Renderizar selector de especialidad
-     */
     const renderEspecialidadSelector = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -210,12 +156,15 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                         }
                     }}
                     style={styles.picker}
+                    itemStyle={{ color: '#1A1A1A', fontSize: 14 }}
+                    dropdownIconColor="#666666"
                 >
                     {especialidades.map((especialidadItem) => (
                         <Picker.Item 
                             key={especialidadItem.value} 
                             label={especialidadItem.label} 
-                            value={especialidadItem.value} 
+                            value={especialidadItem.value}
+                            color="#1A1A1A"
                         />
                     ))}
                 </Picker>
@@ -226,9 +175,6 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
         </View>
     );
 
-    /**
-     * Renderizar selector de estado de disponibilidad
-     */
     const renderEstadoDisponibilidadSelector = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -267,9 +213,6 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
         </View>
     );
 
-    /**
-     * Renderizar información del empleado
-     */
     const renderEmpleadoInfo = () => (
         <View style={styles.empleadoInfoContainer}>
             <View style={styles.empleadoAvatar}>
@@ -285,15 +228,12 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                     {empleadoData?.correo || 'empleado@email.com'}
                 </Text>
                 <Text style={styles.empleadoMeta}>
-                    ✓ Empleado nuevo - Se guardará automáticamente
+                    ✓ {empleadoData?._id ? 'Empleado existente - Se actualizará' : 'Empleado nuevo - Se guardará automáticamente'}
                 </Text>
             </View>
         </View>
     );
 
-    /**
-     * Renderizar selector de sucursales asignadas - CORREGIDO
-     */
     const renderSucursalesAsignadas = () => {
         if (loadingSucursales) {
             return (
@@ -369,7 +309,6 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                     })}
                 </View>
 
-                {/* Error message */}
                 {errors.sucursalesAsignadas && (
                     <View style={styles.errorContainer}>
                         <Ionicons name="alert-circle" size={16} color="#DC2626" />
@@ -377,12 +316,10 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                     </View>
                 )}
 
-                {/* Info adicional */}
                 <Text style={styles.sucursalesHint}>
                     Selecciona al menos una sucursal donde el optometrista trabajará
                 </Text>
                 
-                {/* Debug info - temporal */}
                 {sucursalesAsignadas && sucursalesAsignadas.length > 0 && (
                     <Text style={styles.debugText}>
                         Seleccionadas: {sucursalesAsignadas.length}
@@ -400,9 +337,10 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
             onRequestClose={handleClose}
         >
             <SafeAreaView style={styles.container}>
-                {/* Header del modal */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Añadir Detalles del Optometrista (Paso 2 de 2)</Text>
+                    <Text style={styles.headerTitle}>
+                        {empleadoData?._id ? 'Actualizar a Optometrista (Paso 2 de 2)' : 'Añadir Detalles del Optometrista (Paso 2 de 2)'}
+                    </Text>
                     <TouchableOpacity 
                         style={styles.closeButton}
                         onPress={handleClose}
@@ -412,24 +350,20 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                     </TouchableOpacity>
                 </View>
 
-                {/* Contenido del formulario */}
                 <ScrollView 
                     style={styles.content}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContent}
                 >
-                    {/* Sección: Información del Optometrista */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Ionicons name="person" size={20} color="#009BBF" />
                             <Text style={styles.sectionTitle}>Información del Optometrista</Text>
                         </View>
                         <View style={styles.sectionContent}>
-                            {/* Información del empleado */}
                             <Text style={styles.sectionSubtitle}>Empleado <Text style={styles.required}>*</Text></Text>
                             {renderEmpleadoInfo()}
 
-                            {/* Campos específicos del optometrista */}
                             <View style={styles.row}>
                                 <View style={styles.halfWidth}>
                                     {renderEspecialidadSelector()}
@@ -450,7 +384,6 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                         </View>
                     </View>
 
-                    {/* Sección: Horarios de Disponibilidad */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Ionicons name="time" size={20} color="#009BBF" />
@@ -465,7 +398,6 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                         </View>
                     </View>
 
-                    {/* Sección: Asignación de Sucursales */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Ionicons name="business" size={20} color="#009BBF" />
@@ -476,11 +408,9 @@ const AddOptometristaModal = ({ visible, onClose, onSuccess, empleadoData }) => 
                         </View>
                     </View>
 
-                    {/* Espaciador */}
                     <View style={styles.spacer} />
                 </ScrollView>
 
-                {/* Botones de acción */}
                 <View style={styles.actionButtons}>
                     <TouchableOpacity 
                         style={styles.cancelButton}
@@ -617,10 +547,13 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: '#FFFFFF',
         overflow: 'hidden',
+        minHeight: 50,
     },
     picker: {
         height: 50,
         fontSize: 14,
+        color: '#1A1A1A',
+        backgroundColor: '#FFFFFF',
     },
     estadoContainer: {
         flexDirection: 'row',
@@ -738,8 +671,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Bold',
         color: '#FFFFFF',
     },
-    
-    // Estilos para Sucursales Asignadas
     sucursalesContainer: {
         marginVertical: 8,
     },

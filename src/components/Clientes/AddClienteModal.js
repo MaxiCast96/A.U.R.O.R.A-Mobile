@@ -18,13 +18,7 @@ import {
     formatDUI, 
     formatTelefono, 
     getTelefonoNumbers,
-    getFieldError,
-    validateDUI,
-    validateTelefono,
-    validateEmail,
-    validateRequired,
-    validateEdad,
-    validatePassword
+    getFieldError
 } from '../../utils/validator';
 
 /**
@@ -320,101 +314,118 @@ const AddClienteModal = ({ visible, onClose, onSuccess }) => {
     );
 
     /**
- * Renderizar selector de departamento con validación defensiva
- */
-const renderDepartamentoSelector = () => {
-    // Validación defensiva para evitar errores si EL_SALVADOR_DATA está undefined
-    if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
-        console.warn('EL_SALVADOR_DATA no está disponible');
+     * Renderizar selector de departamento con validación defensiva
+     */
+    const renderDepartamentoSelector = () => {
+        if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
+            console.warn('EL_SALVADOR_DATA no está disponible');
+            return (
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>
+                        Departamento <Text style={styles.required}>*</Text>
+                    </Text>
+                    <View style={[styles.pickerContainer, styles.disabledInput]}>
+                        <Text style={styles.errorText}>Error: Datos de departamentos no disponibles</Text>
+                    </View>
+                </View>
+            );
+        }
+
         return (
             <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
                     Departamento <Text style={styles.required}>*</Text>
                 </Text>
-                <View style={[styles.pickerContainer, styles.disabledInput]}>
-                    <Text style={styles.errorText}>Error: Datos de departamentos no disponibles</Text>
+                <View style={[styles.pickerContainer, errors.departamento && styles.inputError]}>
+                    <Picker
+                        selectedValue={departamento}
+                        onValueChange={handleDepartamentoChange}
+                        style={styles.picker}
+                        dropdownIconColor="#009BBF"
+                        mode="dropdown"
+                    >
+                        <Picker.Item 
+                            label="Selecciona un departamento" 
+                            value="" 
+                            color="#999999"
+                        />
+                        {Object.keys(EL_SALVADOR_DATA).map((dept) => (
+                            <Picker.Item 
+                                key={dept} 
+                                label={dept} 
+                                value={dept}
+                                color="#1A1A1A"
+                            />
+                        ))}
+                    </Picker>
                 </View>
+                {errors.departamento && (
+                    <Text style={styles.errorText}>{errors.departamento}</Text>
+                )}
             </View>
         );
-    }
-
-    return (
-        <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-                Departamento <Text style={styles.required}>*</Text>
-            </Text>
-            <View style={[styles.pickerContainer, errors.departamento && styles.inputError]}>
-                <Picker
-                    selectedValue={departamento}
-                    onValueChange={handleDepartamentoChange}
-                    style={styles.picker}
-                >
-                    <Picker.Item label="Selecciona un departamento" value="" />
-                    {Object.keys(EL_SALVADOR_DATA).map((dept) => (
-                        <Picker.Item key={dept} label={dept} value={dept} />
-                    ))}
-                </Picker>
-            </View>
-            {errors.departamento && (
-                <Text style={styles.errorText}>{errors.departamento}</Text>
-            )}
-        </View>
-    );
-};
+    };
 
     /**
- * Renderizar selector de ciudad con validación defensiva
- */
-const renderCiudadSelector = () => {
-    // Validación defensiva
-    if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
+     * Renderizar selector de ciudad con validación defensiva
+     */
+    const renderCiudadSelector = () => {
+        if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
+            return (
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>
+                        Ciudad/Municipio <Text style={styles.required}>*</Text>
+                    </Text>
+                    <View style={[styles.pickerContainer, styles.disabledInput]}>
+                        <Text style={styles.errorText}>Error: Datos de ciudades no disponibles</Text>
+                    </View>
+                </View>
+            );
+        }
+
         return (
             <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
                     Ciudad/Municipio <Text style={styles.required}>*</Text>
                 </Text>
-                <View style={[styles.pickerContainer, styles.disabledInput]}>
-                    <Text style={styles.errorText}>Error: Datos de ciudades no disponibles</Text>
+                <View style={[styles.pickerContainer, errors.ciudad && styles.inputError]}>
+                    <Picker
+                        selectedValue={ciudad}
+                        onValueChange={(value) => {
+                            setCiudad(value);
+                            if (value) {
+                                setErrors(prev => ({ ...prev, ciudad: null }));
+                            }
+                        }}
+                        style={styles.picker}
+                        enabled={!!departamento && !!EL_SALVADOR_DATA[departamento]}
+                        dropdownIconColor={departamento ? "#009BBF" : "#CCCCCC"}
+                        mode="dropdown"
+                    >
+                        <Picker.Item 
+                            label={departamento ? "Selecciona una ciudad" : "Primero selecciona un departamento"} 
+                            value="" 
+                            color="#999999"
+                        />
+                        {departamento && EL_SALVADOR_DATA[departamento]?.map((municipio) => (
+                            <Picker.Item 
+                                key={municipio} 
+                                label={municipio} 
+                                value={municipio}
+                                color="#1A1A1A"
+                            />
+                        ))}
+                    </Picker>
                 </View>
+                {errors.ciudad && (
+                    <Text style={styles.errorText}>{errors.ciudad}</Text>
+                )}
+                {!departamento && (
+                    <Text style={styles.inputHint}>Selecciona primero un departamento</Text>
+                )}
             </View>
         );
-    }
-
-    return (
-        <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-                Ciudad/Municipio <Text style={styles.required}>*</Text>
-            </Text>
-            <View style={[styles.pickerContainer, errors.ciudad && styles.inputError]}>
-                <Picker
-                    selectedValue={ciudad}
-                    onValueChange={(value) => {
-                        setCiudad(value);
-                        if (value) {
-                            setErrors(prev => ({ ...prev, ciudad: null }));
-                        }
-                    }}
-                    style={styles.picker}
-                    enabled={!!departamento && !!EL_SALVADOR_DATA[departamento]}
-                >
-                    <Picker.Item 
-                        label={departamento ? "Selecciona una ciudad" : "Primero selecciona un departamento"} 
-                        value="" 
-                    />
-                    {departamento && EL_SALVADOR_DATA[departamento]?.map((municipio) => (
-                        <Picker.Item key={municipio} label={municipio} value={municipio} />
-                    ))}
-                </Picker>
-            </View>
-            {errors.ciudad && (
-                <Text style={styles.errorText}>{errors.ciudad}</Text>
-            )}
-            {!departamento && (
-                <Text style={styles.inputHint}>Selecciona primero un departamento</Text>
-            )}
-        </View>
-    );
-};
+    };
 
     /**
      * Renderizar selector de estado
@@ -734,10 +745,15 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: '#FFFFFF',
         overflow: 'hidden',
+        minHeight: 50,
     },
     picker: {
         height: 50,
         fontSize: 14,
+        color: '#1A1A1A',
+    },
+    disabledInput: {
+        backgroundColor: '#F8F9FA',
     },
     estadoContainer: {
         flexDirection: 'row',

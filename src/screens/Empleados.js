@@ -1,3 +1,5 @@
+// CAMBIOS EN Empleados.js
+
 import React, { useState } from 'react';
 import {
     View,
@@ -22,24 +24,6 @@ import AddEmpleadoModal from '../components/Empleados/AddEmpleadoModal';
 import EditEmpleadoModal from '../components/Empleados/EditEmpleadoModal';
 import EmpleadoDetailModal from '../components/Empleados/EmpleadoDetailModal';
 
-
-/**
- * Pantalla de Gestión de Empleados
- * 
- * Esta pantalla replica la funcionalidad del sitio web de escritorio
- * para gestionar empleados de la óptica, incluyendo:
- * - Estadísticas de empleados (total, activos, inactivos, nómina)
- * - Búsqueda por nombre, DUI, email, teléfono o cargo
- * - Filtros por estado (todos, activos, inactivos)
- * - Filtros por sucursal (todas, centro, escalón, etc.)
- * - Lista de empleados con información completa
- * - Acciones para ver, editar y eliminar empleados
- * - Función para añadir nuevos empleados con modales
- * - CRUD completo funcional
- * 
- * Sigue el mismo diseño y colores del sitio web de escritorio
- * adaptado para dispositivos móviles.
- */
 const Empleados = () => {
     const navigation = useNavigation();
 
@@ -69,6 +53,7 @@ const Empleados = () => {
         // Funciones de datos
         onRefresh,
         getEmpleadosStats,
+        loadEmpleados, // AGREGAR ESTA LÍNEA
 
         // Funciones CRUD
         deleteEmpleado,
@@ -127,22 +112,30 @@ const Empleados = () => {
 
     /**
      * Manejar éxito al actualizar empleado
+     * ACTUALIZADO: Ahora recarga los datos del servidor
      */
-    const handleEditSuccess = (updatedEmpleado) => {
-        // Actualizar la lista local usando la función del hook
-        updateEmpleado(updatedEmpleado._id, updatedEmpleado);
-
+    const handleEditSuccess = async (updatedEmpleado) => {
+        // Cerrar el modal primero
+        handleCloseEditModal();
+        
+        // Recargar empleados del servidor para obtener datos frescos
+        await loadEmpleados();
+        
         // Mostrar mensaje de éxito
         showSuccessMessage('Empleado actualizado exitosamente');
     };
 
     /**
      * Manejar éxito al agregar empleado
+     * ACTUALIZADO: Ahora recarga los datos del servidor
      */
-    const handleAddSuccess = (newEmpleado) => {
-        // Actualizar la lista local cuando se crea un empleado
-        addEmpleadoToList(newEmpleado);
-
+    const handleAddSuccess = async (newEmpleado) => {
+        // Cerrar el modal primero
+        handleCloseAddModal();
+        
+        // Recargar empleados del servidor para obtener datos frescos
+        await loadEmpleados();
+        
         // Mostrar mensaje de éxito
         showSuccessMessage('Empleado creado exitosamente');
     };
@@ -360,6 +353,7 @@ const Empleados = () => {
     );
 };
 
+// Los estilos permanecen igual
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -435,25 +429,6 @@ const styles = StyleSheet.create({
         height: 40,
         backgroundColor: 'rgba(255, 255, 255, 0.3)',
         marginHorizontal: 8,
-    },
-    nominaContainer: {
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-        borderRadius: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 10,
-        marginTop: 12,
-        alignItems: 'center',
-    },
-    nominaLabel: {
-        fontSize: 12,
-        fontFamily: 'Lato-Regular',
-        color: 'rgba(255, 255, 255, 0.8)',
-        marginBottom: 4,
-    },
-    nominaValue: {
-        fontSize: 20,
-        fontFamily: 'Lato-Bold',
-        color: '#FFFFFF',
     },
     searchContainer: {
         paddingHorizontal: 10,

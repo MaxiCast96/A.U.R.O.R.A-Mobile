@@ -12,39 +12,29 @@ import {
 export const useEditEmpleado = () => {
     const { getAuthHeaders } = useAuth();
     
-    // Estados del formulario - Información Personal
     const [nombre, setNombre] = useState('');
     const [apellido, setApellido] = useState('');
     const [dui, setDui] = useState('');
     const [telefono, setTelefono] = useState('');
     const [correo, setCorreo] = useState('');
     const [fotoPerfil, setFotoPerfil] = useState(null);
-
-    // Estados del formulario - Información de Residencia
     const [departamento, setDepartamento] = useState('');
     const [ciudad, setCiudad] = useState('');
     const [direccionCompleta, setDireccionCompleta] = useState('');
-
-    // Estados del formulario - Información Laboral
     const [sucursal, setSucursal] = useState('');
     const [puesto, setPuesto] = useState('');
     const [salario, setSalario] = useState('');
     const [fechaContratacion, setFechaContratacion] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [estado, setEstado] = useState('Activo');
-
-    // Acceso y Seguridad
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-
-    // Estados de control
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [uploadingImage, setUploadingImage] = useState(false);
     const [empleadoId, setEmpleadoId] = useState(null);
     const [originalData, setOriginalData] = useState(null);
 
-    // Opciones de sucursales - cargadas dinámicamente con valor único inicial
     const [sucursales, setSucursales] = useState([
         { label: 'Cargando sucursales...', value: 'loading' }
     ]);
@@ -59,7 +49,6 @@ export const useEditEmpleado = () => {
         { label: 'Recepcionista', value: 'Recepcionista' }
     ];
 
-    // Cargar sucursales del backend
     const loadSucursales = async () => {
         try {
             const response = await fetch('https://a-u-r-o-r-a.onrender.com/api/sucursales', {
@@ -77,27 +66,22 @@ export const useEditEmpleado = () => {
                     }))
                 ];
                 setSucursales(sucursalesOptions);
-                console.log('Sucursales cargadas para edición:', sucursalesOptions);
             } else {
-                console.error('Error cargando sucursales para edición');
                 setSucursales([
                     { label: 'Error cargando sucursales', value: 'error' }
                 ]);
             }
         } catch (error) {
-            console.error('Error al cargar sucursales para edición:', error);
             setSucursales([
                 { label: 'Seleccione sucursal', value: '' }
             ]);
         }
     };
 
-    // Cargar sucursales al inicializar el hook
     useEffect(() => {
         loadSucursales();
     }, []);
 
-    // Funciones de formateo
     const handleDUIChange = (value) => {
         const formattedDUI = formatDUI(value);
         setDui(formattedDUI);
@@ -137,7 +121,6 @@ export const useEditEmpleado = () => {
         }
     };
 
-    // Gestión de imágenes
     const handleImagePicker = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         
@@ -197,21 +180,17 @@ export const useEditEmpleado = () => {
 
             if (!result.canceled && result.assets && result.assets[0]) {
                 setFotoPerfil(result.assets[0].uri);
-                console.log('Nueva imagen seleccionada:', result.assets[0].uri);
             }
         } catch (error) {
-            console.error('Error al seleccionar imagen:', error);
             Alert.alert('Error', 'No se pudo seleccionar la imagen');
         }
     };
 
-    // Subir imagen a Cloudinary
     const uploadImageToCloudinary = async (imageUri) => {
         if (!imageUri) return null;
 
         try {
             setUploadingImage(true);
-            console.log('Subiendo nueva imagen a Cloudinary...');
             
             const formData = new FormData();
             
@@ -227,8 +206,6 @@ export const useEditEmpleado = () => {
 
             formData.append('upload_preset', 'empleados_unsigned');
 
-            console.log('Usando preset: empleados_unsigned');
-
             const response = await fetch(`https://api.cloudinary.com/v1_1/dv6zckgk4/image/upload`, {
                 method: 'POST',
                 headers: {
@@ -238,28 +215,21 @@ export const useEditEmpleado = () => {
             });
 
             const responseData = await response.json();
-            console.log('Respuesta de Cloudinary para edición:', responseData);
 
             if (response.ok && responseData.secure_url) {
-                console.log('Nueva imagen subida exitosamente:', responseData.secure_url);
                 return responseData.secure_url;
             } else {
-                console.error('Error de Cloudinary en edición:', responseData);
                 throw new Error(responseData.error?.message || 'Error al subir imagen');
             }
 
         } catch (error) {
-            console.error('Error subiendo imagen en edición:', error);
             throw error;
         } finally {
             setUploadingImage(false);
         }
     };
 
-    // Cargar datos del empleado para edición
     const loadEmpleadoData = (empleado) => {
-        console.log('Cargando datos del empleado para editar:', empleado);
-        
         setEmpleadoId(empleado._id);
         setNombre(empleado.nombre || '');
         setApellido(empleado.apellido || '');
@@ -268,19 +238,16 @@ export const useEditEmpleado = () => {
         setCorreo(empleado.correo || '');
         setFotoPerfil(empleado.fotoPerfil || null);
         
-        // Información de residencia
         setDepartamento(empleado.direccion?.departamento || '');
         setCiudad(empleado.direccion?.municipio || empleado.direccion?.ciudad || '');
         setDireccionCompleta(empleado.direccion?.direccionDetallada || empleado.direccion?.calle || '');
         
-        // Información laboral
         setSucursal(empleado.sucursalId?._id || empleado.sucursalId || '');
         setPuesto(empleado.cargo || '');
         setSalario(empleado.salario?.toString() || '');
         setFechaContratacion(empleado.fechaContratacion ? new Date(empleado.fechaContratacion) : new Date());
         setEstado(empleado.estado || 'Activo');
         
-        // Guardar datos originales para detectar cambios
         setOriginalData({
             nombre: empleado.nombre || '',
             apellido: empleado.apellido || '',
@@ -298,12 +265,10 @@ export const useEditEmpleado = () => {
             estado: empleado.estado || 'Activo'
         });
         
-        // Limpiar errores y contraseña
         setErrors({});
         setPassword('');
     };
 
-    // Verificar si hay cambios
     const hasChanges = () => {
         if (!originalData) return false;
         
@@ -333,7 +298,6 @@ export const useEditEmpleado = () => {
         return JSON.stringify(currentData) !== JSON.stringify(originalFormatted) || password.trim() !== '';
     };
 
-    // Validaciones
     const validateField = (field, value) => {
         const error = getFieldError(field, value);
         setErrors(prev => ({
@@ -347,7 +311,6 @@ export const useEditEmpleado = () => {
         const newErrors = {};
         let isValid = true;
 
-        // Validar campos requeridos básicos
         const requiredFields = {
             nombre: nombre.trim(),
             apellido: apellido.trim(),
@@ -364,7 +327,6 @@ export const useEditEmpleado = () => {
             }
         });
 
-        // Validar contraseña solo si se proporciona
         if (password.trim() !== '') {
             const passwordError = getFieldError('password', password.trim());
             if (passwordError) {
@@ -373,32 +335,27 @@ export const useEditEmpleado = () => {
             }
         }
 
-        // Validar sucursal
         if (!sucursal || sucursal === '' || sucursal === 'loading' || sucursal === 'error') {
             newErrors.sucursal = 'La sucursal es requerida';
             isValid = false;
         }
 
-        // Validar puesto
         if (!puesto || puesto === '') {
             newErrors.puesto = 'El puesto es requerido';
             isValid = false;
         }
 
-        // Validar salario
         const salarioNum = parseFloat(salario);
         if (!salario || isNaN(salarioNum) || salarioNum <= 0) {
             newErrors.salario = 'El salario debe ser un número válido mayor a 0';
             isValid = false;
         }
 
-        // Validar departamento
         if (!departamento) {
             newErrors.departamento = 'El departamento es requerido';
             isValid = false;
         }
 
-        // Validar ciudad
         if (!ciudad) {
             newErrors.ciudad = 'La ciudad es requerida';
             isValid = false;
@@ -408,7 +365,56 @@ export const useEditEmpleado = () => {
         return isValid;
     };
 
-    // Limpiar formulario
+    const validateBasicData = async () => {
+        const newErrors = {};
+        let isValid = true;
+
+        const requiredFields = {
+            nombre: nombre.trim(),
+            apellido: apellido.trim(),
+            dui: dui.trim(),
+            telefono: telefono.trim(),
+            correo: correo.trim()
+        };
+
+        Object.keys(requiredFields).forEach(field => {
+            const error = getFieldError(field, requiredFields[field]);
+            if (error) {
+                newErrors[field] = error;
+                isValid = false;
+            }
+        });
+
+        if (!sucursal || sucursal === '') {
+            newErrors.sucursal = 'La sucursal es requerida';
+            isValid = false;
+        }
+
+        if (!puesto || puesto === '') {
+            newErrors.puesto = 'El puesto es requerido';
+            isValid = false;
+        }
+
+        const salarioNum = parseFloat(salario);
+        if (!salario || isNaN(salarioNum) || salarioNum <= 0) {
+            newErrors.salario = 'El salario debe ser un número válido mayor a 0';
+            isValid = false;
+        }
+
+        if (!departamento) {
+            newErrors.departamento = 'El departamento es requerido';
+            isValid = false;
+        }
+
+        if (!ciudad) {
+            newErrors.ciudad = 'La ciudad es requerida';
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
+
     const clearForm = () => {
         setEmpleadoId(null);
         setNombre('');
@@ -431,17 +437,13 @@ export const useEditEmpleado = () => {
         setOriginalData(null);
     };
 
-    // Función principal para actualizar empleado
     const updateEmpleado = async (onSuccess) => {
-        console.log('Iniciando actualización de empleado...');
-        
         if (!empleadoId) {
             Alert.alert('Error', 'No se encontró el ID del empleado');
             return false;
         }
         
         if (!validateForm()) {
-            console.log('Formulario no válido:', errors);
             return false;
         }
 
@@ -450,15 +452,10 @@ export const useEditEmpleado = () => {
         try {
             let photoUrl = originalData?.fotoPerfil || "";
             
-            // Subir nueva imagen si se cambió
             if (fotoPerfil && fotoPerfil !== originalData?.fotoPerfil) {
-                console.log('Subiendo nueva imagen...');
                 try {
                     photoUrl = await uploadImageToCloudinary(fotoPerfil);
-                    console.log('Nueva URL de imagen obtenida:', photoUrl);
                 } catch (imageError) {
-                    console.log('Error subiendo nueva imagen:', imageError.message);
-                    
                     const continuar = await new Promise((resolve) => {
                         Alert.alert(
                             'Error al subir imagen',
@@ -474,12 +471,10 @@ export const useEditEmpleado = () => {
                         setLoading(false);
                         return false;
                     }
-                    // Mantener la imagen original
                     photoUrl = originalData?.fotoPerfil || "";
                 }
             }
 
-            // Preparar datos para actualización
             const updateData = {
                 nombre: nombre.trim(),
                 apellido: apellido.trim(),
@@ -497,16 +492,9 @@ export const useEditEmpleado = () => {
                 fotoPerfil: photoUrl
             };
 
-            // Incluir contraseña solo si se proporciona
             if (password.trim() !== '') {
                 updateData.password = password.trim();
             }
-
-            console.log('Actualizando empleado:', {
-                ...updateData,
-                password: password.trim() !== '' ? '***NUEVA***' : '***SIN_CAMBIO***',
-                fotoPerfil: photoUrl !== originalData?.fotoPerfil ? 'IMAGEN_CAMBIADA' : 'IMAGEN_ORIGINAL'
-            });
 
             const response = await fetch(`https://a-u-r-o-r-a.onrender.com/api/empleados/${empleadoId}`, {
                 method: 'PUT',
@@ -518,10 +506,8 @@ export const useEditEmpleado = () => {
             });
 
             const responseData = await response.json();
-            console.log('Respuesta del servidor para actualización:', responseData);
 
             if (response.ok) {
-                console.log('Empleado actualizado exitosamente');
                 clearForm();
                 
                 if (onSuccess) {
@@ -536,7 +522,6 @@ export const useEditEmpleado = () => {
                 
                 return true;
             } else {
-                console.error('Error del servidor:', responseData);
                 Alert.alert(
                     'Error al actualizar empleado', 
                     responseData.message || 'No se pudo actualizar el empleado.',
@@ -545,7 +530,6 @@ export const useEditEmpleado = () => {
                 return false;
             }
         } catch (error) {
-            console.error('Error general:', error);
             Alert.alert(
                 'Error de conexión', 
                 'Hubo un problema al conectar con el servidor. Verifica tu conexión.',
@@ -558,7 +542,6 @@ export const useEditEmpleado = () => {
     };
 
     return {
-        // Estados del formulario - Información Personal
         nombre,
         setNombre,
         apellido,
@@ -571,16 +554,12 @@ export const useEditEmpleado = () => {
         setCorreo,
         fotoPerfil,
         setFotoPerfil,
-        
-        // Estados del formulario - Información de Residencia
         departamento,
         setDepartamento,
         ciudad,
         setCiudad,
         direccionCompleta,
         setDireccionCompleta,
-        
-        // Estados del formulario - Información Laboral
         sucursal,
         setSucursal,
         puesto,
@@ -593,48 +572,31 @@ export const useEditEmpleado = () => {
         setShowDatePicker,
         estado,
         setEstado,
-        
-        // Estados del formulario - Acceso y Seguridad
         password,
         setPassword,
         showPassword,
         setShowPassword,
-        
-        // Estados de control
         loading,
         setLoading,
         errors,
         setErrors,
         uploadingImage,
         empleadoId,
-        
-        // Opciones para selectores
         sucursales,
         puestos,
-        
-        // Funciones de inicialización
         loadEmpleadoData,
-        
-        // Funciones de formateo
         handleDUIChange,
         handleTelefonoChange,
         handleDepartamentoChange,
         handleDateChange,
-        
-        // Funciones de gestión de imágenes
         handleImagePicker,
         pickImage,
         uploadImageToServer: uploadImageToCloudinary,
-        
-        // Funciones de validación
         validateForm,
         validateField,
+        validateBasicData,
         hasChanges,
-        
-        // Funciones de limpieza
         clearForm,
-        
-        // Funciones de actualización
         updateEmpleado
     };
 };

@@ -118,9 +118,9 @@ const Optometristas = () => {
     /**
      * Manejar éxito al actualizar optometrista
      */
-    const handleEditSuccess = (updatedOptometrista) => {
-        // Actualizar la lista local usando la función del hook
-        updateOptometrista(updatedOptometrista._id, updatedOptometrista);
+    const handleEditSuccess = async (updatedOptometrista) => {
+        // Refrescar la lista completa desde el servidor
+        await onRefresh();
 
         // Mostrar mensaje de éxito
         showSuccessMessage('Optometrista actualizado exitosamente');

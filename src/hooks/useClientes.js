@@ -253,12 +253,15 @@ export const useClientes = () => {
                     `El cliente ha sido marcado como ${nuevoEstado}.`,
                     [{ text: 'Entendido', style: 'default' }]
                 );
+                
+                return true;
             } else {
                 Alert.alert(
                     'Error', 
                     'No se pudo actualizar el estado del cliente.',
                     [{ text: 'Entendido', style: 'default' }]
                 );
+                return false;
             }
         } catch (error) {
             console.error('Error al actualizar estado del cliente:', error);
@@ -267,6 +270,7 @@ export const useClientes = () => {
                 'Hubo un problema al actualizar el estado del cliente.',
                 [{ text: 'Entendido', style: 'default' }]
             );
+            return false;
         }
     };
 
@@ -489,3 +493,6 @@ export const useClientes = () => {
         filterAndSortClientes
     };
 };
+
+// IMPORTANTE: También exportar como default para compatibilidad
+export default useClientes;

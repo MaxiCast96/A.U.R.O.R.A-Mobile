@@ -18,25 +18,11 @@ import { useAddEmpleado } from '../../hooks/useEmpleado/useAddEmpleado';
 import { EL_SALVADOR_DATA } from '../../constants/ElSalvadorData';
 import AddOptometristaModal from '../Optometristas/AddOptometristaModal';
 
-/**
- * Componente AddEmpleadoModal
- * 
- * Modal para agregar nuevos empleados con formulario organizado por secciones
- * siguiendo el diseño del sitio web de escritorio.
- * Ahora incluye flujo especial para optometristas.
- * 
- * Props:
- * @param {boolean} visible - Controla la visibilidad del modal
- * @param {Function} onClose - Función que se ejecuta al cerrar el modal
- * @param {Function} onSuccess - Función que se ejecuta al crear exitosamente el empleado
- */
 const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
-    // Estado para controlar el flujo de optometristas
     const [showOptometristaModal, setShowOptometristaModal] = useState(false);
     const [empleadoDataForOptometrista, setEmpleadoDataForOptometrista] = useState(null);
 
     const {
-        // Estados del formulario - Información Personal
         nombre,
         setNombre,
         apellido,
@@ -46,15 +32,11 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         correo,
         setCorreo,
         fotoPerfil,
-        
-        // Estados del formulario - Información de Residencia
         departamento,
         ciudad,
         setCiudad,
         direccionCompleta,
         setDireccionCompleta,
-        
-        // Estados del formulario - Información Laboral
         sucursal,
         setSucursal,
         puesto,
@@ -66,57 +48,32 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         setShowDatePicker,
         estado,
         setEstado,
-        
-        // Estados del formulario - Acceso y Seguridad
         password,
         setPassword,
         showPassword,
         setShowPassword,
-        
-        // Estados de control
         loading,
         errors,
         setErrors,
         uploadingImage,
-        
-        // Opciones para selectores
         sucursales,
         puestos,
-        
-        // Funciones de formateo
         handleDUIChange,
         handleTelefonoChange,
         handleDepartamentoChange,
         handleDateChange,
-        
-        // Funciones de gestión de imágenes
         handleImagePicker,
-        
-        // Funciones de validación
         validateField,
         validateBasicData,
-        
-        // Funciones de limpieza
         clearForm,
-        
-        // Funciones de creación
         createEmpleado
     } = useAddEmpleado();
 
-    /**
-     * Determinar si el puesto seleccionado es Optometrista
-     */
     const isOptometrista = puesto === 'Optometrista';
 
-    /**
-     * Manejar el guardado del empleado o continuar con optometrista
-     */
     const handleSaveOrContinue = async () => {
         if (isOptometrista) {
-            // Para optometristas, SOLO validar datos básicos y continuar al paso 2
-            // NO crear el empleado todavía
             if (await validateBasicData()) {
-                // Preparar datos del empleado para el modal de optometrista
                 const empleadoData = {
                     nombre: nombre.trim(),
                     apellido: apellido.trim(),
@@ -139,7 +96,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                 setShowOptometristaModal(true);
             }
         } else {
-            // Para empleados regulares, proceder con el guardado normal
             const success = await createEmpleado(onSuccess);
             if (success) {
                 onClose();
@@ -147,9 +103,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         }
     };
 
-    /**
-     * Cerrar modal y limpiar formulario
-     */
     const handleClose = () => {
         clearForm();
         setShowOptometristaModal(false);
@@ -157,9 +110,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         onClose();
     };
 
-    /**
-     * Manejar éxito en la creación del optometrista
-     */
     const handleOptometristaSuccess = (optometristaData) => {
         setShowOptometristaModal(false);
         setEmpleadoDataForOptometrista(null);
@@ -168,18 +118,11 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         onClose();
     };
 
-    /**
-     * Manejar cancelación del modal de optometrista
-     */
     const handleOptometristaCancel = () => {
         setShowOptometristaModal(false);
         setEmpleadoDataForOptometrista(null);
-        // No cerrar el modal principal, permitir al usuario modificar datos
     };
 
-    /**
-     * Renderizar campo de entrada de texto con validación
-     */
     const renderTextInput = (label, value, onChangeText, placeholder, required = false, keyboardType = 'default', multiline = false, field = null) => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -206,9 +149,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         </View>
     );
 
-    /**
-     * Renderizar campo de contraseña
-     */
     const renderPasswordInput = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -242,12 +182,8 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         </View>
     );
 
-    /**
-     * Renderizar selector de departamento con validación defensiva
-     */
     const renderDepartamentoSelector = () => {
         if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
-            console.warn('EL_SALVADOR_DATA no está disponible');
             return (
                 <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>
@@ -270,10 +206,12 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                         selectedValue={departamento}
                         onValueChange={handleDepartamentoChange}
                         style={styles.picker}
+                        itemStyle={{ color: '#1A1A1A', fontSize: 14 }}
+                        dropdownIconColor="#666666"
                     >
-                        <Picker.Item label="Selecciona un departamento" value="" />
+                        <Picker.Item label="Selecciona un departamento" value="" color="#999999" />
                         {Object.keys(EL_SALVADOR_DATA).map((dept) => (
-                            <Picker.Item key={dept} label={dept} value={dept} />
+                            <Picker.Item key={dept} label={dept} value={dept} color="#1A1A1A" />
                         ))}
                     </Picker>
                 </View>
@@ -284,9 +222,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         );
     };
 
-    /**
-     * Renderizar selector de ciudad con validación defensiva
-     */
     const renderCiudadSelector = () => {
         if (!EL_SALVADOR_DATA || typeof EL_SALVADOR_DATA !== 'object') {
             return (
@@ -317,13 +252,16 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                         }}
                         style={styles.picker}
                         enabled={!!departamento && !!EL_SALVADOR_DATA[departamento]}
+                        itemStyle={{ color: '#1A1A1A', fontSize: 14 }}
+                        dropdownIconColor="#666666"
                     >
                         <Picker.Item 
                             label={departamento ? "Selecciona una ciudad" : "Primero selecciona un departamento"} 
-                            value="" 
+                            value=""
+                            color="#999999"
                         />
                         {departamento && EL_SALVADOR_DATA[departamento]?.map((municipio) => (
-                            <Picker.Item key={municipio} label={municipio} value={municipio} />
+                            <Picker.Item key={municipio} label={municipio} value={municipio} color="#1A1A1A" />
                         ))}
                     </Picker>
                 </View>
@@ -337,9 +275,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         );
     };
 
-    /**
-     * Renderizar selector de estado
-     */
     const renderEstadoSelector = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -378,9 +313,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         </View>
     );
 
-    /**
-     * Renderizar selector de sucursal
-     */
     const renderSucursalSelector = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -396,12 +328,15 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                         }
                     }}
                     style={styles.picker}
+                    itemStyle={{ color: '#1A1A1A', fontSize: 14 }}
+                    dropdownIconColor="#666666"
                 >
                     {sucursales.map((sucursalItem) => (
                         <Picker.Item 
                             key={sucursalItem.value} 
                             label={sucursalItem.label} 
-                            value={sucursalItem.value} 
+                            value={sucursalItem.value}
+                            color="#1A1A1A"
                         />
                     ))}
                 </Picker>
@@ -412,9 +347,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         </View>
     );
 
-    /**
-     * Renderizar selector de puesto
-     */
     const renderPuestoSelector = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -430,12 +362,15 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                         }
                     }}
                     style={styles.picker}
+                    itemStyle={{ color: '#1A1A1A', fontSize: 14 }}
+                    dropdownIconColor="#666666"
                 >
                     {puestos.map((puestoItem) => (
                         <Picker.Item 
                             key={puestoItem.value} 
                             label={puestoItem.label} 
-                            value={puestoItem.value} 
+                            value={puestoItem.value}
+                            color="#1A1A1A"
                         />
                     ))}
                 </Picker>
@@ -451,9 +386,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         </View>
     );
 
-    /**
-     * Renderizar selector de fecha
-     */
     const renderDatePicker = () => (
         <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -483,9 +415,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
         </View>
     );
 
-    /**
-     * Renderizar sección de foto de perfil
-     */
     const renderFotoPerfilSection = () => (
         <View style={styles.fotoPerfilContainer}>
             <TouchableOpacity
@@ -522,7 +451,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                 onRequestClose={handleClose}
             >
                 <SafeAreaView style={styles.container}>
-                    {/* Header del modal */}
                     <View style={styles.header}>
                         <Text style={styles.headerTitle}>
                             {isOptometrista ? 'Agregar Nuevo Optometrista (Paso 1 de 2)' : 'Agregar Nuevo Empleado'}
@@ -536,20 +464,17 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Contenido del formulario */}
                     <ScrollView 
                         style={styles.content}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.scrollContent}
                     >
-                        {/* Sección: Foto de Perfil */}
                         <View style={styles.section}>
                             <View style={styles.sectionContent}>
                                 {renderFotoPerfilSection()}
                             </View>
                         </View>
 
-                        {/* Sección: Información Personal */}
                         <View style={styles.section}>
                             <View style={styles.sectionHeader}>
                                 <Ionicons name="person" size={20} color="#009BBF" />
@@ -579,7 +504,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                             </View>
                         </View>
 
-                        {/* Sección: Información de Residencia */}
                         <View style={styles.section}>
                             <View style={styles.sectionHeader}>
                                 <Ionicons name="home" size={20} color="#49AA4C" />
@@ -606,7 +530,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                             </View>
                         </View>
 
-                        {/* Sección: Información Laboral */}
                         <View style={styles.section}>
                             <View style={styles.sectionHeader}>
                                 <Ionicons name="briefcase" size={20} color="#6B46C1" />
@@ -634,7 +557,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                             </View>
                         </View>
 
-                        {/* Sección: Acceso y Seguridad */}
                         <View style={styles.section}>
                             <View style={styles.sectionHeader}>
                                 <Ionicons name="lock-closed" size={20} color="#6B7280" />
@@ -645,11 +567,9 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                             </View>
                         </View>
 
-                        {/* Espaciador */}
                         <View style={styles.spacer} />
                     </ScrollView>
 
-                    {/* Botones de acción */}
                     <View style={styles.actionButtons}>
                         <TouchableOpacity 
                             style={styles.cancelButton}
@@ -685,7 +605,6 @@ const AddEmpleadoModal = ({ visible, onClose, onSuccess }) => {
                 </SafeAreaView>
             </Modal>
 
-            {/* Modal para datos específicos del optometrista */}
             <AddOptometristaModal
                 visible={showOptometristaModal}
                 onClose={handleOptometristaCancel}
@@ -834,10 +753,13 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: '#FFFFFF',
         overflow: 'hidden',
+        minHeight: 50,
     },
     picker: {
         height: 50,
         fontSize: 14,
+        color: '#1A1A1A',
+        backgroundColor: '#FFFFFF',
     },
     estadoContainer: {
         flexDirection: 'row',

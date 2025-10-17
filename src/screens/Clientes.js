@@ -3,7 +3,6 @@ import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
     RefreshControl,
     TextInput,
     TouchableOpacity,
@@ -71,7 +70,6 @@ const Clientes = () => {
         // Funciones CRUD
         deleteCliente,
         updateClienteEstado,
-        updateCliente,
 
         // Funciones de modal de detalle
         handleViewMore,
@@ -84,9 +82,6 @@ const Clientes = () => {
         // Funciones de filtros
         setSearchText,
         setSelectedFilter,
-
-        // Función para actualizar lista de clientes
-        addClienteToList,
     } = useClientes();
 
     /**
@@ -125,10 +120,13 @@ const Clientes = () => {
     /**
      * Manejar éxito al actualizar cliente
      */
-    const handleEditSuccess = (updatedCliente) => {
-        // Actualizar la lista local usando la función del hook
-        updateCliente(updatedCliente._id, updatedCliente);
-
+    const handleEditSuccess = async (updatedCliente) => {
+        // Cerrar el modal primero
+        handleCloseEditModal();
+        
+        // Recargar la lista completa para asegurar datos actualizados
+        await onRefresh();
+        
         // Mostrar mensaje de éxito
         showSuccessMessage('Cliente actualizado exitosamente');
     };
@@ -136,10 +134,13 @@ const Clientes = () => {
     /**
      * Manejar éxito al agregar cliente
      */
-    const handleAddSuccess = (newCliente) => {
-        // Actualizar la lista local cuando se crea un cliente
-        addClienteToList(newCliente);
-
+    const handleAddSuccess = async (newCliente) => {
+        // Cerrar el modal primero
+        handleCloseAddModal();
+        
+        // Recargar la lista completa para asegurar datos actualizados
+        await onRefresh();
+        
         // Mostrar mensaje de éxito
         showSuccessMessage('Cliente creado exitosamente');
     };
