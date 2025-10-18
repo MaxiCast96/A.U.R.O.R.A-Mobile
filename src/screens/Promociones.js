@@ -26,7 +26,7 @@ import PromocionItem from '../components/Promociones/promocionItem';
 
 const Promociones = () => {
     const navigation = useNavigation();
-    
+
     // Hook principal
     const {
         filteredPromociones,
@@ -75,19 +75,27 @@ const Promociones = () => {
     /**
      * Manejar éxito al crear promoción
      */
-    const handleAddSuccess = (newPromocion) => {
+    const handleAddSuccess = async (newPromocion) => {
         addPromocionToList(newPromocion);
         showSuccessMessage('Promoción creada exitosamente');
         handleCloseAddModal();
+        // Refrescar desde el servidor
+        setTimeout(() => {
+            onRefresh();
+        }, 500);
     };
 
     /**
      * Manejar éxito al actualizar promoción
      */
-    const handleEditSuccess = (updatedPromocion) => {
+    const handleEditSuccess = async (updatedPromocion) => {
         updatePromocionInList(updatedPromocion);
         showSuccessMessage('Promoción actualizada exitosamente');
         handleCloseEditModal();
+        // Refrescar desde el servidor
+        setTimeout(() => {
+            onRefresh();
+        }, 500);
     };
 
     /**
@@ -104,12 +112,12 @@ const Promociones = () => {
             'Eliminar Promoción',
             `¿Estás seguro de que deseas eliminar la promoción "${promocion.nombre}"?`,
             [
-                { 
-                    text: 'Cancelar', 
-                    style: 'cancel' 
+                {
+                    text: 'Cancelar',
+                    style: 'cancel'
                 },
-                { 
-                    text: 'Eliminar', 
+                {
+                    text: 'Eliminar',
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -146,12 +154,12 @@ const Promociones = () => {
             'Cambiar Estado',
             `¿Estás seguro de que deseas ${nuevoEstado ? 'activar' : 'desactivar'} la promoción "${promocion.nombre}"?`,
             [
-                { 
-                    text: 'Cancelar', 
-                    style: 'cancel' 
+                {
+                    text: 'Cancelar',
+                    style: 'cancel'
                 },
-                { 
-                    text: 'Confirmar', 
+                {
+                    text: 'Confirmar',
                     style: 'default',
                     onPress: async () => {
                         try {
@@ -238,23 +246,23 @@ const Promociones = () => {
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.backButton}
                         onPress={() => navigation.goBack()}
                     >
                         <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Promociones</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.headerAddButton}
                         onPress={handleOpenAddModal}
                     >
                         <Ionicons name="add" size={24} color="#FFFFFF" />
                     </TouchableOpacity>
                 </View>
-                
+
                 <Text style={styles.headerSubtitle}>Gestiona las promociones de la óptica</Text>
-                
+
                 {/* Estadísticas */}
                 <PromocionesStatsCard stats={promocionesStats} />
             </View>

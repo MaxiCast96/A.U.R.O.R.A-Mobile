@@ -15,8 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useAuth } from '../../context/AuthContext';
 
 const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
+    const { getAuthHeaders } = useAuth();
+    
     const [formData, setFormData] = useState({
         nombre: '',
         descripcion: '',
@@ -24,7 +27,7 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
         valorDescuento: '',
         aplicaA: 'todos',
         fechaInicio: new Date(),
-        fechaFin: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 días después
+        fechaFin: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         codigoPromo: '',
         prioridad: '0',
         limiteUsos: '',
@@ -38,38 +41,57 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     
-    // Estados para los selectores de fecha
     const [showDateInicio, setShowDateInicio] = useState(false);
     const [showDateFin, setShowDateFin] = useState(false);
     
-    // Estados para los datos de categorías y productos
     const [categorias, setCategorias] = useState([]);
-    const [productos, setProductos] = useState([]);
+    const [lentes, setLentes] = useState([]);
+    const [accesorios, setAccesorios] = useState([]);
     const [showCategoriasModal, setShowCategoriasModal] = useState(false);
     const [showProductosModal, setShowProductosModal] = useState(false);
 
-    // Simular carga de categorías y productos (en una app real esto vendría de tu API)
+    // Cargar datos reales cuando el modal se abre
     useEffect(() => {
         if (visible) {
-            // Datos de ejemplo - en tu caso vendrían de tu base de datos
-            setCategorias([
-                { id: '1', nombre: 'Lentes de Sol' },
-                { id: '2', nombre: 'Lentes de Lectura' },
-                { id: '3', nombre: 'Lentes de Contacto' },
-                { id: '4', nombre: 'Accesorios' },
-                { id: '5', nombre: 'Monturas' },
-                { id: '6', nombre: 'Cristales' }
-            ]);
-
-            setProductos([
-                { id: '1', nombre: 'Lente Solar Clásico', precio: 150 },
-                { id: '2', nombre: 'Lente Reading Pro', precio: 120 },
-                { id: '3', nombre: 'Contacto Diario', precio: 80 },
-                { id: '4', nombre: 'Montura Deportiva', precio: 200 },
-                { id: '5', nombre: 'Cristal Anti-reflejo', precio: 90 }
-            ]);
+            cargarDatos();
         }
     }, [visible]);
+
+    const cargarDatos = async () => {
+        try {
+            // Cargar categorías
+            const categoriasResponse = await fetch('https://aurora-production-7e57.up.railway.app/api/categoria', {
+                headers: getAuthHeaders(),
+            });
+            if (categoriasResponse.ok) {
+                const categoriasData = await categoriasResponse.json();
+                setCategorias(categoriasData);
+            }
+
+            // Cargar lentes
+            const lentesResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/lentes', {
+                headers: getAuthHeaders(),
+            });
+            if (lentesResponse.ok) {
+                const lentesData = await lentesResponse.json();
+                setLentes(Array.isArray(lentesData) ? lentesData : []);
+            }
+
+            // Cargar accesorios
+            const accesoriosResponse = await fetch('https://a-u-r-o-r-a.onrender.com/api/accesorios', {
+                headers: getAuthHeaders(),
+            });
+            if (accesoriosResponse.ok) {
+                const accesoriosData = await accesoriosResponse.json();
+                setAccesorios(Array.isArray(accesoriosData) ? accesoriosData : []);
+            }
+        } catch (error) {
+            console.error('Error cargando datos:', error);
+        }
+    };
+
+    // Combinar lentes y accesorios en un solo array de productos
+    const productos = [...lentes, ...accesorios];
 
     const generateUniqueId = () => {
         return 'promo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -98,7 +120,6 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
         }
     };
 
-    // Manejo de fechas
     const onChangeFechaInicio = (event, selectedDate) => {
         setShowDateInicio(false);
         if (selectedDate) {
@@ -113,13 +134,12 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
         }
     };
 
-    // Manejo de selección de categorías
     const toggleCategoria = (categoria) => {
-        const exists = formData.categoriasSeleccionadas.find(cat => cat.id === categoria.id);
+        const exists = formData.categoriasSeleccionadas.find(cat => cat._id === categoria._id);
         if (exists) {
             setFormData({
                 ...formData, 
-                categoriasSeleccionadas: formData.categoriasSeleccionadas.filter(cat => cat.id !== categoria.id)
+                categoriasSeleccionadas: formData.categoriasSeleccionadas.filter(cat => cat._id !== categoria._id)
             });
         } else {
             setFormData({
@@ -129,13 +149,12 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
         }
     };
 
-    // Manejo de selección de productos
     const toggleProducto = (producto) => {
-        const exists = formData.productosSeleccionados.find(prod => prod.id === producto.id);
+        const exists = formData.productosSeleccionados.find(prod => prod._id === producto._id);
         if (exists) {
             setFormData({
                 ...formData, 
-                productosSeleccionados: formData.productosSeleccionados.filter(prod => prod.id !== producto.id)
+                productosSeleccionados: formData.productosSeleccionados.filter(prod => prod._id !== producto._id)
             });
         } else {
             setFormData({
@@ -199,37 +218,65 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
         return isValid;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validateForm()) {
             Alert.alert('Error', 'Por favor completa todos los campos requeridos correctamente');
             return;
         }
 
+        // Preparar datos según el tipo de aplicación
+        let categoriasAplicables = [];
+        let productosAplicables = [];
+
+        if (formData.aplicaA === 'categoria') {
+            categoriasAplicables = formData.categoriasSeleccionadas.map(cat => cat._id);
+        } else if (formData.aplicaA === 'producto') {
+            productosAplicables = formData.productosSeleccionados.map(prod => prod._id);
+        }
+
         const promocionData = {
-            _id: generateUniqueId(), // Añadir ID único temporal
-            ...formData,
             nombre: formData.nombre.trim(),
             descripcion: formData.descripcion.trim(),
+            tipoDescuento: formData.tipoDescuento,
             valorDescuento: Number(formData.valorDescuento),
-            fechaInicio: formData.fechaInicio,
-            fechaFin: formData.fechaFin,
+            aplicaA: formData.aplicaA,
+            fechaInicio: formData.fechaInicio.toISOString(),
+            fechaFin: formData.fechaFin.toISOString(),
             codigoPromo: formData.codigoPromo.trim().toUpperCase(),
             prioridad: Number(formData.prioridad),
             limiteUsos: formData.limiteUsos ? Number(formData.limiteUsos) : null,
+            mostrarEnCarrusel: formData.mostrarEnCarrusel,
+            activo: formData.activo,
             imagen: imagen,
-            // Solo enviar las IDs para ahorrar espacio
-            categoriasAplicables: formData.categoriasSeleccionadas.map(cat => cat.id),
-            productosAplicables: formData.productosSeleccionados.map(prod => prod.id)
+            categoriasAplicables: categoriasAplicables,
+            productosAplicables: productosAplicables
         };
 
         setLoading(true);
         
-        // Simular una pequeña demora para mejor UX
-        setTimeout(() => {
-            onSubmit(promocionData);
+        try {
+            const response = await fetch('https://aurora-production-7e57.up.railway.app/api/promociones', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(promocionData),
+            });
+
+            if (response.ok) {
+                const responseData = await response.json();
+                onSubmit(responseData.promocion || responseData);
+                handleClose();
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al crear promoción');
+            }
+        } catch (error) {
+            console.error('Error creating promocion:', error);
+            Alert.alert('Error', error.message);
+        } finally {
             setLoading(false);
-            handleClose();
-        }, 1000);
+        }
     };
 
     const handleClose = () => {
@@ -297,7 +344,6 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
         </View>
     );
 
-    // Modal para seleccionar categorías
     const CategoriasModal = () => (
         <Modal
             visible={showCategoriasModal}
@@ -313,10 +359,10 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
                 </View>
                 <ScrollView style={styles.modalContent}>
                     {categorias.map((categoria) => {
-                        const isSelected = formData.categoriasSeleccionadas.find(cat => cat.id === categoria.id);
+                        const isSelected = formData.categoriasSeleccionadas.find(cat => cat._id === categoria._id);
                         return (
                             <TouchableOpacity
-                                key={categoria.id}
+                                key={categoria._id}
                                 style={[styles.optionItem, isSelected && styles.optionItemSelected]}
                                 onPress={() => toggleCategoria(categoria)}
                             >
@@ -345,7 +391,6 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
         </Modal>
     );
 
-    // Modal para seleccionar productos
     const ProductosModal = () => (
         <Modal
             visible={showProductosModal}
@@ -361,10 +406,10 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
                 </View>
                 <ScrollView style={styles.modalContent}>
                     {productos.map((producto) => {
-                        const isSelected = formData.productosSeleccionados.find(prod => prod.id === producto.id);
+                        const isSelected = formData.productosSeleccionados.find(prod => prod._id === producto._id);
                         return (
                             <TouchableOpacity
-                                key={producto.id}
+                                key={producto._id}
                                 style={[styles.optionItem, isSelected && styles.optionItemSelected]}
                                 onPress={() => toggleProducto(producto)}
                             >
@@ -372,7 +417,9 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
                                     <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
                                         {producto.nombre}
                                     </Text>
-                                    <Text style={styles.productoPrecio}>${producto.precio}</Text>
+                                    <Text style={styles.productoPrecio}>
+                                        ${producto.precioActual || producto.precioBase || 0}
+                                    </Text>
                                 </View>
                                 {isSelected && (
                                     <Ionicons name="checkmark" size={20} color="#49AA4C" />
@@ -472,9 +519,11 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
                                 <Picker
                                     selectedValue={formData.tipoDescuento}
                                     onValueChange={(value) => setFormData({...formData, tipoDescuento: value})}
+                                    style={styles.picker}
+                                    itemStyle={styles.pickerItem}
                                 >
-                                    <Picker.Item label="Porcentaje (%)" value="porcentaje" />
-                                    <Picker.Item label="Monto Fijo" value="monto" />
+                                    <Picker.Item label="Porcentaje (%)" value="porcentaje" color="#1A1A1A" />
+                                    <Picker.Item label="Monto Fijo" value="monto" color="#1A1A1A" />
                                 </Picker>
                             </View>
                         </View>
@@ -489,15 +538,16 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
                                 <Picker
                                     selectedValue={formData.aplicaA}
                                     onValueChange={(value) => setFormData({...formData, aplicaA: value})}
+                                    style={styles.picker}
+                                    itemStyle={styles.pickerItem}
                                 >
-                                    <Picker.Item label="Todos los productos" value="todos" />
-                                    <Picker.Item label="Categorías específicas" value="categoria" />
-                                    <Picker.Item label="Productos específicos" value="producto" />
+                                    <Picker.Item label="Todos los productos" value="todos" color="#1A1A1A" />
+                                    <Picker.Item label="Categorías específicas" value="categoria" color="#1A1A1A" />
+                                    <Picker.Item label="Productos específicos" value="producto" color="#1A1A1A" />
                                 </Picker>
                             </View>
                         </View>
 
-                        {/* Selector de categorías o productos según la opción elegida */}
                         {formData.aplicaA === 'categoria' && (
                             <View style={styles.inputGroup}>
                                 <Text style={styles.inputLabel}>Categorías Seleccionadas</Text>
@@ -548,7 +598,6 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
                         {renderDateInput('Fecha de Inicio', formData.fechaInicio, 'fechaInicio', () => setShowDateInicio(true))}
                         {renderDateInput('Fecha de Fin', formData.fechaFin, 'fechaFin', () => setShowDateFin(true))}
 
-                        {/* Date Pickers */}
                         {showDateInicio && (
                             <DateTimePicker
                                 value={formData.fechaInicio}
@@ -584,7 +633,6 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
                             </View>
                         </View>
 
-                        {/* Switches */}
                         <View style={styles.switchesContainer}>
                             <View style={styles.switchRow}>
                                 <Text style={styles.switchLabel}>Mostrar en Carrusel Principal</Text>
@@ -633,7 +681,6 @@ const AddPromocionModal = ({ visible, onClose, onSubmit }) => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Modales para seleccionar categorías y productos */}
                 <CategoriasModal />
                 <ProductosModal />
             </SafeAreaView>
@@ -814,6 +861,15 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         overflow: 'hidden',
     },
+    picker: {
+        color: '#1A1A1A',
+        backgroundColor: '#FFFFFF',
+    },
+    pickerItem: {
+        color: '#1A1A1A',
+        fontSize: 14,
+        fontFamily: 'Lato-Regular',
+    },
     selectorButton: {
         borderWidth: 1,
         borderColor: '#E5E5E5',
@@ -912,7 +968,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato-Bold',
         color: '#FFFFFF',
     },
-    // Estilos para los modales de selección
     modalContainer: {
         flex: 1,
         backgroundColor: '#F8F9FA',

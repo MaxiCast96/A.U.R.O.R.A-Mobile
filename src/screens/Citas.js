@@ -11,21 +11,23 @@ import {
     RefreshControl,
     ActivityIndicator,
     StatusBar,
-    Alert
+    Alert,
+    Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 
 const API_URL = 'https://aurora-production-7e57.up.railway.app/api';
 
 const ESTADO_CONFIG = {
-    'Agendada': { color: '#A4D5DD', icon: 'bookmark' },
-    'Pendiente': { color: '#E74C3C', icon: 'hourglass' },
-    'Confirmada': { color: '#F39C12', icon: 'checkmark' },
-    'Completada': { color: '#49AA4C', icon: 'checkmark-circle' },
-    'Cancelada': { color: '#8E44AD', icon: 'close-circle' },
-    'Programada': { color: '#009BBF', icon: 'calendar' }
+    'agendada': { color: '#A4D5DD', icon: 'bookmark' },
+    'pendiente': { color: '#E74C3C', icon: 'hourglass' },
+    'confirmada': { color: '#F39C12', icon: 'checkmark' },
+    'completada': { color: '#49AA4C', icon: 'checkmark-circle' },
+    'cancelada': { color: '#8E44AD', icon: 'close-circle' },
+    'programada': { color: '#009BBF', icon: 'calendar' }
 };
 
 const FILTER_OPTIONS = [
@@ -48,7 +50,7 @@ const StatsCard = ({ label, value, iconName, color }) => (
 );
 
 const CitaCard = ({ cita, onView, onEdit, onDelete }) => {
-    const estadoInfo = ESTADO_CONFIG[cita.estado] || ESTADO_CONFIG['Pendiente'];
+    const estadoInfo = ESTADO_CONFIG[cita.estado?.toLowerCase()] || ESTADO_CONFIG['pendiente'];
     const clienteNombre = cita.clienteId
         ? `${cita.clienteId.nombre || ''} ${cita.clienteId.apellido || ''}`.trim()
         : 'N/A';
@@ -109,7 +111,7 @@ const CitaCard = ({ cita, onView, onEdit, onDelete }) => {
 
 const DetailModal = ({ visible, onClose, cita }) => {
     if (!cita) return null;
-    const estadoInfo = ESTADO_CONFIG[cita.estado] || ESTADO_CONFIG['Pendiente'];
+    const estadoInfo = ESTADO_CONFIG[cita.estado?.toLowerCase()] || ESTADO_CONFIG['pendiente'];
 
     return (
         <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -174,6 +176,32 @@ const InfoRow = ({ label, value }) => (
 );
 
 const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, errors, clientes, optometristas, sucursales }) => {
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
+    const [tempDate, setTempDate] = useState(new Date());
+    const [tempTime, setTempTime] = useState(new Date());
+
+    const onDateChange = (event, selectedDate) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (selectedDate) {
+            setTempDate(selectedDate);
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            setFormData({ ...formData, fecha: `${year}-${month}-${day}` });
+        }
+    };
+
+    const onTimeChange = (event, selectedTime) => {
+        setShowTimePicker(Platform.OS === 'ios');
+        if (selectedTime) {
+            setTempTime(selectedTime);
+            const hours = String(selectedTime.getHours()).padStart(2, '0');
+            const minutes = String(selectedTime.getMinutes()).padStart(2, '0');
+            setFormData({ ...formData, hora: `${hours}:${minutes}` });
+        }
+    };
+
     return (
         <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
             <View style={styles.modalContainer}>
@@ -195,13 +223,16 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                                 selectedValue={formData.clienteId}
                                 onValueChange={(value) => setFormData({ ...formData, clienteId: value })}
                                 style={styles.picker}
+                                itemStyle={styles.pickerItem}
+                                dropdownIconColor="#1A1A1A"
                             >
-                                <Picker.Item label="Seleccione cliente" value="" />
+                                <Picker.Item label="Seleccione cliente" value="" color="#666666" />
                                 {clientes.map(cliente => (
                                     <Picker.Item 
                                         key={cliente._id} 
                                         label={`${cliente.nombre} ${cliente.apellido}`} 
-                                        value={cliente._id} 
+                                        value={cliente._id}
+                                        color="#1A1A1A"
                                     />
                                 ))}
                             </Picker>
@@ -217,13 +248,16 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                                 selectedValue={formData.optometristaId}
                                 onValueChange={(value) => setFormData({ ...formData, optometristaId: value })}
                                 style={styles.picker}
+                                itemStyle={styles.pickerItem}
+                                dropdownIconColor="#1A1A1A"
                             >
-                                <Picker.Item label="Seleccione optometrista" value="" />
+                                <Picker.Item label="Seleccione optometrista" value="" color="#666666" />
                                 {optometristas.map(opto => (
                                     <Picker.Item 
                                         key={opto._id} 
                                         label={opto.empleadoId ? `Dr(a). ${opto.empleadoId.nombre} ${opto.empleadoId.apellido}` : 'Optometrista'} 
-                                        value={opto._id} 
+                                        value={opto._id}
+                                        color="#1A1A1A"
                                     />
                                 ))}
                             </Picker>
@@ -239,13 +273,16 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                                 selectedValue={formData.sucursalId}
                                 onValueChange={(value) => setFormData({ ...formData, sucursalId: value })}
                                 style={styles.picker}
+                                itemStyle={styles.pickerItem}
+                                dropdownIconColor="#1A1A1A"
                             >
-                                <Picker.Item label="Seleccione sucursal" value="" />
+                                <Picker.Item label="Seleccione sucursal" value="" color="#666666" />
                                 {sucursales.map(sucursal => (
                                     <Picker.Item 
                                         key={sucursal._id} 
                                         label={sucursal.nombre} 
-                                        value={sucursal._id} 
+                                        value={sucursal._id}
+                                        color="#1A1A1A"
                                     />
                                 ))}
                             </Picker>
@@ -255,32 +292,47 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
 
                     <View style={styles.formGroup}>
                         <Text style={styles.formLabel}>Fecha *</Text>
-                        <View style={styles.inputContainer}>
+                        <TouchableOpacity 
+                            style={styles.inputContainer}
+                            onPress={() => setShowDatePicker(true)}
+                        >
                             <Ionicons name="calendar" size={20} color="#666666" style={styles.inputIcon} />
-                            <TextInput 
-                                style={styles.input} 
-                                value={formData.fecha} 
-                                onChangeText={(text) => setFormData({ ...formData, fecha: text })} 
-                                placeholder="YYYY-MM-DD" 
-                                placeholderTextColor="#999999" 
-                            />
-                        </View>
+                            <Text style={[styles.dateTimeText, !formData.fecha && styles.placeholderText]}>
+                                {formData.fecha || 'Seleccionar fecha'}
+                            </Text>
+                        </TouchableOpacity>
                         {errors.fecha && <Text style={styles.errorText}>{errors.fecha}</Text>}
+                        {showDatePicker && (
+                            <DateTimePicker
+                                value={tempDate}
+                                mode="date"
+                                display="default"
+                                onChange={onDateChange}
+                            />
+                        )}
                     </View>
 
                     <View style={styles.formGroup}>
                         <Text style={styles.formLabel}>Hora *</Text>
-                        <View style={styles.inputContainer}>
+                        <TouchableOpacity 
+                            style={styles.inputContainer}
+                            onPress={() => setShowTimePicker(true)}
+                        >
                             <Ionicons name="time" size={20} color="#666666" style={styles.inputIcon} />
-                            <TextInput 
-                                style={styles.input} 
-                                value={formData.hora} 
-                                onChangeText={(text) => setFormData({ ...formData, hora: text })} 
-                                placeholder="HH:MM" 
-                                placeholderTextColor="#999999" 
-                            />
-                        </View>
+                            <Text style={[styles.dateTimeText, !formData.hora && styles.placeholderText]}>
+                                {formData.hora || 'Seleccionar hora'}
+                            </Text>
+                        </TouchableOpacity>
                         {errors.hora && <Text style={styles.errorText}>{errors.hora}</Text>}
+                        {showTimePicker && (
+                            <DateTimePicker
+                                value={tempTime}
+                                mode="time"
+                                is24Hour={true}
+                                display="default"
+                                onChange={onTimeChange}
+                            />
+                        )}
                     </View>
 
                     <View style={styles.formGroup}>
@@ -291,20 +343,21 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                                 selectedValue={formData.estado}
                                 onValueChange={(value) => setFormData({ ...formData, estado: value })}
                                 style={styles.picker}
+                                itemStyle={styles.pickerItem}
+                                dropdownIconColor="#1A1A1A"
                             >
-                                <Picker.Item label="Agendada" value="Agendada" />
-                                <Picker.Item label="Pendiente" value="Pendiente" />
-                                <Picker.Item label="Confirmada" value="Confirmada" />
-                                <Picker.Item label="Completada" value="Completada" />
-                                <Picker.Item label="Cancelada" value="Cancelada" />
-                                <Picker.Item label="Programada" value="Programada" />
+                                <Picker.Item label="Agendada" value="agendada" color="#1A1A1A" />
+                                <Picker.Item label="Pendiente" value="pendiente" color="#1A1A1A" />
+                                <Picker.Item label="Confirmada" value="confirmada" color="#1A1A1A" />
+                                <Picker.Item label="Completada" value="completada" color="#1A1A1A" />
+                                <Picker.Item label="Cancelada" value="cancelada" color="#1A1A1A" />
                             </Picker>
                         </View>
                         {errors.estado && <Text style={styles.errorText}>{errors.estado}</Text>}
                     </View>
 
                     <View style={styles.formGroup}>
-                        <Text style={styles.formLabel}>Motivo de la cita</Text>
+                        <Text style={styles.formLabel}>Motivo de la cita *</Text>
                         <View style={styles.inputContainer}>
                             <Ionicons name="document-text" size={20} color="#666666" style={styles.inputIcon} />
                             <TextInput 
@@ -317,10 +370,11 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                                 numberOfLines={3} 
                             />
                         </View>
+                        {errors.motivoCita && <Text style={styles.errorText}>{errors.motivoCita}</Text>}
                     </View>
 
                     <View style={styles.formGroup}>
-                        <Text style={styles.formLabel}>Tipo de lente</Text>
+                        <Text style={styles.formLabel}>Tipo de lente *</Text>
                         <View style={styles.inputContainer}>
                             <Ionicons name="glasses" size={20} color="#666666" style={styles.inputIcon} />
                             <TextInput 
@@ -331,6 +385,7 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                                 placeholderTextColor="#999999" 
                             />
                         </View>
+                        {errors.tipoLente && <Text style={styles.errorText}>{errors.tipoLente}</Text>}
                     </View>
 
                     <View style={styles.formGroup}>
@@ -430,7 +485,7 @@ const Citas = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [formData, setFormData] = useState({
-        clienteId: '', optometristaId: '', sucursalId: '', fecha: '', hora: '', estado: 'Programada',
+        clienteId: '', optometristaId: '', sucursalId: '', fecha: '', hora: '', estado: 'agendada',
         motivoCita: '', tipoLente: '', graduacion: '', notasAdicionales: ''
     });
     const [clientes, setClientes] = useState([]);
@@ -502,19 +557,11 @@ const Citas = () => {
             return matchesSearch && matchesDate && matchesEstado && matchesSucursal && matchesOptometrista;
         });
 
-        const [field, order] = sortBy.split('-');
+        // Ordenar por fecha de creación (más reciente primero) por defecto
         filtered.sort((a, b) => {
-            let valueA, valueB;
-            if (field === 'fecha') {
-                valueA = a.fecha ? new Date(a.fecha) : new Date(0);
-                valueB = b.fecha ? new Date(b.fecha) : new Date(0);
-            } else if (field === 'hora') {
-                valueA = a.hora || '';
-                valueB = b.hora || '';
-            }
-            if (valueA < valueB) return order === 'asc' ? -1 : 1;
-            if (valueA > valueB) return order === 'asc' ? 1 : -1;
-            return 0;
+            const dateA = new Date(a.createdAt || a.fecha);
+            const dateB = new Date(b.createdAt || b.fecha);
+            return dateB - dateA; // Más reciente primero
         });
 
         return filtered;
@@ -525,8 +572,8 @@ const Citas = () => {
         return {
             total: citas.length,
             hoy: citas.filter(c => c.fecha?.startsWith(today)).length,
-            pendientes: citas.filter(c => ['Pendiente', 'Programada'].includes(c.estado)).length,
-            confirmadas: citas.filter(c => ['Confirmada', 'Completada'].includes(c.estado)).length
+            pendientes: citas.filter(c => ['pendiente', 'agendada'].includes(c.estado?.toLowerCase())).length,
+            confirmadas: citas.filter(c => ['confirmada', 'completada'].includes(c.estado?.toLowerCase())).length
         };
     }, [citas]);
 
@@ -542,7 +589,7 @@ const Citas = () => {
     };
 
     const handleOpenAddModal = () => {
-        setFormData({ clienteId: '', optometristaId: '', sucursalId: '', fecha: '', hora: '', estado: 'Programada', motivoCita: '', tipoLente: '', graduacion: '', notasAdicionales: '' });
+        setFormData({ clienteId: '', optometristaId: '', sucursalId: '', fecha: '', hora: '', estado: 'agendada', motivoCita: '', tipoLente: '', graduacion: '', notasAdicionales: '' });
         setErrors({});
         setShowAddModal(true);
     };
@@ -554,7 +601,7 @@ const Citas = () => {
             sucursalId: cita.sucursalId?._id || cita.sucursalId || '',
             fecha: cita.fecha ? new Date(cita.fecha).toISOString().split('T')[0] : '',
             hora: cita.hora || '',
-            estado: cita.estado || 'Programada',
+            estado: cita.estado || 'agendada',
             motivoCita: cita.motivoCita || '',
             tipoLente: cita.tipoLente || '',
             graduacion: cita.graduacion || '',
@@ -580,6 +627,8 @@ const Citas = () => {
         if (!formData.fecha) newErrors.fecha = 'Fecha requerida';
         if (!formData.hora) newErrors.hora = 'Hora requerida';
         if (!formData.estado) newErrors.estado = 'Estado requerido';
+        if (!formData.motivoCita) newErrors.motivoCita = 'Motivo de cita requerido';
+        if (!formData.tipoLente) newErrors.tipoLente = 'Tipo de lente requerido';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -591,12 +640,28 @@ const Citas = () => {
         }
         try {
             setLoading(true);
-            const dataToSend = { ...formData, fecha: new Date(formData.fecha) };
+            const dataToSend = { 
+                clienteId: formData.clienteId,
+                optometristaId: formData.optometristaId,
+                sucursalId: formData.sucursalId,
+                fecha: formData.fecha,
+                hora: formData.hora,
+                estado: formData.estado,
+                motivoCita: formData.motivoCita || '',
+                tipoLente: formData.tipoLente || '',
+                graduacion: formData.graduacion || '',
+                notasAdicionales: formData.notasAdicionales || ''
+            };
+            
+            console.log('Datos a enviar:', JSON.stringify(dataToSend, null, 2));
+            
             if (selectedCita) {
-                await axios.put(`${API_URL}/citas/${selectedCita._id}`, dataToSend);
+                const response = await axios.put(`${API_URL}/citas/${selectedCita._id}`, dataToSend);
+                console.log('Respuesta actualizar:', response.data);
                 Alert.alert('Éxito', 'Cita actualizada correctamente');
             } else {
-                await axios.post(`${API_URL}/citas`, dataToSend);
+                const response = await axios.post(`${API_URL}/citas`, dataToSend);
+                console.log('Respuesta crear:', response.data);
                 Alert.alert('Éxito', 'Cita creada correctamente');
             }
             await fetchCitas();
@@ -605,7 +670,9 @@ const Citas = () => {
             setSelectedCita(null);
         } catch (error) {
             console.error('Error al guardar cita:', error);
-            Alert.alert('Error', 'No se pudo guardar la cita');
+            console.error('Error response:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+            Alert.alert('Error', error.response?.data?.message || 'No se pudo guardar la cita');
         } finally {
             setLoading(false);
         }
@@ -704,14 +771,14 @@ const Citas = () => {
                                     selectedValue={filters.estado}
                                     onValueChange={(value) => setFilters({ ...filters, estado: value })}
                                     style={styles.picker}
+                                    dropdownIconColor="#1A1A1A"
                                 >
-                                    <Picker.Item label="Todos los estados" value="todos" />
-                                    <Picker.Item label="Agendada" value="Agendada" />
-                                    <Picker.Item label="Pendiente" value="Pendiente" />
-                                    <Picker.Item label="Confirmada" value="Confirmada" />
-                                    <Picker.Item label="Completada" value="Completada" />
-                                    <Picker.Item label="Cancelada" value="Cancelada" />
-                                    <Picker.Item label="Programada" value="Programada" />
+                                    <Picker.Item label="Todos los estados" value="todos" color="#1A1A1A" />
+                                    <Picker.Item label="Agendada" value="agendada" color="#1A1A1A" />
+                                    <Picker.Item label="Pendiente" value="pendiente" color="#1A1A1A" />
+                                    <Picker.Item label="Confirmada" value="confirmada" color="#1A1A1A" />
+                                    <Picker.Item label="Completada" value="completada" color="#1A1A1A" />
+                                    <Picker.Item label="Cancelada" value="cancelada" color="#1A1A1A" />
                                 </Picker>
                             </View>
                         </View>
@@ -724,13 +791,15 @@ const Citas = () => {
                                     selectedValue={filters.sucursal}
                                     onValueChange={(value) => setFilters({ ...filters, sucursal: value })}
                                     style={styles.picker}
+                                    dropdownIconColor="#1A1A1A"
                                 >
-                                    <Picker.Item label="Todas las sucursales" value="todos" />
+                                    <Picker.Item label="Todas las sucursales" value="todos" color="#1A1A1A" />
                                     {sucursales.map(sucursal => (
                                         <Picker.Item 
                                             key={sucursal._id} 
                                             label={sucursal.nombre} 
-                                            value={sucursal._id} 
+                                            value={sucursal._id}
+                                            color="#1A1A1A"
                                         />
                                     ))}
                                 </Picker>
@@ -745,13 +814,15 @@ const Citas = () => {
                                     selectedValue={filters.optometrista}
                                     onValueChange={(value) => setFilters({ ...filters, optometrista: value })}
                                     style={styles.picker}
+                                    dropdownIconColor="#1A1A1A"
                                 >
-                                    <Picker.Item label="Todos los optometristas" value="todos" />
+                                    <Picker.Item label="Todos los optometristas" value="todos" color="#1A1A1A" />
                                     {optometristas.map(opto => (
                                         <Picker.Item 
                                             key={opto._id} 
                                             label={opto.empleadoId ? `Dr(a). ${opto.empleadoId.nombre} ${opto.empleadoId.apellido}` : 'Optometrista'} 
-                                            value={opto._id} 
+                                            value={opto._id}
+                                            color="#1A1A1A"
                                         />
                                     ))}
                                 </Picker>
@@ -845,30 +916,6 @@ const Citas = () => {
                 }
             />
 
-            <Modal visible={showFilters && false} animationType="slide" transparent={true} onRequestClose={() => setShowFilters(false)}>
-                <View style={styles.filterModalOverlay}>
-                    <View style={styles.filterModalContent}>
-                        <View style={styles.filterModalHeader}>
-                            <Text style={styles.filterModalTitle}>Ordenar por</Text>
-                            <TouchableOpacity onPress={() => setShowFilters(false)}>
-                                <Ionicons name="close" size={24} color="#666666" />
-                            </TouchableOpacity>
-                        </View>
-                        {FILTER_OPTIONS.map(option => (
-                            <TouchableOpacity 
-                                key={option.value} 
-                                onPress={() => { setSortBy(option.value); setShowFilters(false); }} 
-                                style={[styles.filterOption, sortBy === option.value && styles.filterOptionSelected]}
-                            >
-                                <Ionicons name={option.icon} size={20} color={sortBy === option.value ? '#009BBF' : '#666666'} />
-                                <Text style={[styles.filterOptionText, sortBy === option.value && styles.filterOptionTextSelected]}>{option.label}</Text>
-                                {sortBy === option.value && <Ionicons name="checkmark-circle" size={20} color="#009BBF" />}
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-            </Modal>
-
             <DetailModal 
                 visible={showDetail} 
                 onClose={() => { setShowDetail(false); setSelectedCita(null); }} 
@@ -961,14 +1008,6 @@ const styles = StyleSheet.create({
     emptyIconContainer: { width: 96, height: 96, backgroundColor: '#F8F9FA', borderRadius: 48, alignItems: 'center', justifyContent: 'center', marginBottom: 16, borderWidth: 2, borderColor: '#E5E5E5', borderStyle: 'dashed' },
     emptyTitle: { fontSize: 18, fontFamily: 'Lato-Bold', color: '#1A1A1A', marginBottom: 8, textAlign: 'center' },
     emptySubtitle: { fontSize: 14, fontFamily: 'Lato-Regular', color: '#666666', textAlign: 'center', lineHeight: 20 },
-    filterModalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' },
-    filterModalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 40 },
-    filterModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#E5E5E5' },
-    filterModalTitle: { fontSize: 18, fontFamily: 'Lato-Bold', color: '#1A1A1A' },
-    filterOption: { flexDirection: 'row', alignItems: 'center', padding: 16, marginHorizontal: 16, marginVertical: 4, borderRadius: 12, gap: 12 },
-    filterOptionSelected: { backgroundColor: '#F0F9FF' },
-    filterOptionText: { flex: 1, fontSize: 16, fontFamily: 'Lato-Regular', color: '#666666' },
-    filterOptionTextSelected: { fontFamily: 'Lato-Bold', color: '#009BBF' },
     modalContainer: { flex: 1, backgroundColor: '#F8F9FA' },
     modalHeader: { backgroundColor: '#009BBF', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20 },
     modalHeaderContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
@@ -1004,10 +1043,15 @@ const styles = StyleSheet.create({
         height: 48,
         color: '#1A1A1A'
     },
-    inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#E5E5E5', paddingHorizontal: 12 },
+    pickerItem: {
+        color: '#1A1A1A'
+    },
+    inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#E5E5E5', paddingHorizontal: 12, height: 48 },
     inputIcon: { marginRight: 8 },
     input: { flex: 1, height: 48, fontSize: 16, fontFamily: 'Lato-Regular', color: '#1A1A1A' },
     textArea: { height: 80, textAlignVertical: 'top', paddingTop: 12 },
+    dateTimeText: { flex: 1, fontSize: 16, fontFamily: 'Lato-Regular', color: '#1A1A1A' },
+    placeholderText: { color: '#999999' },
     errorText: { fontSize: 12, fontFamily: 'Lato-Regular', color: '#E74C3C', marginTop: 4 },
     formActions: { flexDirection: 'row', padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: '#E5E5E5' },
     cancelButton: { flex: 1, height: 48, backgroundColor: '#F8F9FA', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },

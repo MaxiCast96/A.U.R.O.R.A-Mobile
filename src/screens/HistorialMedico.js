@@ -11,12 +11,14 @@ import {
     RefreshControl,
     ActivityIndicator,
     StatusBar,
-    Alert
+    Alert,
+    Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const API_URL = 'https://aurora-production-7e57.up.railway.app/api';
 
@@ -36,11 +38,30 @@ const toYMD = (val) => {
     } catch { return ''; }
 };
 
+const formatDateForDisplay = (dateStr) => {
+    if (!dateStr) return 'Seleccionar fecha';
+    try {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('es-ES', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+    } catch {
+        return 'Seleccionar fecha';
+    }
+};
+
+const getTodayString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+};
+
 const initialFormState = {
     clienteId: '',
-    padecimientos: { tipo: '', descripcion: '', fechaDeteccion: '' },
+    padecimientos: { tipo: '', descripcion: '', fechaDeteccion: getTodayString() },
     historialVisual: {
-        fecha: '',
+        fecha: getTodayString(),
         diagnostico: '',
         receta: {
             ojoDerecho: { esfera: '', cilindro: '', eje: '', adicion: '' },
@@ -221,6 +242,9 @@ const InfoRow = ({ label, value }) => (
 );
 
 const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, errors, clientes, editMode }) => {
+    const [showFechaDeteccionPicker, setShowFechaDeteccionPicker] = useState(false);
+    const [showFechaDiagnosticoPicker, setShowFechaDiagnosticoPicker] = useState(false);
+
     const handleInputChange = (field, value, subfield = null, subsubfield = null) => {
         if (subfield && subsubfield) {
             setFormData(prev => ({
@@ -243,6 +267,22 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
             }));
         } else {
             setFormData(prev => ({ ...prev, [field]: value }));
+        }
+    };
+
+    const handleFechaDeteccionChange = (event, selectedDate) => {
+        setShowFechaDeteccionPicker(Platform.OS === 'ios');
+        if (selectedDate) {
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            handleInputChange('padecimientos', dateStr, 'fechaDeteccion');
+        }
+    };
+
+    const handleFechaDiagnosticoChange = (event, selectedDate) => {
+        setShowFechaDiagnosticoPicker(Platform.OS === 'ios');
+        if (selectedDate) {
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            handleInputChange('historialVisual', dateStr, 'fecha');
         }
     };
 
@@ -316,31 +356,49 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
 
                     <View style={styles.formGroup}>
                         <Text style={styles.formLabel}>Fecha de Detección *</Text>
-                        <View style={styles.inputContainer}>
+                        <TouchableOpacity 
+                            onPress={() => setShowFechaDeteccionPicker(true)}
+                            style={styles.datePickerButton}
+                        >
                             <Ionicons name="calendar" size={20} color="#666666" style={styles.inputIcon} />
-                            <TextInput 
-                                style={styles.input} 
-                                value={formData.padecimientos.fechaDeteccion} 
-                                onChangeText={(text) => handleInputChange('padecimientos', text, 'fechaDeteccion')} 
-                                placeholder="YYYY-MM-DD" 
-                                placeholderTextColor="#999999" 
+                            <Text style={styles.datePickerText}>
+                                {formatDateForDisplay(formData.padecimientos.fechaDeteccion)}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color="#666666" />
+                        </TouchableOpacity>
+                        {showFechaDeteccionPicker && (
+                            <DateTimePicker
+                                value={formData.padecimientos.fechaDeteccion ? new Date(formData.padecimientos.fechaDeteccion) : new Date()}
+                                mode="date"
+                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                onChange={handleFechaDeteccionChange}
+                                maximumDate={new Date()}
                             />
-                        </View>
+                        )}
                         {errors.fechaDeteccion && <Text style={styles.errorText}>{errors.fechaDeteccion}</Text>}
                     </View>
 
                     <View style={styles.formGroup}>
                         <Text style={styles.formLabel}>Fecha de Diagnóstico *</Text>
-                        <View style={styles.inputContainer}>
+                        <TouchableOpacity 
+                            onPress={() => setShowFechaDiagnosticoPicker(true)}
+                            style={styles.datePickerButton}
+                        >
                             <Ionicons name="calendar" size={20} color="#666666" style={styles.inputIcon} />
-                            <TextInput 
-                                style={styles.input} 
-                                value={formData.historialVisual.fecha} 
-                                onChangeText={(text) => handleInputChange('historialVisual', text, 'fecha')} 
-                                placeholder="YYYY-MM-DD" 
-                                placeholderTextColor="#999999" 
+                            <Text style={styles.datePickerText}>
+                                {formatDateForDisplay(formData.historialVisual.fecha)}
+                            </Text>
+                            <Ionicons name="chevron-down" size={20} color="#666666" />
+                        </TouchableOpacity>
+                        {showFechaDiagnosticoPicker && (
+                            <DateTimePicker
+                                value={formData.historialVisual.fecha ? new Date(formData.historialVisual.fecha) : new Date()}
+                                mode="date"
+                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                onChange={handleFechaDiagnosticoChange}
+                                maximumDate={new Date()}
                             />
-                        </View>
+                        )}
                         {errors.fechaDiagnostico && <Text style={styles.errorText}>{errors.fechaDiagnostico}</Text>}
                     </View>
 
@@ -366,7 +424,11 @@ const FormModal = ({ visible, onClose, title, onSubmit, formData, setFormData, e
                             <TextInput 
                                 style={styles.inputSmall} 
                                 value={formData.historialVisual.receta.ojoDerecho.esfera} 
-                                onChangeText={(text) => handleInputChange('historialVisual', text, 'receta', { ojoDerecho: { ...formData.historialVisual.receta.ojoDerecho, esfera: text } })}
+                                onChangeText={(text) => {
+                                    const newReceta = { ...formData.historialVisual.receta };
+                                    newReceta.ojoDerecho.esfera = text;
+                                    handleInputChange('historialVisual', newReceta, 'receta');
+                                }}
                                 placeholder="0.00" 
                                 keyboardType="numeric"
                                 placeholderTextColor="#999999" 
@@ -656,7 +718,6 @@ const HistorialMedico = () => {
 
     const stats = useMemo(() => {
         const hoy = new Date();
-        const hoyStr = hoy.toISOString().split('T')[0];
         
         return {
             total: historiales.length,
@@ -690,10 +751,10 @@ const HistorialMedico = () => {
             padecimientos: {
                 tipo: historial.padecimientos?.tipo || '',
                 descripcion: historial.padecimientos?.descripcion || '',
-                fechaDeteccion: toYMD(historial.padecimientos?.fechaDeteccion)
+                fechaDeteccion: toYMD(historial.padecimientos?.fechaDeteccion) || getTodayString()
             },
             historialVisual: {
-                fecha: toYMD(historial.historialVisual?.fecha),
+                fecha: toYMD(historial.historialVisual?.fecha) || getTodayString(),
                 diagnostico: historial.historialVisual?.diagnostico || '',
                 receta: {
                     ojoDerecho: {
@@ -754,6 +815,8 @@ const HistorialMedico = () => {
                 }
             };
             
+            console.log('Datos a enviar:', JSON.stringify(dataToSend, null, 2));
+            
             if (selectedHistorial) {
                 await axios.put(`${API_URL}/historialMedico/${selectedHistorial._id}`, dataToSend);
                 Alert.alert('Éxito', 'Historial médico actualizado correctamente');
@@ -776,7 +839,8 @@ const HistorialMedico = () => {
                                         setSelectedHistorial(null);
                                         setFormData(initialFormState);
                                     } catch (error) {
-                                        Alert.alert('Error', 'No se pudo sobrescribir el historial');
+                                        console.error('Error al sobrescribir:', error.response?.data || error.message);
+                                        Alert.alert('Error', error.response?.data?.message || 'No se pudo sobrescribir el historial');
                                     }
                                 }
                             }
@@ -795,7 +859,11 @@ const HistorialMedico = () => {
             setFormData(initialFormState);
         } catch (error) {
             console.error('Error al guardar historial:', error);
-            Alert.alert('Error', 'No se pudo guardar el historial médico');
+            console.error('Detalles del error:', error.response?.data);
+            Alert.alert(
+                'Error al guardar', 
+                error.response?.data?.message || error.response?.data?.error || 'No se pudo guardar el historial médico'
+            );
         } finally {
             setLoading(false);
         }
@@ -1050,7 +1118,6 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 24, fontFamily: 'Lato-Bold', color: '#FFFFFF', marginBottom: 4, marginLeft: 20 },
     headerSubtitle: { fontSize: 14, fontFamily: 'Lato-Regular', color: '#E0F7FF' },
     headerButtons: { flexDirection: 'row', gap: 8 },
-    refreshButton: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255, 255, 255, 0.15)', alignItems: 'center', justifyContent: 'center' },
     addButton: { width: 48, height: 48, borderRadius: 16, backgroundColor: '#49AA4C', alignItems: 'center', justifyContent: 'center' },
     statsContainer: { marginTop: 8 },
     statsContent: { gap: 12 },
@@ -1133,6 +1200,23 @@ const styles = StyleSheet.create({
     inputSmall: { height: 48, paddingHorizontal: 12, fontSize: 16, fontFamily: 'Lato-Regular', color: '#1A1A1A', backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#E5E5E5' },
     textArea: { height: 80, textAlignVertical: 'top', paddingTop: 12 },
     errorText: { fontSize: 12, fontFamily: 'Lato-Regular', color: '#E74C3C', marginTop: 4 },
+    datePickerButton: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        backgroundColor: '#FFFFFF', 
+        borderRadius: 12, 
+        borderWidth: 1, 
+        borderColor: '#E5E5E5', 
+        paddingHorizontal: 12,
+        height: 48
+    },
+    datePickerText: { 
+        flex: 1, 
+        fontSize: 16, 
+        fontFamily: 'Lato-Regular', 
+        color: '#1A1A1A',
+        marginLeft: 8
+    },
     sectionTitle: { fontSize: 16, fontFamily: 'Lato-Bold', color: '#009BBF', marginBottom: 12, marginTop: 8 },
     formRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
     formActions: { flexDirection: 'row', padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: '#E5E5E5' },
