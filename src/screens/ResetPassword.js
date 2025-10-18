@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,11 +15,12 @@ import Button from '../components/Button';
 const ResetPassword = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { correo, codigo } = route.params;
+    const { correo, codigo: routeCode } = route.params;
 
     // Uso del hook personalizado para obtener todos los estados y funciones
     const {
         // Estados de formularios
+        codigo,
         password,
         confirmPassword,
         
@@ -27,6 +29,7 @@ const ResetPassword = () => {
         isLoading,
         
         // Funciones de cambio de estado
+        setCodigo,
         setPassword,
         setConfirmPassword,
         
@@ -34,9 +37,16 @@ const ResetPassword = () => {
         resetPassword
     } = usePasswordRecovery();
 
+    // Prefill code from route if provided
+    useEffect(() => {
+        if (routeCode) {
+            setCodigo(routeCode);
+        }
+    }, [routeCode]);
+
     const handleResetPassword = async () => {
         const result = await resetPassword(correo, codigo);
-        
+
         if (result && result.success) {
             navigation.navigate('PasswordSuccess');
         }
@@ -78,6 +88,16 @@ const ResetPassword = () => {
                     </View>
 
                     <View style={styles.form}>
+                        <Input
+                            label="Código de Verificación"
+                            placeholder="Ingresa el código de 6 dígitos"
+                            value={codigo}
+                            onChangeText={setCodigo}
+                            keyboardType="number-pad"
+                            icon="key-outline"
+                            error={errors.codigo}
+                        />
+
                         <Input
                             label="Nueva Contraseña"
                             placeholder="Ingresa tu nueva contraseña"

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,35 +11,54 @@ import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
 import Input from '../components/Login/Input';
 import Button from '../components/Button';
 
-const ResetPassword = () => {
+const VerifyCode = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { correo, codigo } = route.params;
+    const { correo, codigo: routeCode } = route.params || {};
 
     // Uso del hook personalizado para obtener todos los estados y funciones
     const {
         // Estados de formularios
-        password,
-        confirmPassword,
+        codigo,
         
         // Estados de UI
         errors,
         isLoading,
+        timeLeft,
+        canResend,
         
         // Funciones de cambio de estado
-        setPassword,
-        setConfirmPassword,
+        setCodigo,
+        handleCodeChange,
+        handleCodeComplete,
         
         // Funciones de API
-        resetPassword
+        verifyRecoveryCode,
+        resendCode,
+        
+        // Utilidades
+        formatTime
     } = usePasswordRecovery();
 
-    const handleResetPassword = async () => {
-        const result = await resetPassword(correo, codigo);
-        
-        if (result && result.success) {
-            navigation.navigate('PasswordSuccess');
+    // Prefill code from route if provided
+    useEffect(() => {
+        if (routeCode) {
+            setCodigo(routeCode);
         }
+    }, [routeCode]);
+
+    const handleVerify = async () => {
+        const result = await verifyRecoveryCode(correo, codigo);
+        if (result && result.success) {
+            navigation.navigate('ResetPassword', { correo, codigo });
+        }
+    };
+
+    const handleResend = async () => {
+        if (!canResend) return;
+        const res = await resendCode(correo);
+        // El hook ya gestiona el timer y mensajes
+        return res;
     };
 
     return (
@@ -71,64 +90,35 @@ const ResetPassword = () => {
                         <View style={styles.iconContainer}>
                             <Ionicons name="lock-closed-outline" size={50} color="#009BBF" />
                         </View>
-                        <Text style={styles.title}>Nueva Contraseña</Text>
+                        <Text style={styles.title}>Verificar Código</Text>
                         <Text style={styles.subtitle}>
-                            Crea una contraseña segura para tu cuenta
+                            Ingresa el código de 6 dígitos enviado a tu correo
                         </Text>
                     </View>
 
                     <View style={styles.form}>
                         <Input
-                            label="Nueva Contraseña"
-                            placeholder="Ingresa tu nueva contraseña"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry={true}
-                            icon="lock-closed-outline"
-                            error={errors.password}
+                            label="Código de Verificación"
+                            placeholder="Ingresa el código de 6 dígitos"
+                            value={codigo}
+                            onChangeText={(t) => handleCodeChange(t)}
+                            keyboardType="number-pad"
+                            icon="key-outline"
+                            error={errors.codigo}
                         />
 
-                        <Input
-                            label="Confirmar Contraseña"
-                            placeholder="Confirma tu nueva contraseña"
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            secureTextEntry={true}
-                            icon="lock-closed-outline"
-                            error={errors.confirmPassword}
-                        />
-
-                        <View style={styles.requirements}>
-                            <Text style={styles.requirementsTitle}>Requisitos de la contraseña:</Text>
-                            <Text style={[
-                                styles.requirement,
-                                password.length >= 6 && styles.requirementMet
-                            ]}>
-                                • Mínimo 6 caracteres
-                            </Text>
-                            <Text style={[
-                                styles.requirement,
-                                /(?=.*[a-z])/.test(password) && styles.requirementMet
-                            ]}>
-                                • Al menos una letra minúscula
-                            </Text>
-                            <Text style={[
-                                styles.requirement,
-                                /(?=.*[A-Z])/.test(password) && styles.requirementMet
-                            ]}>
-                                • Al menos una letra mayúscula
-                            </Text>
-                            <Text style={[
-                                styles.requirement,
-                                /(?=.*\d)/.test(password) && styles.requirementMet
-                            ]}>
-                                • Al menos un número
-                            </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                            <Text style={{ color: '#666666', fontSize: 13 }}>Tiempo restante: {formatTime(timeLeft)}</Text>
+                            <TouchableOpacity onPress={handleResend} disabled={!canResend}>
+                                <Text style={{ color: canResend ? '#009BBF' : '#999999', fontWeight: '600' }}>
+                                    Reenviar código
+                                </Text>
+                            </TouchableOpacity>
                         </View>
 
                         <Button
-                            title="Cambiar Contraseña"
-                            onPress={handleResetPassword}
+                            title="Verificar Código"
+                            onPress={handleVerify}
                             variant="primary"
                             size="large"
                             disabled={isLoading}
@@ -222,31 +212,9 @@ const styles = StyleSheet.create({
     form: {
         marginBottom: 20,
     },
-    requirements: {
-        backgroundColor: '#F8F9FA',
-        padding: 12,
-        borderRadius: 8,
-        marginTop: 12,
-        marginBottom: 15,
-    },
-    requirementsTitle: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#1A1A1A',
-        marginBottom: 6,
-    },
-    requirement: {
-        fontSize: 11,
-        color: '#666666',
-        marginBottom: 3,
-    },
-    requirementMet: {
-        color: '#22C55E',
-        fontWeight: '500',
-    },
     resetButton: {
         marginTop: 10,
     },
 });
 
-export default ResetPassword;
+export default VerifyCode;

@@ -99,7 +99,8 @@ export const usePasswordRecovery = () => {
         try {
             setIsLoading(true);
             
-            const response = await fetch(`${API}/api/empleados/forgot-password`, {
+            // Intentar primero en clientes
+            const responseClientes = await fetch(`${API}/api/clientes/forgot-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -107,9 +108,24 @@ export const usePasswordRecovery = () => {
                 body: JSON.stringify({ correo: email }),
             });
 
-            const data = await response.json();
+            let data = await responseClientes.json();
 
-            if (response.ok) {
+            if (responseClientes.ok) {
+                return { success: true, data };
+            }
+
+            // Fallback: intentar en empleados
+            const responseEmpleados = await fetch(`${API}/api/empleados/forgot-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ correo: email }),
+            });
+
+            data = await responseEmpleados.json();
+
+            if (responseEmpleados.ok) {
                 return { success: true, data };
             } else {
                 Alert.alert('Error', data.message || 'Error al enviar código de verificación');
@@ -137,7 +153,8 @@ export const usePasswordRecovery = () => {
         try {
             setIsLoading(true);
             
-            const response = await fetch(`${API}/api/empleados/verify-reset-code`, {
+            // Intentar primero en clientes
+            const responseClientes = await fetch(`${API}/api/clientes/verify-reset-code`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -148,9 +165,27 @@ export const usePasswordRecovery = () => {
                 }),
             });
 
-            const data = await response.json();
+            let data = await responseClientes.json();
 
-            if (response.ok) {
+            if (responseClientes.ok) {
+                return { success: true, data };
+            }
+
+            // Fallback: intentar en empleados
+            const responseEmpleados = await fetch(`${API}/api/empleados/verify-reset-code`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    correo: email,
+                    code: code
+                }),
+            });
+
+            data = await responseEmpleados.json();
+
+            if (responseEmpleados.ok) {
                 return { success: true, data };
             } else {
                 setErrors({ codigo: 'Código incorrecto o expirado' });
@@ -180,7 +215,8 @@ export const usePasswordRecovery = () => {
         try {
             setIsLoading(true);
             
-            const response = await fetch(`${API}/api/empleados/reset-password`, {
+            // Intentar primero en clientes
+            const responseClientes = await fetch(`${API}/api/clientes/reset-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -192,9 +228,28 @@ export const usePasswordRecovery = () => {
                 }),
             });
 
-            const data = await response.json();
+            let data = await responseClientes.json();
 
-            if (response.ok) {
+            if (responseClientes.ok) {
+                return { success: true, data };
+            }
+
+            // Fallback: intentar en empleados
+            const responseEmpleados = await fetch(`${API}/api/empleados/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    correo: email, 
+                    code: code,
+                    newPassword: newPassword 
+                }),
+            });
+
+            data = await responseEmpleados.json();
+
+            if (responseEmpleados.ok) {
                 return { success: true, data };
             } else {
                 Alert.alert('Error', data.message || 'Error al cambiar la contraseña');
@@ -217,7 +272,8 @@ export const usePasswordRecovery = () => {
         try {
             setIsLoading(true);
 
-            const response = await fetch(`${API}/api/empleados/forgot-password`, {
+            // Intentar primero en clientes
+            const responseClientes = await fetch(`${API}/api/clientes/forgot-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -225,9 +281,29 @@ export const usePasswordRecovery = () => {
                 body: JSON.stringify({ correo: email }),
             });
 
-            const data = await response.json();
+            let data = await responseClientes.json();
 
-            if (response.ok) {
+            if (responseClientes.ok) {
+                Alert.alert('Código Reenviado', 'Se ha enviado un nuevo código a tu correo');
+                // Reiniciar el temporizador
+                setTimeLeft(300);
+                setCanResend(false);
+                setCodigo('');
+                return { success: true };
+            }
+
+            // Fallback: intentar en empleados
+            const responseEmpleados = await fetch(`${API}/api/empleados/forgot-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ correo: email }),
+            });
+
+            data = await responseEmpleados.json();
+
+            if (responseEmpleados.ok) {
                 Alert.alert('Código Reenviado', 'Se ha enviado un nuevo código a tu correo');
                 // Reiniciar el temporizador
                 setTimeLeft(300);

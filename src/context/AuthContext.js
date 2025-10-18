@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     
     // URL base de la API
-    const API_URL = "https://a-u-r-o-r-a.onrender.com";
+    const API_URL = "https://aurora-production-6d8b.up.railway.app";
 
     /**
      * Cargar token guardado al iniciar la app
